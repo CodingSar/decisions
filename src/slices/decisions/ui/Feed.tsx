@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Decision, Verdict } from '../model'
 import './feed.css'
 
@@ -232,14 +232,16 @@ export function Feed({
     return () => void window.api.invoke('decisions:working', false)
   }, [commenting])
   // A new oldest card starts without a comment box, except an overturn, which opens with one.
+  // Layout effects: the box state and the key listener settle before the card is painted, so a
+  // key pressed as soon as it shows acts on it instead of being lost or undone by the reset.
   // biome-ignore lint/correctness/useExhaustiveDependencies: only a change of card resets it
-  useEffect(() => setCommenting(first?.supersedes !== undefined), [first?.id])
+  useLayoutEffect(() => setCommenting(first?.supersedes !== undefined), [first?.id])
   // With nothing focused, focus lands on the oldest card, so the ring always shows where keys act.
   useEffect(() => {
     if (oldest && document.activeElement === document.body)
       document.querySelector<HTMLElement>(`[aria-label="D${oldest.id}"]`)?.focus()
   }, [oldest])
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!first || commenting) return
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || typesText(e.target)) return

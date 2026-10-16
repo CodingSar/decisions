@@ -1,10 +1,10 @@
 ---
 id: TASK-33
 title: Fix flaky Feed key-press scenarios
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-16 17:04'
-updated_date: '2026-10-16 17:15'
+updated_date: '2026-10-16 20:52'
 labels: []
 dependencies: []
 ordinal: 37
@@ -18,5 +18,5 @@ take-decision.feature, auto-resolve.feature and the shell 'Hover focuses after 1
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Both features pass 10 repeated runs
+- [x] #1 Both features pass 10 repeated runs
 <!-- AC:END -->
