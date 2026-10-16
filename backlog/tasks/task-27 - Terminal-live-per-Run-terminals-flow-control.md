@@ -1,9 +1,10 @@
 ---
 id: TASK-27
 title: 'Terminal: live per-Run terminals + flow control'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-16 16:28'
+updated_date: '2026-10-16 16:38'
 labels: []
 dependencies:
   - TASK-26
@@ -18,6 +19,6 @@ Phase 2 of docs/plans/2026-10-16-terminal-modernization.md: one xterm per Run ke
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Scenario 'Switching Runs keeps each terminal' passes
-- [ ] #2 Scenario 'Fast output does not drop text' passes
+- [x] #1 Scenario 'Switching Runs keeps each terminal' passes
+- [x] #2 Scenario 'Fast output does not drop text' passes
 <!-- AC:END -->

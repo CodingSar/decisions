@@ -32,6 +32,8 @@ export const claudeCodeRuntime: AgentRuntime = {
     return {
       write: (data) => pty.write(data),
       resize: (cols, rows) => pty.resize(cols, rows),
+      pause: () => pty.pause(),
+      resume: () => pty.resume(),
       stop: () => pty.kill(),
     }
   },

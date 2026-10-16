@@ -350,6 +350,10 @@ main {
   font-family: var(--mono);
   transition: opacity 0.15s;
 }
+.term-live {
+  width: 100%;
+  height: 100%;
+}
 /* Ghostty: unfocused splits and finished Runs sit back a little. */
 .terminal:not(:focus-within) .term-host,
 .term-host[data-readonly="true"] {

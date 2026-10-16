@@ -36,3 +36,20 @@ Then('the terminal font is {string}', async ({ page }, font: string) => {
 Then('the terminal renderer is webgl or dom', async ({ page }) => {
   await expect(host(page)).toHaveAttribute('data-renderer', /^(webgl|dom)$/)
 })
+
+Then('the terminal shows {string} with {string}', async ({ page }, id: string, text: string) => {
+  await expect(host(page)).toContainText(`session ${id}`)
+  await expect(host(page)).toContainText(text)
+})
+
+Then('only {int} terminals were created', async ({ page }, n: number) => {
+  expect(await page.evaluate(() => window.terminals.created())).toBe(n)
+})
+
+Then('the terminal ends with {string}', async ({ page }, text: string) => {
+  await expect(host(page)).toContainText(text, { timeout: 15000 })
+})
+
+Then('the Run was paused at least once', async ({ page }) => {
+  expect(await page.evaluate(() => window.api.invoke('runs:pauses', 'R1'))).toBeGreaterThan(0)
+})

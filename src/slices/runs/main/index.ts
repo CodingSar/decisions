@@ -6,6 +6,9 @@ import type { Run } from '../model'
 
 // Past Verdicts live in the folder; a Run that was not blocked on them reads them from there.
 const POINTER = 'Past Decisions are in .decisions/'
+const SCROLLBACK = 2_000_000
+const HIGH = 100_000
+const LOW = 10_000
 
 function hasDecisions(cwd: string) {
   try {
@@ -19,20 +22,59 @@ export function registerRuns(win: BrowserWindow, getCwd: () => string | undefine
   const runs: Run[] = []
   let seq = 0
   const sessions = new Map<string, AgentSession>()
-  const scrollback = new Map<string, string>()
+  // Last SCROLLBACK chars per Run; `base` counts what was dropped, so offsets stay absolute.
+  const scrollback = new Map<string, { text: string; base: number }>()
+  // Bytes sent to the renderer and not yet drawn, per watched Run; the session pauses above HIGH.
+  const flow = new Map<string, { unacked: number; paused: boolean; pauses: number }>()
   const cwds = new Map<string, string>()
   const pushRuns = () => win.webContents.send('runs:changed', runs)
   const emit = (id: string, data: string) => {
-    const before = scrollback.get(id) ?? ''
-    scrollback.set(id, before + data)
-    win.webContents.send('runs:data', { id, data, offset: before.length })
+    const s = scrollback.get(id) ?? { text: '', base: 0 }
+    s.text += data
+    if (s.text.length > SCROLLBACK) {
+      s.base += s.text.length - SCROLLBACK
+      s.text = s.text.slice(-SCROLLBACK)
+    }
+    scrollback.set(id, s)
+    win.webContents.send('runs:data', { id, data, offset: s.base + s.text.length - data.length })
+    const f = flow.get(id)
+    if (!f) return
+    f.unacked += data.length
+    if (!f.paused && f.unacked > HIGH) {
+      f.paused = true
+      f.pauses++
+      sessions.get(id)?.pause()
+    }
+  }
+  const forget = (id: string) => {
+    scrollback.delete(id)
+    cwds.delete(id)
+    flow.delete(id)
   }
 
   ipcMain.handle('runs:list', () => runs)
-  ipcMain.handle('runs:output', (_e, id: string) => {
-    const text = scrollback.get(id) ?? ''
-    return { text, length: text.length }
+  // The renderer keeps one terminal per Run: watching returns the scrollback so far and starts the ack count.
+  ipcMain.handle('runs:watch', (_e, id: string) => {
+    flow.set(id, { unacked: 0, paused: false, pauses: 0 })
+    const s = scrollback.get(id) ?? { text: '', base: 0 }
+    return { text: s.text, length: s.base + s.text.length }
   })
+  ipcMain.handle('runs:unwatch', (_e, id: string) => {
+    if (flow.get(id)?.paused) sessions.get(id)?.resume()
+    flow.delete(id)
+  })
+  ipcMain.handle('runs:ack', (_e, id: string, n: number) => {
+    const f = flow.get(id)
+    if (!f) return
+    f.unacked = Math.max(0, f.unacked - n)
+    if (f.paused && f.unacked < LOW) {
+      f.paused = false
+      sessions.get(id)?.resume()
+    }
+  })
+  // Test hook: how often flow control paused the Run.
+  if (process.env.DECISIONS_RUNTIME)
+    ipcMain.handle('runs:pauses', (_e, id: string) => flow.get(id)?.pauses ?? 0)
   const create = () => {
     const id = `R${++seq}`
     runs.push({ id, name: id, status: 'idle', project: getCwd() })
@@ -43,6 +85,8 @@ export function registerRuns(win: BrowserWindow, getCwd: () => string | undefine
     const run = runs.find((r) => r.id === id)
     const cwd = run?.project ?? getCwd()
     if (!run || !cwd || run.status === 'running') return
+    const f = flow.get(id)
+    if (f) Object.assign(f, { unacked: 0, paused: false })
     let session: AgentSession | undefined
     try {
       session = getRuntime().start({
@@ -59,8 +103,7 @@ export function registerRuns(win: BrowserWindow, getCwd: () => string | undefine
           // The session ended by itself (e.g. `exit`): the Run ends with it.
           if (code === 0 && run.status === 'running') {
             runs.splice(runs.indexOf(run), 1)
-            scrollback.delete(id)
-            cwds.delete(id)
+            forget(id)
             pushRuns()
             return
           }
