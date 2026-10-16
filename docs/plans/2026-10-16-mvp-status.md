@@ -4,17 +4,18 @@ Goal: single-user Electron app where the human takes Decisions raised by agents.
 
 ## Done
 Backlog MVP slices, UI polish, files, components, Decision map, terminal modernization (TASK-26..30, `2026-10-16-terminal-modernization.md`). The git slice was built and then removed (TASK-31): git happens in the Run terminal. All features listed in `playwright.config.ts`.
+UX review (TASK-32, `2026-10-16-ux-review.md`): 40 findings, 29 quick fixes shipped with scenarios, 11 follow-up tasks (TASK-34..44). Flaky Feed key scenarios fixed (TASK-33).
 Docs: `GLOSSARY.md`, ADRs 0001-0007, `docs/use-cases.md` (UC1-UC10 approved; UC9 removed).
 UI mock: `docs/mock/*.dc.html` (boards: Main, Collapsed, Review, NewProject, Settings, Files, Architecture); private artifact https://claude.ai/artifact/KRcQmrkSKrhHbJXr7efMdP.
 
 ## To Do
-- TASK-32 UX review (`2026-10-16-ux-review.md`): walk the use cases as a first-time user, fix friction.
-- TASK-16 Settings section nav.
+- TASK-34..44 UX review follow-ups, ordered by severity (F1-F11 in `2026-10-16-ux-review.md`); TASK-36, 37, 43, 44 need a user interview first.
+- TASK-16 Settings section nav (parked until a second Settings section exists).
 - TASK-15 Agent Runtime picker (parked until a second Agent Runtime exists).
 - TASK-22..25 Decision map extras.
 
 ## Task order (follow for "pick up next task")
-Next: TASK-32, then TASK-16, then TASK-15 (parked). Later ideas: `2026-10-16-later-slices.md`. Order lives in backlog ordinals + deps (`backlog task list --plain`).
+Next: TASK-34, then TASK-35..44 in ordinal order, then TASK-16 and TASK-15 (both parked). Later ideas: `2026-10-16-later-slices.md`. Order lives in backlog ordinals + deps (`backlog task list --plain`).
 
 ## Assumptions made while writing features (re-check)
 - Fake adapter is scriptable from steps ("an agent requests...").
