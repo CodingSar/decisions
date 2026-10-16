@@ -16,6 +16,10 @@ export interface Decision {
   verdict?: string
   /** Overturn: the earlier Decision this one replaces once answered. */
   supersedes?: number
+  /** When the Decision was answered (epoch ms). */
+  answered?: number
+  /** Groma Component ids the Decision touches. */
+  components?: string[]
 }
 
 /** The human's response; `option` is an index, `like` approves the recommendation. */
@@ -45,11 +49,13 @@ export function verdictText(d: Decision, v: Verdict): string {
 export function serialize(d: Decision): string {
   const options = d.options.map((o, i) => `- ${num(i)}: ${o}${i === d.recommended ? ' ★' : ''}`)
   const by = (d.by ? `by: ${d.by}\n` : '') + (d.reason ? `reason: ${d.reason}\n` : '')
-  const asked = d.asked ? `asked: ${d.asked}\n` : ''
+  const asked =
+    (d.asked ? `asked: ${d.asked}\n` : '') + (d.answered ? `answered: ${d.answered}\n` : '')
   const accepted = d.accepted ? 'accepted: true\n' : ''
   const supersedes = d.supersedes ? `supersedes: D${d.supersedes}\n` : ''
+  const components = d.components?.length ? `components: ${d.components.join(', ')}\n` : ''
   const verdict = d.verdict ? `\n## Verdict\n\n${d.verdict}\n` : ''
-  return `---\nscope: ${d.scope}\nstatus: ${d.status}\n${asked}${by}${accepted}${supersedes}---\n# ${d.question}\n\nAsked by: ${d.agent}\n\n${options.join('\n')}\n${verdict}`
+  return `---\nscope: ${d.scope}\nstatus: ${d.status}\n${asked}${by}${accepted}${supersedes}${components}---\n# ${d.question}\n\nAsked by: ${d.agent}\n\n${options.join('\n')}\n${verdict}`
 }
 
 export function parse(id: number, text: string): Decision {
@@ -73,8 +79,12 @@ export function parse(id: number, text: string): Decision {
       ? (field(/^reason: (.*)$/m) as 'out-of-scope' | 'timeout')
       : undefined,
     asked: Number(field(/^asked: (.*)$/m)) || undefined,
+    answered: Number(field(/^answered: (.*)$/m)) || undefined,
     accepted: field(/^accepted: (.*)$/m) === 'true' || undefined,
     supersedes: Number(/^supersedes: D(\d+)$/m.exec(text)?.[1]) || undefined,
+    components: field(/^components: (.*)$/m)
+      .split(', ')
+      .filter(Boolean),
     verdict: /^## Verdict\n\n(.*)$/m.exec(text)?.[1],
   }
 }

@@ -1,5 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { expect, type Page } from '@playwright/test'
 import { asks, OPTIONS, QUESTION, request } from '../../../shared/testing/fake-agent'
 import { Given, Then, When } from '../../../shared/testing/fixtures'
@@ -469,4 +471,87 @@ When('I toggle the Feed order', async ({ page }) => {
 
 Then('{word} leaves the Feed', async ({ page }, id: string) => {
   await expect(page.getByRole('article', { name: id })).toHaveCount(0)
+})
+
+// Decision components: Groma Component ids a Decision touches.
+Given(
+  'its {string} has the Components {string} and {string}',
+  async ({ folder }, dir: string, a: string, b: string) => {
+    for (const id of [a, b]) {
+      const d = join(folder('api-service'), dir, 'components')
+      mkdirSync(d, { recursive: true })
+      writeFileSync(
+        join(d, `${id}.md`),
+        `---\ntype: C4 Component\ntitle: ${id}\ngroma:\n  id: ${id}\n  parent: api\n---\n`,
+      )
+    }
+  },
+)
+
+const started = new WeakSet<Page>()
+const ensureRun = async (page: Page) => {
+  if (started.has(page)) return
+  started.add(page)
+  await page.evaluate(() => window.api.invoke('runs:create'))
+  await page.evaluate(() => window.api.invoke('runs:start', 'R1'))
+}
+
+When('a Run starts', async ({ page }) => ensureRun(page))
+
+Then(
+  'the request_decision tool lists {string} and {string}',
+  async ({ page }, a: string, b: string) => {
+    const url = (await page.evaluate(() => window.api.invoke('agent:mcp-url'))) as string
+    const client = new Client({ name: 'test-agent', version: '0.0.0' })
+    await client.connect(new StreamableHTTPClientTransport(new URL(`${url}/R1`)))
+    const { tools } = await client.listTools()
+    const props = tools.find((t) => t.name === 'request_decision')?.inputSchema
+      .properties as Record<string, { description?: string }>
+    expect(props.components?.description).toContain(a)
+    expect(props.components?.description).toContain(b)
+    await client.close()
+  },
+)
+
+const touching = async (page: Page, ids: string[]) => {
+  await ensureRun(page)
+  await request(page, 'R1', 'orchestrator > api-agent', 'Architecture', 0, ids)
+  await expect(page.getByRole('article')).toHaveCount(1)
+}
+
+When('an agent requests a Decision touching {string}', async ({ page }, a: string) => {
+  await touching(page, [a])
+})
+
+When(
+  'an agent requests a Decision touching {string} and {string}',
+  async ({ page }, a: string, b: string) => {
+    await touching(page, [a, b])
+  },
+)
+
+When('an agent requests a Decision with no components', async ({ page }) => {
+  await touching(page, [])
+})
+
+const recordsComponent = async ({ folder }: { folder: (name: string) => string }, id: string) => {
+  expect(readFileSync(join(folder('api-service'), '.decisions', 'D1.md'), 'utf8')).toContain(
+    `components: ${id}\n`,
+  )
+}
+Then('its file records the component {string}', recordsComponent)
+Then('its file records only {string}', recordsComponent)
+
+Given('D1 touches {string}', async ({ folder }, id: string) => {
+  seed(folder, { id: 1, by: 'human', components: [id] })
+})
+
+When('I overturn D1', async ({ page }) => {
+  await overturn(page, 'History', 1)
+})
+
+Then('the new Decision touches {string}', async ({ folder }, id: string) => {
+  expect(readFileSync(join(folder('api-service'), '.decisions', 'D2.md'), 'utf8')).toContain(
+    `components: ${id}\n`,
+  )
 })

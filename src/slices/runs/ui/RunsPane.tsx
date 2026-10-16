@@ -47,15 +47,20 @@ function Name({ run }: { run: Run }) {
   )
 }
 
-// Runs of one Project; `current` is the selected one, else the newest.
-export function useRuns(project: string) {
+// All Runs, kept live.
+function useAllRuns() {
   const [all, setAll] = useState<Run[]>([])
-  const [selected, setSelected] = useState<string>()
-
   useEffect(() => {
     window.api.invoke('runs:list').then((r) => setAll(r as Run[]))
     return window.api.on('runs:changed', (r: Run[]) => setAll([...r]))
   }, [])
+  return all
+}
+
+// Runs of one Project; `current` is the selected one, else the newest.
+export function useRuns(project: string) {
+  const all = useAllRuns()
+  const [selected, setSelected] = useState<string>()
 
   const runs = all.filter((r) => r.project === project)
   const current = runs.find((r) => r.id === selected) ?? runs.at(-1)
@@ -63,20 +68,29 @@ export function useRuns(project: string) {
     runs,
     current,
     select: setSelected,
-    create: async () => setSelected((await window.api.invoke('runs:create')) as string),
+    create: () =>
+      window.api
+        .invoke('runs:create')
+        .then((id) => setSelected(id as string))
+        .catch(console.error),
+    // Create and start in one go: the terminal placeholder's Run button.
+    run: async () => {
+      try {
+        const id = (await window.api.invoke('runs:create')) as string
+        setSelected(id)
+        await window.api.invoke('runs:start', id)
+      } catch (e) {
+        console.error(e)
+      }
+    },
   }
 }
 
 // Project folders that have a running Run.
 export function useBusy() {
-  const [busy, setBusy] = useState<string[]>([])
-  useEffect(() => {
-    const set = (rs: Run[]) =>
-      setBusy(rs.filter((r) => r.status === 'running' && r.project).map((r) => r.project as string))
-    window.api.invoke('runs:list').then((r) => set(r as Run[]))
-    return window.api.on('runs:changed', (r: Run[]) => set(r))
-  }, [])
-  return busy
+  return useAllRuns()
+    .filter((r) => r.status === 'running' && r.project)
+    .map((r) => r.project as string)
 }
 
 type Runs = ReturnType<typeof useRuns>
@@ -121,8 +135,44 @@ export function RunList({ runs, current, select, create }: Runs) {
   )
 }
 
-export function RunTerminal({ current }: Pick<Runs, 'current'>) {
+export function RunTerminal({ current, run }: Pick<Runs, 'current' | 'run'>) {
   const running = current?.status === 'running'
+  if (!current)
+    return (
+      <>
+        <div className="term-head">
+          <span className="dot" />
+          <span className="muted">Terminal</span>
+        </div>
+        <div className="term-empty">
+          <svg
+            width={24}
+            height={24}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.75}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M4 17l6-5-6-5M12 19h8" />
+          </svg>
+          <p>No Run yet</p>
+          <button
+            type="button"
+            className="run"
+            aria-label="Run"
+            title="Start a Run (N)"
+            onClick={run}
+          >
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M6 4l14 8-14 8z" />
+            </svg>
+          </button>
+        </div>
+      </>
+    )
   return (
     <>
       <div className="term-head">
@@ -135,7 +185,9 @@ export function RunTerminal({ current }: Pick<Runs, 'current'>) {
           aria-label="Start"
           title="Start (S)"
           disabled={!current || running}
-          onClick={() => current && window.api.invoke('runs:start', current.id)}
+          onClick={() =>
+            current && window.api.invoke('runs:start', current.id).catch(console.error)
+          }
         >
           <svg width={14} height={14} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M6 4l14 8-14 8z" />
@@ -147,7 +199,7 @@ export function RunTerminal({ current }: Pick<Runs, 'current'>) {
           aria-label="Stop"
           title="Stop (X)"
           disabled={!running}
-          onClick={() => current && window.api.invoke('runs:stop', current.id)}
+          onClick={() => current && window.api.invoke('runs:stop', current.id).catch(console.error)}
         >
           <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <rect x={4} y={4} width={16} height={16} rx={2} />

@@ -12,6 +12,14 @@ When('I create a new Run and press start', async ({ page }) => {
   await page.getByRole('button', { name: 'Start' }).click()
 })
 
+Then('the terminal shows the placeholder {string}', async ({ page }, text: string) => {
+  await expect(page.getByRole('region', { name: 'Terminal pane' })).toContainText(text)
+})
+
+When('I press the Run button in the terminal', async ({ page }) => {
+  await page.getByRole('button', { name: 'Run', exact: true }).click()
+})
+
 Then('the terminal shows an orchestrator session', async ({ page }) => {
   await expect(page.getByRole('log', { name: 'Terminal' })).toContainText('orchestrator session')
 })
@@ -149,4 +157,23 @@ Then('the terminal shows the error', async ({ page }) => {
 
 Then('the Run is marked failed', async ({ page }) => {
   await expect(runButton(page, 'R1', 'failed')).toBeVisible()
+})
+
+When('I type {string} in the terminal', async ({ page }, text: string) => {
+  await page.getByRole('log', { name: 'Terminal' }).click()
+  await page.keyboard.type(text)
+  await page.keyboard.press('Enter')
+})
+
+Then('the sidebar does not list {string}', async ({ page }, id: string) => {
+  await expect(page.getByRole('button', { name: new RegExp(`^${id} · `) })).toHaveCount(0)
+})
+
+Then('{string} never shows as failed', async ({ page }, id: string) => {
+  const failed = runButton(page, id, 'failed')
+  for (const end = Date.now() + 500; Date.now() < end; ) {
+    expect(await failed.count()).toBe(0)
+    await page.waitForTimeout(25)
+  }
+  await expect(runButton(page, id, 'stopped')).toBeVisible()
 })

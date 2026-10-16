@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Feed, History, Review, ReviewBadge, usePending } from '../../slices/decisions'
+import { DecisionMap } from '../../slices/architecture'
+import { Feed, History, Review, ReviewBadge, useAll, usePending } from '../../slices/decisions'
 import { FilesView, FileTree } from '../../slices/files'
+import { DiffView, GitSection } from '../../slices/git'
 import { Projects } from '../../slices/projects'
 import { RunList, RunTerminal, useBusy, useRuns } from '../../slices/runs'
 import { Settings } from '../../slices/scopes'
@@ -45,15 +47,21 @@ function Workspace({
   paths: string[]
   pending: ReturnType<typeof usePending>[string]
 }) {
-  const [view, setView] = useState<'feed' | 'review' | 'history' | 'files'>('feed')
+  const [view, setView] = useState<'feed' | 'review' | 'history' | 'files' | 'git'>('feed')
   const [file, setFile] = useState<string>()
   const openFile = (path: string) => {
     setFile(path)
     setView('files')
   }
+  const [change, setChange] = useState<string>()
+  const openChange = (path: string) => {
+    setChange(path)
+    setView('git')
+  }
   const [settings, setSettings] = useState(false)
   const [newestFirst, setNewestFirst] = useState(false)
   const runs = useRuns(active)
+  const all = useAll(active)
   useFocus(paths, active)
   const { layout, update } = useLayout()
 
@@ -76,6 +84,28 @@ function Workspace({
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // Scrollbars show only while their element scrolls.
+  useEffect(() => {
+    const timers = new Map<Element, number>()
+    const onScroll = (e: Event) => {
+      if (!(e.target instanceof Element)) return
+      const el = e.target
+      el.classList.add('scrolling')
+      clearTimeout(timers.get(el))
+      timers.set(
+        el,
+        window.setTimeout(() => el.classList.remove('scrolling'), 500),
+      )
+    }
+    document.addEventListener('scroll', onScroll, true)
+    return () => {
+      document.removeEventListener('scroll', onScroll, true)
+      for (const t of timers.values()) clearTimeout(t)
+      timers.clear()
+    }
+  }, [])
+
+  const running = runs.runs.find((r) => r.status === 'running')
   if (!layout) return null
   return (
     <div className="panes" style={{ gridTemplateColumns: columns(layout) }}>
@@ -83,6 +113,7 @@ function Workspace({
         <aside aria-label="Sidebar" data-focus-unit="sidebar" tabIndex={-1}>
           <RunList {...runs} />
           <FileTree project={active} onOpen={openFile} />
+          <GitSection project={active} run={running} onOpen={openChange} />
           <button
             type="button"
             className="gear"
@@ -136,8 +167,10 @@ function Workspace({
         </div>
         {view === 'feed' ? (
           <Feed project={active} pending={pending} newestFirst={newestFirst} />
+        ) : view === 'git' && change ? (
+          <DiffView project={active} path={change} />
         ) : view === 'files' ? (
-          <FilesView project={active} path={file} onOpen={openFile} />
+          <FilesView project={active} path={file} run={running} onOpen={openFile} />
         ) : view === 'review' ? (
           <Review project={active} onOverturn={() => setView('feed')} />
         ) : (
@@ -146,7 +179,12 @@ function Workspace({
       </main>
       <Pane side="terminal" state={layout.terminal} onChange={(p) => update('terminal', p)}>
         <section aria-label="Terminal pane" data-focus-unit="terminal" tabIndex={-1}>
-          <RunTerminal current={runs.current} />
+          <RunTerminal current={runs.current} run={runs.run} />
+          <DecisionMap
+            project={active}
+            decisions={all}
+            onOpen={(d) => setView(d.status === 'pending' ? 'feed' : 'history')}
+          />
         </section>
       </Pane>
       {settings ? <Settings project={active} onClose={() => setSettings(false)} /> : null}

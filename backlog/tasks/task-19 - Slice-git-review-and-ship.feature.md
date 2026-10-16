@@ -1,9 +1,10 @@
 ---
 id: TASK-19
 title: 'Slice: git (review-and-ship.feature)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-16 12:34'
+updated_date: '2026-10-16 13:29'
 labels: []
 dependencies:
   - TASK-18
@@ -18,5 +19,5 @@ Git section + view over system git: status, Monaco diff, stage, commit, push/pul
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 review-and-ship.feature passes
+- [x] #1 review-and-ship.feature passes
 <!-- AC:END -->

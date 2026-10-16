@@ -27,7 +27,9 @@ export function Review({ project, onOverturn }: { project: string; onOverturn: (
                     type="button"
                     aria-label={`Accept D${d.id}`}
                     title="Accept"
-                    onClick={() => window.api.invoke('decisions:accept', project, d.id)}
+                    onClick={() =>
+                      window.api.invoke('decisions:accept', project, d.id).catch(console.error)
+                    }
                   >
                     <svg
                       width={16}

@@ -2,9 +2,9 @@
 
 Order after the MVP (Decision loop):
 
-1. Git: pull, add, commit, push; per-Run worktrees.
-2. File tree and editor (Monaco).
-3. Architecture visualization (see below).
+1. Git: pull, add, commit, push (built); per-Run worktrees (open).
+2. File tree and editor (Monaco) (built).
+3. Architecture visualization: Decision map built; Flow view open (see below).
 4. Agent, skill, and configuration builder.
 5. Other Agent Runtimes.
 

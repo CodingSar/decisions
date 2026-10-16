@@ -5,6 +5,30 @@ Feature: Decision map
     Given the Project "api-service" is open
     And its "groma/" has the Container "main-process" with the Components "decision-store" and "decision-ipc"
 
+  Scenario: The Overview shows one level at a time with its arrows
+    Given "decision-ipc" uses "decision-store"
+    Then the mini map shows "main-process" without its Components
+    When I click "main-process" in the mini map
+    Then the map shows only "decision-store" and "decision-ipc"
+    And an arrow runs from "decision-ipc" to "decision-store"
+
+  Scenario: Interactions nest Components inside their Container
+    Given the Interactions view
+    Then the mini map shows "main-process" containing "decision-store" and "decision-ipc"
+
+  Scenario: A System shows its Containers with their Components
+    Given "main-process" belongs to the System "svc"
+    And the Interactions view
+    Then the mini map shows "main-process" containing "decision-store" and "decision-ipc"
+
+  Scenario: Interactions show arrows only for the hovered element
+    Given "decision-ipc" uses "decision-store"
+    And the Interactions view
+    Then the mini map shows no arrows
+    When I hover "decision-ipc" in the mini map
+    Then an arrow runs from "decision-ipc" to "decision-store"
+    And "decision-ipc" and "decision-store" stand out
+
   Scenario: Pending Decisions glow with a count
     Given a pending Decision touches "decision-store"
     Then the mini map shows "decision-store" glowing with count 1
@@ -30,6 +54,11 @@ Feature: Decision map
     Given a pending Decision touches no Component
     Then no Component glows
 
+  Scenario: A parent cycle still renders
+    Given the Components "loop-a" and "loop-b" are each other's parent
+    And a pending Decision touches "loop-a"
+    Then the mini map shows "loop-a" glowing with count 1
+
   Scenario: Hover lists the Decisions
     Given a pending Decision D7 touches "decision-store"
     When I hover "decision-store" in the mini map
@@ -45,10 +74,6 @@ Feature: Decision map
     When I click "decision-store" in the mini map
     Then the modal opens with "decision-store" selected
     And the side panel lists D7
-
-  Scenario: Drill into a container
-    When I click "main-process" in the mini map
-    Then the map shows "decision-store" and "decision-ipc"
 
   Scenario: The map follows the model and Decisions live
     When an agent requests a Decision touching "decision-ipc"

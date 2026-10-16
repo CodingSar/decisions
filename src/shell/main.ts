@@ -1,8 +1,10 @@
 import { join } from 'node:path'
 import { app, BrowserWindow, ipcMain, Menu } from 'electron'
 import { type RuntimeKind, setRuntime, startMcpServer } from '../slices/agent-runtimes/main'
+import { componentIds, registerArchitecture } from '../slices/architecture/main'
 import { registerDecisions } from '../slices/decisions/main'
 import { registerFiles } from '../slices/files/main'
+import { registerGit } from '../slices/git/main'
 import { registerProjects } from '../slices/projects/main'
 import { registerRuns } from '../slices/runs/main'
 import { registerScopes, scopeNames, scopeSettings } from '../slices/scopes/main'
@@ -12,6 +14,7 @@ import { registerLayout } from './layout'
 if (process.env.DECISIONS_USER_DATA) app.setPath('userData', process.env.DECISIONS_USER_DATA)
 
 let decisions: ReturnType<typeof registerDecisions>
+let runs: ReturnType<typeof registerRuns>
 let projectOf: (runId: string) => string | undefined = () => undefined
 
 async function startMcp() {
@@ -20,6 +23,10 @@ async function startMcp() {
     (runId) => {
       const project = projectOf(runId)
       return project ? scopeNames(project) : []
+    },
+    (runId) => {
+      const project = projectOf(runId)
+      return project ? componentIds(project) : []
     },
   )
   ipcMain.handle('agent:mcp-url', () => mcp.url)
@@ -50,7 +57,7 @@ function createWindow(mcpUrl: string) {
       files.stop(path)
     },
   )
-  const runs = registerRuns(win, projects.active, mcpUrl)
+  runs = registerRuns(win, projects.active, mcpUrl)
   projectOf = runs.projectOf
   decisions = registerDecisions(win, runs.projectOf, (project, scope) => {
     const s = scopeSettings(project).find((x) => x.name.toLowerCase() === scope.toLowerCase())
@@ -64,6 +71,10 @@ function createWindow(mcpUrl: string) {
 
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(null) // no File/Edit/View/Window bar
+  registerGit()
+  registerArchitecture(() =>
+    runs.startRun('Curate the architecture: run `groma agent-instructions` and follow it'),
+  )
   createWindow(await startMcp())
 })
 app.on('window-all-closed', () => app.quit())

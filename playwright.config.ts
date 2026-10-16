@@ -14,11 +14,15 @@ const testDir = defineBddConfig({
     'src/slices/decisions/spec/auto-resolve.feature',
     'src/slices/decisions/spec/overturn-decision.feature',
     'src/slices/decisions/spec/sort-feed.feature',
+    'src/slices/decisions/spec/decision-components.feature',
     'src/slices/projects/spec/recent-projects.feature',
     'src/slices/files/spec/browse-files.feature',
+    'src/slices/files/spec/edit-files.feature',
+    'src/slices/git/spec/review-and-ship.feature',
+    'src/slices/architecture/spec/decision-map.feature',
   ],
   missingSteps: 'skip-scenario', // slices land one scenario at a time
-  steps: ['src/**/spec/steps.ts', 'src/shared/testing/fixtures.ts'],
+  steps: ['src/**/spec/steps.ts', 'src/**/spec/steps-*.ts', 'src/shared/testing/fixtures.ts'],
 })
 
 export default defineConfig({ testDir, reporter: 'list' })

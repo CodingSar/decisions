@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { expect, type Page } from '@playwright/test'
 import { Given, Then, When } from '../../../shared/testing/fixtures'
@@ -41,7 +41,13 @@ Then('the tree hides {string} and {string}', async ({ page }, a: string, b: stri
 const tree = (page: Page) => page.getByRole('region', { name: 'Files' })
 const view = (page: Page) => page.getByRole('region', { name: 'Files view' })
 
+// Folders start closed: open the ancestors of `path` as the human would.
 const open = async (page: Page, path: string) => {
+  const dirs = path.split('/').slice(0, -1)
+  for (let i = 1; i <= dirs.length; i++) {
+    const folder = tree(page).getByRole('button', { name: dirs.slice(0, i).join('/'), exact: true })
+    if ((await folder.getAttribute('aria-expanded')) === 'false') await folder.click()
+  }
   await tree(page).getByRole('button', { name: path, exact: true }).click()
 }
 
@@ -94,7 +100,7 @@ Then('the editor is read-only', async ({ page }) => {
   // Markdown opens rendered; its editor is the source view.
   const source = view(page).getByRole('button', { name: 'Source' })
   if (await source.isVisible()) await source.click()
-  await expect(view(page).locator('textarea')).toHaveAttribute('readonly', /.*/)
+  await expect(view(page).locator('.code')).toHaveAttribute('data-readonly', 'true')
 })
 
 Then('there is no edit-anyway icon', async ({ page }) => {
@@ -107,6 +113,14 @@ When('I collapse {string}', async ({ page }, dir: string) => {
   await folder.click()
 })
 
+When('I collapse the Files section', async ({ page }) => {
+  await page.getByRole('button', { name: 'Collapse Files' }).click()
+})
+
+When('I expand the Files section', async ({ page }) => {
+  await page.getByRole('button', { name: 'Expand Files' }).click()
+})
+
 When('I expand {string}', async ({ page }, dir: string) => {
   const folder = tree(page).getByRole('button', { name: dir, exact: true })
   await expect(folder).toHaveAttribute('aria-expanded', 'false')
@@ -115,4 +129,69 @@ When('I expand {string}', async ({ page }, dir: string) => {
 
 Then('the tree hides {string}', async ({ page }, path: string) => {
   await expect(tree(page).getByRole('button', { name: path, exact: true })).toHaveCount(0)
+})
+
+const editor = (page: Page) => view(page).locator('.monaco-editor')
+
+const typeIn = async (page: Page) => {
+  await editor(page).click()
+  await page.keyboard.type('// edited\n')
+}
+
+When('I change it', async ({ page }) => typeIn(page))
+
+Then('the file on disk has my change', async ({ folder }) => {
+  const file = join(folder('api-service'), 'src/app.ts')
+  await expect.poll(() => readFileSync(file, 'utf8')).toContain('// edited')
+})
+
+Given('the Run {string} is running', async ({ page }, id: string) => {
+  // Create Runs until the wanted id exists.
+  for (let i = 0; i < 10; i++) {
+    if ((await page.evaluate(() => window.api.invoke('runs:create'))) === id) break
+  }
+  await page.evaluate((i) => window.api.invoke('runs:start', i), id)
+  await expect(page.getByRole('button', { name: `${id} · running` })).toBeVisible()
+})
+
+Then('a banner says {string}', async ({ page }, text: string) => {
+  await expect(view(page).getByRole('status')).toContainText(text)
+})
+
+When('I click the edit-anyway icon', async ({ page }) => {
+  await view(page).getByRole('button', { name: 'Edit anyway' }).click()
+})
+
+Then('the editor is editable', async ({ page }) => {
+  await expect(view(page).locator('.code')).toHaveAttribute('data-readonly', 'false')
+})
+
+When('I stop {string}', async ({ page }, id: string) => {
+  await page.evaluate((i) => window.api.invoke('runs:stop', i), id)
+})
+
+Then('the banner is gone', async ({ page }) => {
+  await expect(view(page).getByRole('status')).toHaveCount(0)
+})
+
+Given('{string} is open rendered', async ({ page, folder }, path: string) => {
+  write(folder('api-service'), path, '# Plan\n')
+  await open(page, path)
+  await expect(view(page).getByRole('heading', { name: 'Plan', level: 1 })).toBeVisible()
+})
+
+When('I toggle to the source and change it', async ({ page }) => {
+  await view(page).getByRole('button', { name: 'Source' }).click()
+  await editor(page).click()
+  await page.keyboard.type('# Edited ')
+})
+
+Then('the rendered view shows my change', async ({ page }) => {
+  await view(page).getByRole('button', { name: 'Rendered' }).click()
+  await expect(view(page).getByRole('heading', { name: /Edited/ })).toBeVisible()
+})
+
+Then('{string} on disk is still empty', async ({ folder }, path: string) => {
+  await new Promise((r) => setTimeout(r, 700)) // outlast the 500ms save debounce
+  expect(readFileSync(join(folder('api-service'), path), 'utf8')).toBe('')
 })

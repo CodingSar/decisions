@@ -16,12 +16,24 @@ Feature: Review and ship with Git
     When I stage "src/app.ts"
     And I commit with the message "Add app"
     Then "src/app.ts" is no longer listed
+    And the commit message is empty
     And the latest commit message is "Add app"
 
   Scenario: Commit needs staged files and a message
     Then the commit icon is disabled
     When I stage "src/app.ts"
     Then the commit icon is still disabled until I type a message
+
+  Scenario: A failed commit keeps the message
+    Given a pre-commit hook rejects commits
+    When I stage "src/app.ts"
+    And I commit with the message "Add app"
+    Then an error strip shows git's message
+    And the commit message is still "Add app"
+
+  Scenario: Detached HEAD shows the short sha
+    Given HEAD is detached
+    Then the Git section shows the short sha as branch
 
   Scenario: Push and pull
     Given a remote exists
@@ -32,7 +44,7 @@ Feature: Review and ship with Git
 
   Scenario: Switch branch
     Given the branch "feature" exists
-    When I switch to "feature"
+    When I switch to the branch "feature"
     Then the Git section shows branch "feature"
 
   Scenario: Branch switching is off while a Run is active

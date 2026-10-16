@@ -1,4 +1,11 @@
-import { existsSync, type FSWatcher, readdirSync, readFileSync, watch } from 'node:fs'
+import {
+  existsSync,
+  type FSWatcher,
+  readdirSync,
+  readFileSync,
+  watch,
+  writeFileSync,
+} from 'node:fs'
 import { join, resolve, sep } from 'node:path'
 import type { BrowserWindow } from 'electron'
 import { ipcMain, shell } from 'electron'
@@ -21,14 +28,33 @@ function tree(root: string): FileNode[] {
   return walk('')
 }
 
+// Resolved file inside the Project root, or undefined when it escapes.
+function inside(project: string, rel: string) {
+  const root = resolve(project)
+  const file = resolve(root, rel)
+  return file.startsWith(root + sep) ? { root, file } : undefined
+}
+
 export function registerFiles(win: BrowserWindow) {
   const watchers = new Map<string, FSWatcher>()
   let lastExternal: string | undefined
   ipcMain.handle('files:list', (_e, project: string) => (existsSync(project) ? tree(project) : []))
   ipcMain.handle('files:read', (_e, project: string, rel: string) => {
-    const file = resolve(project, rel)
-    if (!file.startsWith(project + sep) || !existsSync(file)) return
-    return readFileSync(file, 'utf8')
+    const hit = inside(project, rel)
+    if (!hit || !existsSync(hit.file)) return
+    return readFileSync(hit.file, 'utf8')
+  })
+  ipcMain.handle('files:write', (_e, project: string, rel: string, text: string) => {
+    const hit = inside(project, rel)
+    // `.decisions/` is owned by the app.
+    const owned = hit && resolve(hit.root, '.decisions') + sep
+    if (!hit || hit.file.startsWith(owned as string) || !existsSync(hit.file)) return { ok: false }
+    try {
+      writeFileSync(hit.file, text)
+      return { ok: true }
+    } catch {
+      return { ok: false }
+    }
   })
   ipcMain.handle('files:open-external', (_e, url: string) => {
     if (!/^https?:\/\//.test(url)) return
@@ -41,12 +67,24 @@ export function registerFiles(win: BrowserWindow) {
   ipcMain.handle('files:watch', (_e, project: string) => {
     if (watchers.has(project) || !existsSync(project)) return
     let timer: NodeJS.Timeout | undefined
-    const w = watch(project, { recursive: true }, (_ev, name) => {
-      if (name?.startsWith('.git/') || name === '.git') return
+    let w: FSWatcher
+    try {
+      w = watch(project, { recursive: true }, (_ev, name) => {
+        const n = name?.split(sep).join('/')
+        if (n?.startsWith('.git/') || n === '.git') return
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+          if (!win.isDestroyed()) win.webContents.send('files:changed', project)
+        }, 100)
+      })
+    } catch {
+      return
+    }
+    // The Project folder may vanish (deleted, unmounted): stop watching it.
+    w.on('error', () => {
       clearTimeout(timer)
-      timer = setTimeout(() => {
-        if (!win.isDestroyed()) win.webContents.send('files:changed', project)
-      }, 100)
+      w.close()
+      watchers.delete(project)
     })
     watchers.set(project, w)
   })

@@ -5,15 +5,10 @@ Feature: Edit files
     Given the Project "api-service" is open
     And it contains "src/app.ts"
 
-  Scenario: Edit and save with no Run active
+  Scenario: Edits save automatically
     When I open "src/app.ts"
-    And I change it and press save
+    And I change it
     Then the file on disk has my change
-    And the unsaved dot is gone
-
-  Scenario: Unsaved changes are marked
-    When I open "src/app.ts" and change it
-    Then "src/app.ts" shows an unsaved dot
 
   Scenario: Read-only while a Run is active
     Given the Run "R2" is running
@@ -37,4 +32,12 @@ Feature: Edit files
   Scenario: Markdown toggles to source for editing
     Given "docs/plan.md" is open rendered
     When I toggle to the source and change it
-    Then the rendered view shows my change after save
+    Then the rendered view shows my change
+
+  Scenario: Switching files quickly keeps each file's content on disk
+    Given it contains "src/other.ts"
+    When I open "src/app.ts"
+    And I change it
+    And I open "src/other.ts"
+    Then the file on disk has my change
+    And "src/other.ts" on disk is still empty

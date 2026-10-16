@@ -10,7 +10,6 @@
       "!playwright-report",
       "!test-results",
       "!backlog",
-      "!.tessl",
       "!docs",
       "!tessl.json",
       "!.tessl",

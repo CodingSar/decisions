@@ -24,4 +24,6 @@ export interface DecisionRequest {
   question: string
   options: string[]
   recommended: number
+  /** Groma Component ids the Decision touches. */
+  components?: string[]
 }

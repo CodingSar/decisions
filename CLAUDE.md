@@ -1,9 +1,6 @@
 # decisions
 
-<!-- TODO: one line on WHAT this project is and WHY it exists. -->
-
 ## Commands
-<!-- TODO: fill once stack exists. Only commands Claude can't guess. -->
 - Install: `npm install` (postinstall fetches the Electron binary)
 - Test single file: `npm test -- <name>.feature` (builds, runs bddgen, then Playwright; name filters generated specs). Full: `npm test`. Only features listed in `playwright.config.ts` run; add each slice's feature there when you implement its steps
 - Typecheck / lint: `npm run typecheck`, `npm run lint` (Biome; `./node_modules/.bin/biome check --write .` to fix)
@@ -57,7 +54,6 @@ Run typecheck + only the tests for what you changed after every series of change
 ## Gotchas
 - E2E tests launch the built app from `out/`; `npm test` rebuilds first. Running `bddgen`/`playwright` alone uses a stale build.
 - Step defs live in `src/**/spec/steps.ts`; shared fixture (launches Electron) in `src/shared/testing/fixtures.ts`.
-<!-- TODO: add only mistakes Claude actually made. Each line must pass: "would removing this cause errors?" -->
 
 
 <!-- groma:start -->

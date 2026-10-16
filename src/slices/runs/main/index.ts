@@ -17,19 +17,24 @@ function hasDecisions(cwd: string) {
 
 export function registerRuns(win: BrowserWindow, getCwd: () => string | undefined, mcpUrl: string) {
   const runs: Run[] = []
+  let seq = 0
   const sessions = new Map<string, AgentSession>()
   const scrollback = new Map<string, string>()
   const cwds = new Map<string, string>()
   const pushRuns = () => win.webContents.send('runs:changed', runs)
   const emit = (id: string, data: string) => {
-    scrollback.set(id, (scrollback.get(id) ?? '') + data)
-    win.webContents.send('runs:data', { id, data })
+    const before = scrollback.get(id) ?? ''
+    scrollback.set(id, before + data)
+    win.webContents.send('runs:data', { id, data, offset: before.length })
   }
 
   ipcMain.handle('runs:list', () => runs)
-  ipcMain.handle('runs:output', (_e, id: string) => scrollback.get(id) ?? '')
+  ipcMain.handle('runs:output', (_e, id: string) => {
+    const text = scrollback.get(id) ?? ''
+    return { text, length: text.length }
+  })
   const create = () => {
-    const id = `R${runs.length + 1}`
+    const id = `R${++seq}`
     runs.push({ id, name: id, status: 'idle', project: getCwd() })
     pushRuns()
     return id
@@ -38,23 +43,36 @@ export function registerRuns(win: BrowserWindow, getCwd: () => string | undefine
     const run = runs.find((r) => r.id === id)
     const cwd = run?.project ?? getCwd()
     if (!run || !cwd || run.status === 'running') return
+    let session: AgentSession | undefined
     try {
-      sessions.set(
-        id,
-        getRuntime().start({
-          cwd,
-          mcpUrl: `${mcpUrl}/${id}`,
-          prompt: prompt ?? (hasDecisions(cwd) ? POINTER : undefined),
-          onOutput: (data) => emit(id, data),
-          onExit: (code) => {
-            run.status = code === 0 ? 'stopped' : 'failed'
+      session = getRuntime().start({
+        cwd,
+        mcpUrl: `${mcpUrl}/${id}`,
+        prompt: prompt ?? (hasDecisions(cwd) ? POINTER : undefined),
+        onOutput: (data) => emit(id, data),
+        onExit: (code) => {
+          // A late exit of a previous session must not touch its successor.
+          if (sessions.get(id) !== session) return
+          sessions.delete(id)
+          // Stopped by the human: the status is already final.
+          if (run.status === 'stopped') return
+          // The session ended by itself (e.g. `exit`): the Run ends with it.
+          if (code === 0 && run.status === 'running') {
+            runs.splice(runs.indexOf(run), 1)
+            scrollback.delete(id)
+            cwds.delete(id)
             pushRuns()
-          },
-        }),
-      )
+            return
+          }
+          run.status = code === 0 ? 'stopped' : 'failed'
+          pushRuns()
+        },
+      })
+      sessions.set(id, session)
       cwds.set(id, cwd)
       run.status = 'running'
     } catch (e) {
+      sessions.delete(id)
       run.status = 'failed'
       emit(id, `${(e as Error).message}\r\n`)
     }
@@ -72,12 +90,15 @@ export function registerRuns(win: BrowserWindow, getCwd: () => string | undefine
   const stop = (id: string) => {
     const run = runs.find((r) => r.id === id)
     if (run?.status !== 'running') return
-    sessions.get(id)?.stop()
     run.status = 'stopped'
+    sessions.get(id)?.stop()
     pushRuns()
   }
   ipcMain.handle('runs:stop', (_e, id: string) => stop(id))
-  ipcMain.handle('runs:input', (_e, id: string, data: string) => sessions.get(id)?.write(data))
+  ipcMain.handle('runs:input', (_e, id: string, data: string) => {
+    const s = sessions.get(id)
+    if (s) s.write(data)
+  })
   ipcMain.handle('runs:resize', (_e, id: string, cols: number, rows: number) =>
     sessions.get(id)?.resize(cols, rows),
   )

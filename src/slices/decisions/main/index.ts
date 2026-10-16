@@ -1,5 +1,6 @@
 import { type BrowserWindow, ipcMain } from 'electron'
 import type { DecisionRequest } from '../../agent-runtimes/main'
+import { componentIds } from '../../architecture/main'
 import { supersededBy, type Verdict, verdictText } from '../model'
 import { create, readAll, remove, write } from '../store'
 
@@ -35,9 +36,21 @@ export function registerDecisions(
       w.left -= ms
       if (w.left > 0) continue
       const d = readAll(w.project).find((x) => x.id === w.id)
-      if (!d) continue
+      if (!d) {
+        w.reply('Decision removed')
+        waiting.delete(k)
+        changed(w.project)
+        continue
+      }
       const reply = verdictText(d, { like: true })
-      write(w.project, { ...d, status: 'answered', by: 'auto', reason: 'timeout', verdict: reply })
+      write(w.project, {
+        ...d,
+        status: 'answered',
+        answered: Date.now(),
+        by: 'auto',
+        reason: 'timeout',
+        verdict: reply,
+      })
       w.reply(reply)
       waiting.delete(k)
       changed(w.project)
@@ -50,8 +63,11 @@ export function registerDecisions(
     working = on
   })
   // Test hook: the harness cannot wait 30 minutes.
-  if (process.env.DECISIONS_RUNTIME)
+  if (process.env.DECISIONS_RUNTIME) {
     ipcMain.handle('decisions:advance', (_e, minutes: number) => advance(minutes * 60_000))
+    // Files written behind the app's back (seeded Decisions, curated groma/) show up on request.
+    ipcMain.handle('decisions:touch', (_e, project: string) => changed(project))
+  }
   ipcMain.handle('decisions:accept', (_e, project: string, id: number) => {
     const d = readAll(project).find((x) => x.id === id && x.by === 'auto')
     if (!d) return
@@ -63,7 +79,7 @@ export function registerDecisions(
     const all = readAll(project)
     const old = all.find((x) => x.id === id && x.status === 'answered')
     if (!old || supersededBy(all, id)) return
-    const { id: _, by, reason, accepted, verdict, ...copy } = old
+    const { id: _, by, reason, accepted, verdict, answered, ...copy } = old
     create(project, { ...copy, status: 'pending', asked: Date.now(), supersedes: id })
     changed(project)
   })
@@ -78,7 +94,7 @@ export function registerDecisions(
     const d = readAll(project).find((x) => x.id === id && x.status === 'pending')
     if (!d) return
     const reply = verdictText(d, v)
-    write(project, { ...d, status: 'answered', by: 'human', verdict: reply })
+    write(project, { ...d, status: 'answered', answered: Date.now(), by: 'human', verdict: reply })
     waiting.get(key(project, id))?.reply(reply)
     waiting.delete(key(project, id))
     changed(project)
@@ -88,11 +104,16 @@ export function registerDecisions(
     request(req: DecisionRequest, runId: string): Promise<string> {
       const project = projectOf(runId)
       if (!project) return Promise.reject(new Error(`unknown Run ${runId}`))
+      // Unknown Component ids are dropped.
+      const known = componentIds(project)
+      const components = req.components?.filter((c) => known.includes(c))
+      req = { ...req, components: components?.length ? components : undefined }
       const rule = ruleOf(project, req.scope)
       if (!rule.mine) {
         const d = create(project, {
           ...req,
           status: 'answered',
+          answered: Date.now(),
           by: 'auto',
           reason: 'out-of-scope',
         })

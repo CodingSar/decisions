@@ -10,6 +10,9 @@
   --accent-solid: #d97757;
   --accent: rgb(217 119 87 / 55%);
   --accent-bg: #2e1f19;
+  --dim: #5b5852;
+  --soft: #d6d3cc;
+  --error: #e5786d;
   --green: #3fb950;
   --amber: #e5b567;
   --red: #f85149;
@@ -17,6 +20,8 @@
 }
 * {
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
 }
 html,
 body,
@@ -95,6 +100,10 @@ button:focus-visible {
   border-color: var(--line);
   color: var(--text);
 }
+.git [role="status"] {
+  font-size: 12px;
+  color: var(--muted);
+}
 .tab [role="tab"] {
   height: 100%;
   padding: 0 8px 0 16px;
@@ -153,6 +162,13 @@ main {
 .xterm {
   max-width: 100%;
 }
+.term {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  padding: 16px;
+  overflow: hidden;
+}
 .handle {
   position: absolute;
   top: 0;
@@ -203,7 +219,7 @@ main {
 .strip button {
   width: 20px;
   height: 100%;
-  color: var(--accent-solid);
+  color: var(--muted);
   background: var(--side);
   font-size: 16px;
 }
@@ -222,10 +238,19 @@ main {
   top: 10px;
   right: 12px;
 }
-.sidebar aside {
+.sidebar > aside[data-focus-unit] {
   padding: 16px 14px;
   gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
 }
+.md > * {
+  max-width: 720px;
+}
+.sidebar aside > * {
+  flex: none;
+}
+
 .side-head {
   display: flex;
   align-items: center;
@@ -271,7 +296,7 @@ main {
   width: 8px;
   height: 8px;
   border-radius: 4px;
-  background: #5b5852;
+  background: var(--dim);
   flex: none;
 }
 .dot.running {
@@ -317,10 +342,9 @@ main {
 .term-head .stop {
   color: var(--red);
 }
-.term {
-  flex: 1;
-  min-height: 0;
-  padding: 16px;
+.term-host {
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -362,6 +386,11 @@ main {
 .new-project button:nth-of-type(2) strong {
   color: var(--accent-solid);
 }
+.files li > span {
+  display: block;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
 .new-project button:nth-of-type(2) span {
   color: var(--muted);
 }
@@ -372,6 +401,30 @@ main {
   padding: 0;
   display: grid;
   gap: 8px;
+}
+.tree button {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 24px;
+  padding-right: 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--soft);
+}
+.settings {
+  overflow: auto;
+}
+.files ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
 }
 .new-project ul button {
   width: 100%;
@@ -417,6 +470,10 @@ dialog {
 .settings header button {
   width: 28px;
   height: 28px;
+}
+.settings .scope button {
+  width: 28px;
+  height: 24px;
 }
 .settings h2,
 .settings .scope,
@@ -492,33 +549,20 @@ dialog {
   color: var(--text);
   font: inherit;
 }
-.settings .scope button {
-  width: 28px;
-  height: 24px;
+.tree button:hover {
+  background: var(--raise);
 }
-.settings {
-  overflow: auto;
+.tree button svg,
+.tree .gap {
+  flex: none;
+  color: var(--muted);
 }
-.files ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-size: 12.5px;
-  line-height: 1.5;
+.tree .gap {
+  width: 12px;
 }
-.files li > span {
-  display: block;
-  padding: 1px 8px;
-  white-space: nowrap;
-}
-.files button {
-  all: unset;
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 1px 8px;
-  cursor: pointer;
-  white-space: nowrap;
+.tree button span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .files-view {
   flex: 1;
@@ -551,9 +595,6 @@ dialog {
   font-family: "IBM Plex Sans", sans-serif;
   line-height: 1.65;
 }
-.md > * {
-  max-width: 720px;
-}
 .md a {
   color: var(--accent);
   cursor: pointer;
@@ -561,4 +602,162 @@ dialog {
 .code {
   flex: 1;
   min-height: 0;
+}
+.file-lock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 24px;
+  background: var(--raise);
+  color: var(--muted);
+  font-size: 12px;
+}
+.git[data-repo="false"] .side-head span {
+  opacity: 0.5;
+}
+.git ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12.5px;
+}
+.git li {
+  display: flex;
+  align-items: center;
+}
+.git li button:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.git li .act {
+  width: 24px;
+  flex: none;
+  justify-content: center;
+  opacity: 0;
+}
+.git li:hover .act,
+.git li .act:focus-visible {
+  opacity: 1;
+}
+.git h3 {
+  margin: 6px 0 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.git .commit {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.git .commit input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+.git .commit input::placeholder {
+  color: var(--muted);
+}
+.git .commit input:focus {
+  border-color: var(--accent);
+  box-shadow:
+    inset 0 0 0 1px var(--accent),
+    inset 0 0 14px rgb(217 119 87 / 12%);
+}
+.git .commit button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+}
+.git [role="alert"] {
+  color: var(--error);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+/* Thin scrollbars, visible only while scrolling (see App.tsx). */
+.scrolling {
+  scrollbar-color: var(--line) transparent;
+}
+.git .branch-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.git .branch-row > button {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+.git .branch {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--text);
+}
+.git .branch svg {
+  flex: none;
+  color: var(--muted);
+}
+.git .branch select {
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.git .branch select option {
+  background: var(--panel);
+}
+.git .branch:has(select:disabled) {
+  opacity: 0.7;
+}
+.git .branch select:disabled {
+  cursor: default;
+}
+.term-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: var(--muted);
+}
+.term-empty p {
+  margin: 0;
+  color: var(--soft);
+}
+.term-empty .run {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+}
+.term-head .muted {
+  color: var(--muted);
 }

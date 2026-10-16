@@ -65,5 +65,29 @@ An element of the Project's Groma architecture model that a Decision can touch.
 _Avoid_: Module, node, box
 
 **Decision map**:
-The view of the architecture colored by the Decisions that touch each Component.
+The view of the architecture colored by the Decisions that touch each Component. Two views: Overview (one level at a time, click through) and Interactions (nested, arrows on hover).
 _Avoid_: Architecture view, diagram, heatmap
+
+**In-Scope / Out-of-Scope**:
+A Decision Scope the human takes personally is In-Scope (the agent waits for a Verdict); any other is Out-of-Scope (the agent decides, giving an Auto-resolved Decision).
+_Avoid_: Enabled/disabled
+
+**Adapter**:
+An Agent Runtime implementation; `claude-code` is real, `fake` is test-only.
+_Avoid_: Driver, plugin
+
+**Orchestrator / Subagent**:
+The Orchestrator is a Run's main agent thread; Subagents are the agents it spawns. Their Decisions belong to the Run.
+_Avoid_: Worker, child
+
+**Mini map**:
+The small Decision map in the right sidebar under the terminal; zoom opens the full map in a modal.
+_Avoid_: Preview
+
+**Curate**:
+To produce or refresh the Groma architecture model (`groma/`) the Decision map reads.
+_Avoid_: Generate, scan
+
+**Edit anyway**:
+The override that unlocks the read-only editor while a Run is active.
+_Avoid_: Force edit

@@ -5,6 +5,8 @@ import type { Page } from '@playwright/test'
 export interface Ask {
   settled: boolean
   result?: string
+  error?: string
+  client: Client
 }
 
 // Per-scenario state: the fake agent's blocked request_decision calls.
@@ -20,11 +22,12 @@ export async function request(
   agent: string,
   scope: string,
   recommended = 0,
+  components?: string[],
 ) {
   const base = (await page.evaluate(() => window.api.invoke('agent:mcp-url'))) as string
   const client = new Client({ name: 'fake-agent', version: '0.0.0' })
   await client.connect(new StreamableHTTPClientTransport(new URL(`${base}/${runId}`)))
-  const ask: Ask = { settled: false }
+  const ask: Ask = { settled: false, client }
   asks.set(page, [...(asks.get(page) ?? []), ask])
   client
     .callTool(
@@ -36,6 +39,7 @@ export async function request(
           question: QUESTION,
           options: OPTIONS,
           recommended,
+          ...(components && { components }),
         },
       },
       undefined,
@@ -44,5 +48,8 @@ export async function request(
     .then((r) => {
       ask.settled = true
       ask.result = (r.content as { text: string }[])[0]?.text
+    })
+    .catch((e) => {
+      ask.error = String(e)
     })
 }

@@ -40,6 +40,12 @@ Feature: Take a Decision
     When I press C and then Esc
     Then the Decision stays pending
 
+  Scenario: Typing in a text field sends no Verdict
+    Given a pending Decision recommending 1
+    When I type "l" into the Run name field
+    Then the agent is blocked
+    And the Decision stays pending
+
   Scenario: Oldest first
     Given Decisions D1 and D2 are pending
     When I give a Verdict on D1

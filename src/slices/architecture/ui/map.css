@@ -1,0 +1,226 @@
+.map {
+  flex: none;
+  height: 40%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--side);
+  border-top: 1px solid var(--line);
+}
+.map header,
+.map-modal header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  flex: none;
+  padding: 0 12px 0 8px;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.map header span {
+  flex: 1;
+}
+.map button,
+.map-modal button {
+  width: 26px;
+  height: 26px;
+  color: var(--muted);
+}
+.map button:disabled {
+  opacity: 0.3;
+}
+.map header button[aria-pressed="true"],
+.map-modal header button[aria-pressed="true"] {
+  color: var(--accent);
+}
+.map > svg,
+.map-modal .graph > svg {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  margin: 8px 0;
+}
+.map.empty {
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--muted);
+}
+.map svg path[data-edge],
+.map-modal svg path[data-edge] {
+  fill: none;
+  stroke: #9a978e;
+  stroke-width: 1.3;
+  pointer-events: none;
+}
+.map svg marker path,
+.map-modal svg marker path {
+  fill: #9a978e;
+}
+.map [role="button"],
+.map-modal [role="button"] {
+  cursor: pointer;
+  outline: none;
+}
+.map [role="button"] .shape,
+.map-modal [role="button"] .shape {
+  fill: var(--panel);
+  stroke: var(--line);
+}
+.map [role="button"] .frame,
+.map-modal [role="button"] .frame {
+  fill: none;
+  stroke-width: 1.5;
+}
+.map [data-kind="external"] .shape,
+.map-modal [data-kind="external"] .shape {
+  stroke-dasharray: 4 4;
+}
+.map [data-heat="recent"] .shape,
+.map-modal [data-heat="recent"] .shape {
+  fill: #221a16;
+  stroke: #6b4a3c;
+}
+.map [data-heat="pending"] .shape,
+.map-modal [data-heat="pending"] .shape {
+  fill: var(--accent-bg);
+  stroke: var(--accent-solid);
+  filter: drop-shadow(0 0 6px rgb(217 119 87 / 55%));
+}
+/* focus: soft accent border and glow */
+.map-modal [aria-pressed="true"] > .shape,
+.map [role="button"]:focus-visible > .shape,
+.map-modal [role="button"]:focus-visible > .shape {
+  stroke: var(--accent);
+  filter: drop-shadow(0 0 6px rgb(217 119 87 / 55%));
+}
+/* focus+context: an element's relationships show; everything else fades (own parts only, not nested children) */
+.map [data-dim] > :not([role="button"]),
+.map-modal [data-dim] > :not([role="button"]),
+.map path[data-dim],
+.map-modal path[data-dim] {
+  opacity: 0.3;
+}
+.map svg .icon,
+.map-modal svg .icon {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.2;
+}
+.map svg text,
+.map-modal svg text {
+  fill: var(--text);
+  font-size: 11px;
+  font-family: var(--sans);
+}
+.map svg[data-size="mini"] text {
+  font-size: 9px;
+}
+.map svg .ttl,
+.map-modal svg .ttl {
+  fill: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.map [data-heat="none"] > .title,
+.map-modal [data-heat="none"] > .title {
+  fill: var(--muted);
+}
+.map svg .badge circle,
+.map-modal svg .badge circle {
+  fill: var(--accent-solid);
+}
+.map svg .badge text,
+.map-modal svg .badge text {
+  fill: #141413;
+  font-size: 10px;
+  font-weight: 600;
+}
+.map [role="tooltip"] {
+  pointer-events: none;
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  padding: 8px;
+  background: var(--raise);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.map-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(10 10 9 / 78%);
+}
+.map-modal [role="dialog"] {
+  width: min(1240px, 96vw);
+  height: min(780px, 94vh);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 60%);
+}
+.map-modal header i {
+  flex: 1;
+}
+.map-modal header b {
+  color: var(--text);
+}
+.map-modal .body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.map-modal .graph {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+.map-modal aside {
+  width: 300px;
+  flex: none;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--side);
+  border-left: 1px solid var(--line);
+}
+.map ul,
+.map-modal ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.map li button,
+.map-modal li button {
+  width: 100%;
+  height: auto;
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+  text-align: left;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.map li small,
+.map-modal li small {
+  margin-left: auto;
+  color: var(--muted);
+}

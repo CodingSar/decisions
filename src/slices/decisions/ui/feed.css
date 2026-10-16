@@ -62,22 +62,6 @@ article,
 article[aria-current="true"] {
   border-color: var(--accent-solid);
 }
-article:not([aria-current="true"]) {
-  padding: 14px 20px;
-  gap: 8px;
-}
-article:not([aria-current="true"]) .actions {
-  display: none;
-}
-article:not([aria-current="true"]) .options {
-  gap: 4px;
-  color: var(--muted);
-}
-article:not([aria-current="true"]) .options button {
-  padding: 4px 12px;
-  color: var(--muted);
-  border-color: transparent;
-}
 .meta {
   display: flex;
   align-items: center;
@@ -209,4 +193,20 @@ article input {
 }
 .views .sort {
   margin-left: auto;
+}
+article:not([aria-current="true"]) {
+  padding: 14px 20px;
+  gap: 8px;
+}
+article:not([aria-current="true"]) .actions {
+  display: none;
+}
+article:not([aria-current="true"]) .options {
+  gap: 4px;
+  color: var(--muted);
+}
+article:not([aria-current="true"]) .options button {
+  padding: 4px 12px;
+  color: var(--muted);
+  border-color: transparent;
 }

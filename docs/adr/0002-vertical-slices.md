@@ -12,9 +12,9 @@ src/
     store/        persistence (.decisions/ files, config)
     spec/         .feature scenarios and their steps
   shell/          window, layout, hover focus, wiring of slices
-  shared/         domain-free helpers: ipc, fs, ids
+  shared/         domain-free helpers: `testing/` (fixtures, fake agent) and `ui/` (Chevron, Glyph)
 ```
 
 A slice has one entry per process: `index.ts` (renderer-safe: ui, model) and `main/index.ts` (Electron main). Never import Electron from `index.ts`, or it lands in the renderer bundle.
 
-Slices: `projects`, `runs`, `decisions`, `scopes`, `terminal`, `files`, `git`, `architecture`, `agent-runtimes` (one subfolder per adapter, plus `fake/`). `shared/` knows no domain terms. Slices never import each other's internals; cross-slice needs go through `index.ts` or events. Create only the folders a slice needs (parsimony).
+Slices: `projects`, `runs` (includes the terminal), `decisions`, `scopes`, `files`, `git`, `architecture`, `agent-runtimes` (one subfolder per adapter, plus `fake/`). `shared/` knows no domain terms. Slices never import each other's internals; cross-slice needs go through `index.ts` or events. Create only the folders a slice needs (parsimony).

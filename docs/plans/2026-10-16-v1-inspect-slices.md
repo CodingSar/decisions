@@ -1,6 +1,6 @@
-# v1 inspect slices: files, git, Decision map (resume here)
+# v1 inspect slices: files, git, Decision map
 
-Design resolved by grill (UC8-UC10 in `docs/use-cases.md`, approved) and UI mocks (accepted: Files, Git, Decision map modal in the design canvas; sources in `docs/mock/`). Specs written, nothing built. Supersedes the first three items of `2026-10-16-later-slices.md`; Flow view stays parked.
+Design resolved by grill (UC8-UC10 in `docs/use-cases.md`, approved) and UI mocks (accepted: Files, Git, Decision map modal in the design canvas; sources in `docs/mock/`). Built. Supersedes the first three items of `2026-10-16-later-slices.md`; Flow view stays parked.
 
 ## Decisions
 - Files: Monaco editing allowed; editor read-only while any Run is active (Project-wide), edit-anyway override; `.decisions/` always read-only. `.md` rendered by default.
@@ -13,5 +13,4 @@ TASK-17 files browse -> TASK-18 files edit + lock -> TASK-19 git (reuses Monaco 
 Specs: `src/slices/{files,git,architecture}/spec/*.feature`, `src/slices/decisions/spec/decision-components.feature`. Add each to `playwright.config.ts` when its steps exist.
 
 ## Status
-Done: grill, glossary (Component, Decision map), ADR 0002 slice list, UC8-10, mocks, specs, tasks.
-Next: TASK-17.
+All built (TASK-17..21 Done). Resume from `2026-10-16-mvp-status.md`.

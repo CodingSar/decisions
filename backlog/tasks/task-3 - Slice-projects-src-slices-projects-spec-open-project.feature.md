@@ -28,7 +28,5 @@ Tabs, open/set up folder, restore on launch, missing folder.
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Scenarios 2 (Decisions in Feed/Review) and 'Restart restores the Feed' wait for decisions slice (TASK-6/7); auto-skipped. Scenario 5 split in two.
-
-Blocked on TASK-6/7: when decisions slice lands, add steps for 'Open a folder that already has Decisions' and 'Restart restores the Feed' (open-project.feature), then check AC and mark Done.
+Done: all open-project scenarios pass.
 <!-- SECTION:NOTES:END -->

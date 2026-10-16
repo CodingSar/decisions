@@ -18,7 +18,8 @@ export const claudeCodeRuntime: AgentRuntime = {
   start({ cwd, mcpUrl, prompt, onOutput, onExit }) {
     if (!onPath('claude')) throw new Error('"claude" CLI not found on PATH')
     const mcpConfig = JSON.stringify({ mcpServers: { decisions: { type: 'http', url: mcpUrl } } })
-    const pty = spawn('claude', ['--mcp-config', mcpConfig, ...(prompt ? [prompt] : [])], {
+    // Prompt first: --mcp-config is variadic and would swallow a trailing prompt as a config path.
+    const pty = spawn('claude', [...(prompt ? [prompt] : []), '--mcp-config', mcpConfig], {
       cwd,
       name: 'xterm-256color',
       cols: 80,
