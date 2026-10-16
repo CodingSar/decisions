@@ -5,6 +5,7 @@ import { Terminal } from './Terminal'
 declare global {
   interface Window {
     api: {
+      env: { renderer?: string }
       invoke(channel: string, ...args: unknown[]): Promise<unknown>
       on(channel: string, cb: (payload: never) => void): () => void
     }

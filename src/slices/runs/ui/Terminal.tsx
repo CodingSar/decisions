@@ -1,16 +1,38 @@
 import { FitAddon } from '@xterm/addon-fit'
+import { Unicode11Addon } from '@xterm/addon-unicode11'
+import { WebglAddon } from '@xterm/addon-webgl'
 import { Terminal as Xterm } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
 import { useEffect, useRef } from 'react'
+import { font, hasWebgl, OPTIONS, theme } from './look'
+
+// WebGL when the GPU allows it, the DOM renderer otherwise (and after a context loss).
+function render(term: Xterm, host: HTMLElement) {
+  host.dataset.renderer = 'dom'
+  if (!hasWebgl()) return
+  try {
+    const webgl = new WebglAddon()
+    webgl.onContextLoss(() => {
+      webgl.dispose()
+      host.dataset.renderer = 'dom'
+    })
+    term.loadAddon(webgl)
+    host.dataset.renderer = 'webgl'
+  } catch {}
+}
 
 export function Terminal({ runId, live }: { runId: string; live: boolean }) {
   const el = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const term = new Xterm({ disableStdin: !live, convertEol: false })
+    const host = el.current as HTMLDivElement
+    const term = new Xterm({ ...OPTIONS, fontFamily: font(), theme: theme(), disableStdin: !live })
     const fit = new FitAddon()
     term.loadAddon(fit)
-    term.open(el.current as HTMLDivElement)
+    term.loadAddon(new Unicode11Addon())
+    term.unicode.activeVersion = '11'
+    term.open(host)
+    render(term, host)
     // Fit on the unpadded host, once per frame; always tell the PTY, so the TUI redraws at the real size.
     let frame = 0
     const refit = () => {
@@ -21,7 +43,7 @@ export function Terminal({ runId, live }: { runId: string; live: boolean }) {
       })
     }
     const ro = new ResizeObserver(refit)
-    ro.observe(el.current as HTMLDivElement)
+    ro.observe(host)
     refit()
     let disposed = false
     document.fonts.ready.then(() => {

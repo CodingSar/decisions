@@ -8,6 +8,7 @@ const testDir = defineBddConfig({
     'src/shell/spec/work-across-projects.feature',
     'src/slices/projects/spec/open-project.feature',
     'src/slices/runs/spec/start-run.feature',
+    'src/slices/runs/spec/terminal.feature',
     'src/slices/agent-runtimes/spec/claude-code.feature',
     'src/slices/decisions/spec/take-decision.feature',
     'src/slices/scopes/spec/configure-scopes.feature',
