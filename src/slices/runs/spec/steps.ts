@@ -155,6 +155,23 @@ Then('the terminal shows the error', async ({ page }) => {
   await expect(page.getByRole('log', { name: 'Terminal' })).toContainText('not found')
 })
 
+Then('the error says {string}', async ({ page }, text: string) => {
+  await expect(page.getByRole('log', { name: 'Terminal' })).toContainText(text)
+})
+
+Then('no terminal is shown', async ({ page }) => {
+  await expect(page.getByRole('log', { name: 'Terminal' })).toHaveCount(0)
+})
+
+Then(
+  'its row reads {string} with the tooltip {string}',
+  async ({ page }, text: string, tip: string) => {
+    const row = page.getByRole('button', { name: tip })
+    await expect(row).toHaveText(text)
+    await expect(row).toHaveAttribute('title', tip)
+  },
+)
+
 Then('the Run is marked failed', async ({ page }) => {
   await expect(runButton(page, 'R1', 'failed')).toBeVisible()
 })

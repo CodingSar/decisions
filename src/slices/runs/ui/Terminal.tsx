@@ -22,7 +22,7 @@ export function Terminal({ runId, live }: { runId: string; live: boolean }) {
     const open = () => setFinding(ref.current)
     window.addEventListener('terminal:find', open)
     return () => window.removeEventListener('terminal:find', open)
-  }, [runId])
+  }, [])
 
   useEffect(() => {
     const host = el.current as HTMLDivElement

@@ -132,3 +132,11 @@ When('an agent requests a Decision with the Scope {string}', async ({ page }, sc
 Then('it appears in the Feed', async ({ page }) => {
   await expect(page.getByRole('article')).toBeVisible()
 })
+
+// Blocked keys leave no trace; wait long enough for a Verdict or a Run to have shown up.
+Then('no Verdict was sent and no Run was created', async ({ page }) => {
+  await page.waitForTimeout(300)
+  expect(asks.get(page)?.every((a) => !a.settled)).toBe(true)
+  await expect(page.getByRole('article')).toHaveCount(1)
+  await expect(page.getByRole('button', { name: /^R2 · / })).toHaveCount(0)
+})

@@ -130,17 +130,45 @@ export function RunList({ runs, current, select, create }: Runs) {
             <button
               type="button"
               aria-label={label(r)}
+              title={label(r)}
               aria-current={r.id === current?.id}
               onClick={() => select(r.id)}
             >
               <span className={`dot ${tone(r)}`} />
               <span className="grow">{r.name}</span>
-              <small>{r.id}</small>
+              {r.name !== r.id && <small>{r.id}</small>}
             </button>
           </li>
         ))}
       </ul>
     </>
+  )
+}
+
+// Stands in for the terminal while there is nothing to show: a line and one play button.
+function Placeholder({ text, title, onRun }: { text: string; title: string; onRun: () => void }) {
+  return (
+    <div className="term-empty">
+      <svg
+        width={24}
+        height={24}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M4 17l6-5-6-5M12 19h8" />
+      </svg>
+      <p>{text}</p>
+      <button type="button" className="run" aria-label="Run" title={title} onClick={onRun}>
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M6 4l14 8-14 8z" />
+        </svg>
+      </button>
+    </div>
   )
 }
 
@@ -153,35 +181,11 @@ export function RunTerminal({ current, run }: Pick<Runs, 'current' | 'run'>) {
           <span className="dot" />
           <span className="muted">Terminal</span>
         </div>
-        <div className="term-empty">
-          <svg
-            width={24}
-            height={24}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.75}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M4 17l6-5-6-5M12 19h8" />
-          </svg>
-          <p>No Run yet</p>
-          <button
-            type="button"
-            className="run"
-            aria-label="Run"
-            title="Start a Run (N)"
-            onClick={run}
-          >
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M6 4l14 8-14 8z" />
-            </svg>
-          </button>
-        </div>
+        <Placeholder text="No Run yet" title="Start a Run (N)" onRun={run} />
       </>
     )
+  const idle = current.status === 'idle'
+  const start = () => window.api.invoke('runs:start', current.id).catch(console.error)
   return (
     <>
       <div className="term-head">
@@ -195,13 +199,33 @@ export function RunTerminal({ current, run }: Pick<Runs, 'current' | 'run'>) {
         <span className="grow" />
         <button
           type="button"
+          className="find"
+          aria-label="Find"
+          title="Find (⌘F)"
+          disabled={idle}
+          onClick={() => window.dispatchEvent(new Event('terminal:find'))}
+        >
+          <svg
+            width={14}
+            height={14}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <circle cx={11} cy={11} r={7} />
+            <path d="M21 21l-4.3-4.3" />
+          </svg>
+        </button>
+        <button
+          type="button"
           className="start"
           aria-label="Start"
           title="Start (S)"
-          disabled={!current || running}
-          onClick={() =>
-            current && window.api.invoke('runs:start', current.id).catch(console.error)
-          }
+          disabled={running}
+          onClick={start}
         >
           <svg width={14} height={14} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M6 4l14 8-14 8z" />
@@ -229,7 +253,11 @@ export function RunTerminal({ current, run }: Pick<Runs, 'current' | 'run'>) {
           style={{ width: `${current.progress}%` }}
         />
       )}
-      <Terminal key={current.id} runId={current.id} live={running} />
+      {idle ? (
+        <Placeholder text={`${current.name} not started`} title="Start (S)" onRun={start} />
+      ) : (
+        <Terminal key={current.id} runId={current.id} live={running} />
+      )}
     </>
   )
 }

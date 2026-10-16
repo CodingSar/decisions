@@ -34,6 +34,12 @@ Feature: Work across Projects and Runs
     When I click the arrow
     Then the sidebar returns
 
+  Scenario: Hide and show the sidebar with the keyboard
+    When I press Cmd+B
+    Then an edge strip with an arrow remains
+    When I press Cmd+B
+    Then the sidebar returns
+
   Scenario: Close a tab with a running Run
     Given "shop" has a running Run
     When I close the "shop" tab

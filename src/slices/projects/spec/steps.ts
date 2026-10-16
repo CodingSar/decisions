@@ -128,6 +128,13 @@ Then(
   },
 )
 
+Then('its tooltip says the folder was not found', async ({ session }) => {
+  await expect(session.page.getByRole('tab', { name: 'old' })).toHaveAttribute(
+    'title',
+    /^Folder not found: .*old$/,
+  )
+})
+
 When('I close the Project {string}', async ({ page }, name: string) => {
   await page.getByRole('button', { name: `Close ${name}` }).click()
 })

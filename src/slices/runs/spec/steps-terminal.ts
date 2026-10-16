@@ -88,6 +88,10 @@ Then('the terminal shows the newline mark', async ({ page }) => {
   await expect(host(page)).toContainText('⏎')
 })
 
+When('I press the Find icon', async ({ page }) => {
+  await page.getByRole('button', { name: 'Find', exact: true }).click()
+})
+
 When('I search for {string}', async ({ page }, text: string) => {
   await page.getByRole('searchbox', { name: 'Find in terminal' }).fill(text)
 })

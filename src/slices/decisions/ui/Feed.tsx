@@ -1,14 +1,10 @@
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { keysBlocked } from '../../../shared/ui/keys'
 import type { Decision, Verdict } from '../model'
 import './feed.css'
 
 const send = (project: string, id: number, verdict: Verdict) =>
   window.api.invoke('decisions:verdict', project, id, verdict).catch(console.error)
-
-// Keys typed into a text field belong to the field.
-const typesText = (t: EventTarget | null) =>
-  t instanceof HTMLElement &&
-  (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))
 
 const CLOCK = 'M12 6v6l4 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0z'
 
@@ -244,7 +240,7 @@ export function Feed({
   useLayoutEffect(() => {
     if (!first || commenting) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey || typesText(e.target)) return
+      if (e.metaKey || e.ctrlKey || e.altKey || keysBlocked(e)) return
       const k = e.key.toLowerCase()
       if (k === 'c') {
         e.preventDefault()
