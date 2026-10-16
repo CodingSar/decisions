@@ -89,3 +89,9 @@ Feature: Decision map
     Then the map says "No Decision map yet" with a build button
     When I click the build button
     Then a Run starts with a prompt to curate the architecture
+
+  Scenario: The map appears once groma/ is written
+    Given the Project "bare" has no "groma/" folder
+    Then the map says "No Decision map yet" with a build button
+    When "bare" gets a "groma/" with the Container "main-process" and the Components "decision-store" and "decision-ipc"
+    Then the mini map shows "main-process" without its Components

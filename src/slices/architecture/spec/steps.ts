@@ -12,15 +12,28 @@ const touch = (page: Page, dir: string) =>
 const element = (type: string, id: string, parent?: string) =>
   `---\ntype: C4 ${type}\ntitle: ${id}\ngroma:\n  id: ${id}\n${parent ? `  parent: ${parent}\n` : ''}---\n`
 
+// One Container with its Components under the Project's `dir`.
+function writeContainer(project: string, dir: string, container: string, ids: string[]) {
+  const root = join(project, dir, 'containers', container)
+  mkdirSync(join(root, 'components'), { recursive: true })
+  writeFileSync(join(root, 'container.md'), element('Container', container))
+  for (const id of ids)
+    writeFileSync(join(root, 'components', `${id}.md`), element('Component', id, container))
+}
+
 Given(
   'its {string} has the Container {string} with the Components {string} and {string}',
   async ({ page, folder }, dir: string, container: string, a: string, b: string) => {
-    const root = join(folder('api-service'), dir, 'containers', container)
-    mkdirSync(join(root, 'components'), { recursive: true })
-    writeFileSync(join(root, 'container.md'), element('Container', container))
-    for (const id of [a, b])
-      writeFileSync(join(root, 'components', `${id}.md`), element('Component', id, container))
+    writeContainer(folder('api-service'), dir, container, [a, b])
     await touch(page, folder('api-service'))
+  },
+)
+
+// Written as an agent would, with no nudge: the app has to notice on its own.
+When(
+  '{string} gets a {string} with the Container {string} and the Components {string} and {string}',
+  async ({ folder }, name: string, dir: string, container: string, a: string, b: string) => {
+    writeContainer(folder(name), dir, container, [a, b])
   },
 )
 

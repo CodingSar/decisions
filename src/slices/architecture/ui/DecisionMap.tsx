@@ -3,7 +3,8 @@ import type { Decision } from '../../decisions'
 import { childrenOf, edges, type Heat, heat, level, type Model, type Node } from '../model'
 import './map.css'
 
-// The Model, refetched when main reports a change (agents curate groma/ while Runs go).
+// The Model, refetched when main reports a change: Decisions, or any file in the Project
+// (agents curate groma/ while Runs go; the Project watcher carries no path, reading is cheap).
 function useModel(project: string) {
   const [model, setModel] = useState<Model | null>()
   useEffect(() => {
@@ -16,15 +17,20 @@ function useModel(project: string) {
         .catch(() => live && setModel(null))
     setModel(undefined)
     load()
-    const off = window.api.on('decisions:changed', (p: string) => {
+    window.api.invoke('files:watch', project) // the file tree may be unmounted (sidebar hidden)
+    const changed = (p: string) => {
       if (p !== project) return
       clearTimeout(timer)
       timer = setTimeout(load, 200)
-    })
+    }
+    const offs = [
+      window.api.on('decisions:changed', changed),
+      window.api.on('files:changed', changed),
+    ]
     return () => {
       live = false
       clearTimeout(timer)
-      off()
+      for (const off of offs) off()
     }
   }, [project])
   return model
