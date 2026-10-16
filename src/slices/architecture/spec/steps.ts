@@ -256,12 +256,19 @@ Then('{string} and {string} stand out', async ({ page }, a: string, b: string) =
   await expect(node(page, b)).not.toHaveAttribute('data-dim', /.*/)
 })
 
-Then('the map shows an empty state with a curate button', async ({ page }) => {
-  await expect(mini(page).getByRole('button', { name: 'Curate architecture' })).toBeVisible()
+Then('the listed row shows {string} as plain text', async ({ page }, text: string) => {
+  const tip = mini(page).getByRole('tooltip')
+  await expect(tip.locator('li').first()).toContainText(text)
+  await expect(tip.getByRole('button')).toHaveCount(0)
 })
 
-When('I click the curate button', async ({ page }) => {
-  await mini(page).getByRole('button', { name: 'Curate architecture' }).click()
+Then('the map says {string} with a build button', async ({ page }, text: string) => {
+  await expect(mini(page)).toContainText(text)
+  await expect(mini(page).getByRole('button', { name: 'Build the map with a Run' })).toBeVisible()
+})
+
+When('I click the build button', async ({ page }) => {
+  await mini(page).getByRole('button', { name: 'Build the map with a Run' }).click()
 })
 
 Then('a Run starts with a prompt to curate the architecture', async ({ page }) => {

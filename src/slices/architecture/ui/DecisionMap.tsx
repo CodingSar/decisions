@@ -301,7 +301,7 @@ function Graph({
   )
 }
 
-// A short list of Decisions; a click goes to the Decision in its view.
+// A short list of Decisions; a click goes to the Decision in its view (plain rows without onOpen).
 function Rows({
   ids,
   decisions,
@@ -315,14 +315,24 @@ function Rows({
     <ul>
       {ids.map((id) => {
         const d = decisions.find((x) => x.id === id)
-        return d ? (
+        if (!d) return null
+        const row = (
+          <>
+            <b>D{id}</b> <span>{d.question}</span>
+            <small>{d.status}</small>
+          </>
+        )
+        return (
           <li key={id}>
-            <button type="button" disabled={!onOpen} onClick={() => onOpen?.(d)}>
-              <b>D{id}</b> <span>{d.question}</span>
-              <small>{d.status}</small>
-            </button>
+            {onOpen ? (
+              <button type="button" onClick={() => onOpen(d)}>
+                {row}
+              </button>
+            ) : (
+              <span className="row">{row}</span>
+            )}
           </li>
-        ) : null
+        )
       })}
     </ul>
   )
@@ -369,11 +379,11 @@ export function DecisionMap({
   if (model === null)
     return (
       <section className="map empty" aria-label="Decision map">
-        <p>No architecture model</p>
+        <p>No Decision map yet</p>
         <button
           type="button"
-          aria-label="Curate architecture"
-          title="Curate architecture"
+          aria-label="Build the map with a Run"
+          title="Build the map with a Run"
           onClick={() => window.api.invoke('architecture:curate')}
         >
           <Svg d={CURATE} size={16} />
