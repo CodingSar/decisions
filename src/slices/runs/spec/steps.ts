@@ -89,9 +89,10 @@ Given('Run {string} is stopped', async ({ page }, id: string) => {
   await expect(runButton(page, id, 'stopped')).toBeVisible()
 })
 
+// Neither the app's PATH nor the login shell knows `claude`.
 Given('the {string} CLI is not found', async ({ page }, _cli: string) => {
   await page.evaluate(() => window.api.invoke('agent:use-runtime', 'claude-code'))
-  await page.evaluate(() => window.api.invoke('agent:hide-claude'))
+  await page.evaluate(() => window.api.invoke('agent:env', { PATH: '', SHELL: '/bin/false' }))
 })
 
 When('I select {string} in the sidebar', async ({ page }, id: string) => {
