@@ -54,9 +54,11 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 // Enter sends, Esc cancels; an empty comment is ignored.
 function CommentBox({
+  hint,
   onSend,
   onCancel,
 }: {
+  hint: string
   onSend: (text: string) => void
   onCancel: () => void
 }) {
@@ -66,6 +68,7 @@ function CommentBox({
     <input
       ref={ref}
       aria-label="Comment"
+      placeholder={hint}
       onKeyDown={(e) => {
         if (e.key === 'Escape') onCancel()
         else if (e.key === 'Enter' && e.currentTarget.value.trim())
@@ -161,6 +164,7 @@ function Card({
             <button
               type="button"
               aria-label={`${i + 1} ${o}`}
+              title={`Choose option ${i + 1} (${i + 1})`}
               onClick={() => send(project, d.id, { option: i })}
             >
               <span>{i + 1}</span>
@@ -175,6 +179,7 @@ function Card({
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
+                <title>Recommended</title>
                 <path d="M12 2l3 7 7 .6-5.3 4.7 1.6 7.2L12 17.8 5.7 21.5l1.6-7.2L2 9.6 9 9z" />
               </svg>
             )}
@@ -183,7 +188,7 @@ function Card({
       </ul>
       <div className="actions">
         <Act
-          label="Like (L)"
+          label="Like: take the recommended option (L)"
           name="Like"
           d={LIKE}
           solid
@@ -212,19 +217,25 @@ function Card({
 export function Feed({
   project,
   pending,
+  runIds,
+  focus,
   newestFirst = false,
   onShowRun,
 }: {
   project: string
   pending: Decision[]
+  /** Runs that still exist: only their Decisions offer Show in Run. */
+  runIds: string[]
+  /** The card focused at first, e.g. a fresh overturn copy. */
+  focus?: number
   newestFirst?: boolean
   /** Jump to the terminal line where the Decision was raised. */
   onShowRun?: (d: Decision) => void
 }) {
-  const [focusId, setFocusId] = useState<number>()
+  const [focusId, setFocusId] = useState(focus)
   const [commenting, setCommenting] = useState(false)
   const first = pending.find((d) => d.id === focusId) ?? pending[0]
-  const oldest = pending[0]
+  const hasRun = (d: Decision) => d.run !== undefined && runIds.includes(d.run)
 
   // An open comment box pauses every timeout.
   useEffect(() => {
@@ -236,11 +247,11 @@ export function Feed({
   // key pressed as soon as it shows acts on it instead of being lost or undone by the reset.
   // biome-ignore lint/correctness/useExhaustiveDependencies: only a change of card resets it
   useLayoutEffect(() => setCommenting(first?.supersedes !== undefined), [first?.id])
-  // With nothing focused, focus lands on the oldest card, so the ring always shows where keys act.
+  // With nothing focused, focus lands on the first card, so the ring always shows where keys act.
   useEffect(() => {
-    if (oldest && document.activeElement === document.body)
-      document.querySelector<HTMLElement>(`[aria-label="D${oldest.id}"]`)?.focus()
-  }, [oldest])
+    if (first && document.activeElement === document.body)
+      document.querySelector<HTMLElement>(`[aria-label="D${first.id}"]`)?.focus()
+  }, [first])
   useLayoutEffect(() => {
     if (!first || commenting) return
     const onKey = (e: KeyboardEvent) => {
@@ -251,7 +262,7 @@ export function Feed({
         setCommenting(true)
         return
       }
-      if (k === 'j') return first.run && onShowRun?.(first)
+      if (k === 'j') return first.run && runIds.includes(first.run) && onShowRun?.(first)
       const option = Number(k) - 1
       const verdict: Verdict | undefined =
         k === 'l'
@@ -265,10 +276,15 @@ export function Feed({
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [project, first, commenting, onShowRun])
+  }, [project, first, commenting, onShowRun, runIds])
 
   return (
     <section className="cards" aria-label="Feed" data-pane="feed" tabIndex={-1}>
+      {!pending.length && (
+        <p className="empty">
+          No pending Decisions. Start a Run and give it a task; its questions land here.
+        </p>
+      )}
       {(newestFirst ? [...pending].reverse() : pending).map((d) => (
         <Card
           key={d.id}
@@ -281,10 +297,15 @@ export function Feed({
             setFocusId(d.id)
             setCommenting(true)
           }}
-          onShowRun={() => onShowRun?.(d)}
+          onShowRun={hasRun(d) ? () => onShowRun?.(d) : undefined}
           box={
             commenting && d === first ? (
               <CommentBox
+                hint={
+                  d.supersedes
+                    ? 'Why overturn? · ↵ sends · Esc discards'
+                    : 'Your direction · ↵ sends · Esc cancels'
+                }
                 onSend={(comment) => send(project, d.id, { comment })}
                 onCancel={() =>
                   d.supersedes

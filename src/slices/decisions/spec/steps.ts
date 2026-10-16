@@ -85,11 +85,37 @@ Given('a pending Decision', async ({ page }) => {
   await expect(page.getByRole('article')).toHaveCount(1)
 })
 
-When('I press C, type {string} and press Enter', async ({ page }, text: string) => {
+When('I type {string} and press Enter', async ({ page }, text: string) => {
   typed.set(page, text)
-  await page.keyboard.press('c')
   await page.keyboard.type(text)
   await page.keyboard.press('Enter')
+})
+
+Then('the comment box hints {string}', async ({ page }, hint: string) => {
+  await expect(page.getByRole('textbox', { name: 'Comment' })).toHaveAttribute('placeholder', hint)
+})
+
+Then('option {int} offers {string}', async ({ page }, n: number, title: string) => {
+  await expect(
+    page.getByRole('article').getByRole('button', { name: new RegExp(`^${n} `) }),
+  ).toHaveAttribute('title', title)
+})
+
+Then('the card offers no {string}', async ({ page }, name: string) => {
+  await expect(page.getByRole('article')).toHaveCount(1)
+  await expect(page.getByRole('article').getByRole('button', { name })).toHaveCount(0)
+})
+
+// Empty states; the Feed is the view already shown.
+Then('the {word} says {string}', async ({ page }, view: string, text: string) => {
+  if (view !== 'Feed') await page.getByRole('button', { name: view }).click()
+  await expect(page.getByRole('region', { name: view })).toHaveText(text)
+})
+
+Then('History tags {word} {string}', async ({ page }, id: string, tag: string) => {
+  await page.getByRole('button', { name: 'History' }).click()
+  const rows = page.getByRole('region', { name: 'History' }).getByRole('listitem')
+  await expect(rows.filter({ has: page.getByText(id, { exact: true }) })).toContainText(tag)
 })
 
 When('I press C and then Esc', async ({ page }) => {
@@ -367,6 +393,36 @@ Then('D5 shows struck through with {string}', async ({ page }, text: string) => 
 
 Then('{string} has {string}', async ({ folder }, file: string, line: string) => {
   expect(readFileSync(join(folder('api-service'), file), 'utf8')).toContain(line)
+})
+
+When('I overturn D5 again', async ({ page, folder }) => {
+  await page.getByRole('button', { name: 'Review' }).click()
+  await expect(page.getByRole('button', { name: 'Overturn D5' })).toBeDisabled()
+  // The guard in main, past the disabled button.
+  await page.evaluate((p) => window.api.invoke('decisions:overturn', p, 5), folder('api-service'))
+})
+
+Then('only D6 is pending and Overturn D5 is disabled', async ({ page, folder }) => {
+  await expect(page.getByRole('button', { name: 'Overturn D5' })).toHaveAttribute(
+    'title',
+    'Overturn pending',
+  )
+  expect(existsSync(join(folder('api-service'), '.decisions', 'D7.md'))).toBe(false)
+  await page.getByRole('button', { name: 'Feed' }).click()
+  await expect(page.getByRole('article')).toHaveCount(1)
+})
+
+Given('D1 is pending', async ({ page, folder }) => {
+  seed(folder, { id: 1, status: 'pending', asked: Date.now(), verdict: undefined })
+  await page.evaluate((p) => window.api.invoke('decisions:touch', p), folder('api-service'))
+  await expect(page.getByRole('article', { name: 'D1' })).toBeVisible()
+})
+
+Then('D6 is focused with a comment box', async ({ page }) => {
+  const card = page.getByRole('article', { name: 'D6' })
+  await expect(card).toHaveAttribute('aria-current', 'true')
+  await expect(card.getByRole('textbox', { name: 'Comment' })).toBeVisible()
+  await expect(page.getByRole('article', { name: 'D1' })).toHaveAttribute('aria-current', 'false')
 })
 
 Given('I started overturning D5', async ({ page }) => {

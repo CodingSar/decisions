@@ -85,3 +85,8 @@ Feature: Terminal
     And I press "Show in Run" on the card
     Then "R1" is selected in the sidebar
     And the terminal is scrolled so the Decision marker of "D1" is in view
+
+  Scenario: No jump when the Run is gone
+    Given Run "R1" is running with a pending Decision
+    When I type "exit" in the terminal
+    Then the card offers no "Show in Run"

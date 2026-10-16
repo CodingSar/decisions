@@ -36,3 +36,9 @@ Feature: Auto-resolve a Decision
     Given Review has an unseen Auto-resolved Decision D1
     When I accept D1
     Then the Review badge decreases
+    And History tags D1 "auto · accepted"
+
+  Scenario: Empty Review and History say what lands there
+    Then the Review says "Nothing to review. Auto-resolved Decisions land here."
+    And the History says "No Decisions yet."
+

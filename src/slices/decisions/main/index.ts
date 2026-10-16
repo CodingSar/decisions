@@ -76,14 +76,16 @@ export function registerDecisions(
     write(project, { ...d, accepted: true })
     changed(project)
   })
-  // Overturn: a pending copy linked to the old Decision; nothing reaches any agent.
+  // Overturn: a pending copy linked to the old Decision; nothing reaches any agent. Returns the copy's id.
   ipcMain.handle('decisions:overturn', (_e, project: string, id: number) => {
     const all = readAll(project)
     const old = all.find((x) => x.id === id && x.status === 'answered')
     if (!old || supersededBy(all, id)) return
+    if (all.some((x) => x.supersedes === id && x.status === 'pending')) return
     const { id: _, by, reason, accepted, verdict, answered, ...copy } = old
-    create(project, { ...copy, status: 'pending', asked: Date.now(), supersedes: id })
+    const d = create(project, { ...copy, status: 'pending', asked: Date.now(), supersedes: id })
     changed(project)
+    return d.id
   })
   // Cancelling an overturn drops its pending Decision.
   ipcMain.handle('decisions:discard', (_e, project: string, id: number) => {

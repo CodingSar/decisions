@@ -54,6 +54,12 @@ function Workspace({
   }
   const [settings, setSettings] = useState(false)
   const [newestFirst, setNewestFirst] = useState(false)
+  // An overturn opens the Feed on its new copy.
+  const [focus, setFocus] = useState<number>()
+  const overturned = (id: number) => {
+    setFocus(id)
+    setView('feed')
+  }
   const runs = useRuns(active)
   const all = useAll(active)
   useFocus(paths, active)
@@ -187,6 +193,8 @@ function Workspace({
           <Feed
             project={active}
             pending={pending}
+            runIds={runs.runs.map((r) => r.id)}
+            focus={focus}
             newestFirst={newestFirst}
             onShowRun={(d) => {
               if (!d.run) return
@@ -199,9 +207,9 @@ function Workspace({
         ) : view === 'files' ? (
           <FilesView project={active} path={file} run={running} onOpen={openFile} />
         ) : view === 'review' ? (
-          <Review project={active} onOverturn={() => setView('feed')} />
+          <Review project={active} onOverturn={overturned} />
         ) : (
-          <History project={active} onOverturn={() => setView('feed')} />
+          <History project={active} onOverturn={overturned} />
         )}
       </main>
       <Pane side="terminal" state={layout.terminal} onChange={(p) => update('terminal', p)}>
