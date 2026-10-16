@@ -44,16 +44,20 @@ export function registerFiles(win: BrowserWindow) {
     if (!hit || !existsSync(hit.file)) return
     return readFileSync(hit.file, 'utf8')
   })
+  // Resolves to `{ ok: true }` or `{ ok: false, reason }`; the reason is shown to the human.
   ipcMain.handle('files:write', (_e, project: string, rel: string, text: string) => {
+    const refuse = (reason: string) => ({ ok: false, reason })
     const hit = inside(project, rel)
+    if (!hit) return refuse('outside the project')
     // `.decisions/` is owned by the app.
-    const owned = hit && resolve(hit.root, '.decisions') + sep
-    if (!hit || hit.file.startsWith(owned as string) || !existsSync(hit.file)) return { ok: false }
+    if (hit.file.startsWith(resolve(hit.root, '.decisions') + sep))
+      return refuse('Decisions files are read-only')
+    if (!existsSync(hit.file)) return refuse('file is gone')
     try {
       writeFileSync(hit.file, text)
       return { ok: true }
-    } catch {
-      return { ok: false }
+    } catch (e) {
+      return refuse((e as Error).message.trim())
     }
   })
   ipcMain.handle('files:open-external', (_e, url: string) => {

@@ -8,7 +8,15 @@ Feature: Edit files
   Scenario: Edits save automatically
     When I open "src/app.ts"
     And I change it
-    Then the file on disk has my change
+    Then the status says "Saved"
+    And the file on disk has my change
+
+  Scenario: A refused write says why
+    When I open "src/app.ts"
+    And I change it
+    And the file vanishes from disk
+    Then the status says "Save failed: file is gone"
+    And the status is an error
 
   Scenario: Read-only while a Run is active
     Given the Run "R2" is running

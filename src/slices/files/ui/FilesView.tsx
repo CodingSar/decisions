@@ -17,6 +17,7 @@ function resolveLink(from: string, href: string) {
 }
 
 const SAVE_DELAY = 500
+const SAVED_FOR = 1500
 
 export function FilesView({
   project,
@@ -34,15 +35,22 @@ export function FilesView({
   const [text, setText] = useState<string | null>()
   const [source, setSource] = useState(false)
   const [unlocked, setUnlocked] = useState(false)
-  const [failed, setFailed] = useState(false)
+  // "Saved" shows briefly; a failure stays until the next successful write.
+  const [status, setStatus] = useState<{ state: 'saved' | 'error'; text: string }>()
+  const statusTimer = useRef<NodeJS.Timeout | undefined>(undefined)
   // Debounced save, keyed by the file it belongs to.
   const pending = useRef<
     { project: string; path: string; value: string; timer: NodeJS.Timeout } | undefined
   >(undefined)
 
-  const fail = () => {
-    setFailed(true)
-    setTimeout(() => setFailed(false), 3000)
+  const saved = () => {
+    setStatus({ state: 'saved', text: 'Saved' })
+    clearTimeout(statusTimer.current)
+    statusTimer.current = setTimeout(() => setStatus(undefined), SAVED_FOR)
+  }
+  const fail = (reason: string) => {
+    clearTimeout(statusTimer.current)
+    setStatus({ state: 'error', text: `Save failed: ${reason}` })
   }
 
   const flush = () => {
@@ -53,9 +61,11 @@ export function FilesView({
     window.api
       .invoke('files:write', p.project, p.path, p.value)
       .then((r) => {
-        if (!(r as { ok?: boolean } | undefined)?.ok) fail()
+        const res = r as { ok: boolean; reason?: string } | undefined
+        if (res?.ok) saved()
+        else fail(res?.reason ?? 'unknown error')
       })
-      .catch(fail)
+      .catch((e: Error) => fail(e.message))
   }
 
   // Closing the window inside the debounce must not lose the edit.
@@ -109,6 +119,11 @@ export function FilesView({
     <section aria-label="Files view" className="files-view">
       <div className="file-head">
         <h2>{path}</h2>
+        {status && (
+          <span role="status" className="save-state" data-state={status.state}>
+            {status.text}
+          </span>
+        )}
         {isMarkdown(path) && (
           <>
             <button
@@ -151,11 +166,6 @@ export function FilesView({
           >
             <Glyph d={PENCIL} />
           </button>
-        </div>
-      )}
-      {failed && (
-        <div role="status" className="file-lock">
-          <span>Save failed</span>
         </div>
       )}
       {text === undefined ? null : text === null ? (
