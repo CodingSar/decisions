@@ -30,8 +30,15 @@ export function registerProjects(
   }
 
   ipcMain.handle('projects:list', state)
-  ipcMain.handle('projects:pick', async () => {
-    const r = await dialog.showOpenDialog(win, { properties: ['openDirectory', 'createDirectory'] })
+  ipcMain.handle('projects:pick', async (_e, setup = false) => {
+    const r = await dialog.showOpenDialog(win, {
+      title: 'Choose the project folder',
+      buttonLabel: 'Open',
+      message: setup
+        ? 'An empty folder for the new project'
+        : 'A folder with your code; Decisions go to .decisions/',
+      properties: ['openDirectory', 'createDirectory'],
+    })
     return r.canceled ? undefined : r.filePaths[0]
   })
   ipcMain.handle('projects:open', (_e, folder: string, setup = false) => {

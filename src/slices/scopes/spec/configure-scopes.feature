@@ -43,6 +43,14 @@ Feature: Configure Decision Scopes
     When I relaunch the app
     Then "Performance" is still not mine
 
+  Scenario: Keys behind the Settings modal do nothing
+    Given an agent requests a "Security" Decision
+    And it appears in the Feed
+    When I open the project settings
+    And I press L
+    And I press N
+    Then no Verdict was sent and no Run was created
+
   Scenario: Unknown Scope counts as In-Scope
     When an agent requests a Decision with the Scope "Legal"
     Then it appears in the Feed

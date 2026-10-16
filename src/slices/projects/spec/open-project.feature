@@ -41,3 +41,4 @@ Feature: Open a Project
     Given the Project "old" was open and its folder is deleted
     When I relaunch the app
     Then the tab "old" is shown as unavailable with a close icon
+    And its tooltip says the folder was not found

@@ -16,7 +16,10 @@ function onPath(cmd: string) {
 // Runs the interactive `claude` CLI in a pty, wired to the app's request_decision MCP server.
 export const claudeCodeRuntime: AgentRuntime = {
   start({ cwd, mcpUrl, prompt, onOutput, onExit }) {
-    if (!onPath('claude')) throw new Error('"claude" CLI not found on PATH')
+    if (!onPath('claude'))
+      throw new Error(
+        '"claude" CLI not found on PATH. Install Claude Code (npm i -g @anthropic-ai/claude-code), then press Start (S).',
+      )
     const mcpConfig = JSON.stringify({ mcpServers: { decisions: { type: 'http', url: mcpUrl } } })
     // Prompt first: --mcp-config is variadic and would swallow a trailing prompt as a config path.
     const pty = spawn('claude', [...(prompt ? [prompt] : []), '--mcp-config', mcpConfig], {

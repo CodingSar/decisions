@@ -61,13 +61,20 @@ Feature: Terminal
     When I press Escape in the find bar
     Then the find bar is gone
 
+  Scenario: Find icon opens search
+    Given Run "R1" is running
+    When I press the Find icon
+    And I search for "haystack"
+    Then the find bar shows "No matches"
+
   Scenario: Run shortcuts work from the terminal pane
+    Given Run "R1" exists
     When I focus the terminal pane and press "n"
-    Then the sidebar lists Run "R1" as idle
+    Then the sidebar lists Run "R2" as idle
     When I focus the terminal pane and press "s"
-    Then the sidebar lists Run "R1" as running
+    Then the sidebar lists Run "R2" as running
     When I focus the terminal pane and press "x"
-    Then "R1" is marked stopped
+    Then "R2" is marked stopped
 
   Scenario: Hide and show the terminal with the keyboard
     Given Run "R1" is running

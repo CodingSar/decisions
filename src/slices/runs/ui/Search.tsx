@@ -62,7 +62,11 @@ export function Search({ live, onClose }: { live: Live; onClose: () => void }) {
         }}
       />
       <span className="count" aria-live="polite">
-        {q && hits ? (hits.resultCount ? `${hits.resultIndex + 1}/${hits.resultCount}` : '0') : ''}
+        {q && hits
+          ? hits.resultCount
+            ? `${hits.resultIndex + 1}/${hits.resultCount}`
+            : 'No matches'
+          : ''}
       </span>
       <button type="button" aria-label="Previous match" title="Previous match (⇧↵)" onClick={prev}>
         <Arrow up />

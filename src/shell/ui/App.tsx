@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { keysBlocked } from '../../shared/ui/keys'
 import { DecisionMap } from '../../slices/architecture'
 import { Feed, History, Review, ReviewBadge, useAll, usePending } from '../../slices/decisions'
 import { FilesView, FileTree } from '../../slices/files'
@@ -72,29 +73,23 @@ function Workspace({
     const onKey = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase()
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
-        if (k === 'j') {
+        if (k === 'j' || k === 'b') {
           e.preventDefault()
-          update('terminal', (s) => ({ hidden: !s.hidden }))
+          update(k === 'j' ? 'terminal' : 'sidebar', (s) => ({ hidden: !s.hidden }))
         } else if (k === 'f' && unit() === 'terminal') {
           e.preventDefault()
           window.dispatchEvent(new Event('terminal:find'))
         }
         return
       }
-      if (
-        e.metaKey ||
-        e.ctrlKey ||
-        e.altKey ||
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      )
-        return
+      if (e.metaKey || e.ctrlKey || e.altKey || keysBlocked(e)) return
       if (e.key === ',') return setSettings((o) => !o)
       const u = unit()
       const onRuns = u === 'terminal' || u === 'sidebar'
       if (onRuns && 'nsx'.includes(k)) {
         const { current } = runs
-        if (k === 'n') runs.create()
+        // With no Run yet, N starts one, as the placeholder promises.
+        if (k === 'n') runs.runs.length === 0 ? runs.run() : runs.create()
         else if (k === 's' && current && current.status !== 'running')
           window.api.invoke('runs:start', current.id).catch(console.error)
         else if (k === 'x' && current?.status === 'running')
