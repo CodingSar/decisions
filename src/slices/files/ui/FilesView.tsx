@@ -110,7 +110,12 @@ export function FilesView({
     pending.current = { project, path, value, timer: setTimeout(flush, SAVE_DELAY) }
   }
 
-  if (!path) return <section aria-label="Files view" />
+  if (!path)
+    return (
+      <section aria-label="Files view" className="files-view">
+        <p className="empty">No file open. Pick one in the sidebar.</p>
+      </section>
+    )
   const rendered = isMarkdown(path) && !source
   const decisions = path.startsWith('.decisions/')
   const locked = !decisions && !!run && !unlocked

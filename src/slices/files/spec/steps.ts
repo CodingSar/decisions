@@ -214,3 +214,11 @@ Then('{string} on disk is still empty', async ({ folder }, path: string) => {
   await new Promise((r) => setTimeout(r, 700)) // outlast the 500ms save debounce
   expect(readFileSync(join(folder('api-service'), path), 'utf8')).toBe('')
 })
+
+When('I click the Files tab', async ({ page }) => {
+  await page.locator('.views').getByRole('button', { name: 'Files' }).click()
+})
+
+Then('the Feed is shown', async ({ page }) => {
+  await expect(page.getByRole('region', { name: 'Feed' })).toBeVisible()
+})

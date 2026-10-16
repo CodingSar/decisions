@@ -61,3 +61,14 @@ Feature: Browse files
     And I collapse "docs"
     And I expand "docs"
     Then the tree shows "docs/deep/note.md"
+
+  Scenario: The Files tab returns to the open file
+    When I click "docs/use-cases.md" in the tree
+    And I press F
+    Then the Feed is shown
+    When I press Cmd+Shift+E
+    Then the Files view shows "docs/use-cases.md"
+
+  Scenario: The Files tab with nothing open
+    When I click the Files tab
+    Then the Files view says "No file open. Pick one in the sidebar."
