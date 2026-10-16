@@ -75,6 +75,8 @@ Feature: Terminal
     Then the sidebar lists Run "R2" as running
     When I focus the terminal pane and press "x"
     Then "R2" is marked stopped
+    When I focus the terminal pane and press "x"
+    Then the sidebar does not list "R2"
 
   Scenario: Hide and show the terminal with the keyboard
     Given Run "R1" is running
@@ -93,7 +95,16 @@ Feature: Terminal
     Then "R1" is selected in the sidebar
     And the terminal is scrolled so the Decision marker of "D1" is in view
 
+  Scenario: Exit keeps the Run as stopped with its scrollback
+    Given Run "R1" is running
+    When I type "hello" in the terminal
+    And I type "exit" in the terminal
+    Then "R1" is marked stopped
+    And the terminal shows "R1" with "hello"
+    And the terminal shows its scrollback read-only
+
   Scenario: No jump when the Run is gone
     Given Run "R1" is running with a pending Decision
     When I type "exit" in the terminal
+    And I press Close
     Then the card offers no "Show in Run"

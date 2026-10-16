@@ -68,9 +68,9 @@ Feature: Start a Run
     When I select it
     Then the terminal shows its scrollback read-only
 
-  Scenario: Exiting the session ends the Run
-    Given Run "R1" is running
-    When I type "exit" in the terminal
+  Scenario: Close removes a stopped Run
+    Given Run "R1" is stopped
+    When I press Close
     Then the terminal shows the placeholder "No Run yet"
     And the sidebar does not list "R1"
 
@@ -78,6 +78,7 @@ Feature: Start a Run
     Given Runs "R1" and "R2" are running and "R2" is selected
     When I select "R1" in the sidebar
     And I type "exit" in the terminal
+    And I press Close
     And I create a new Run and press start
     Then the sidebar lists "R2" and "R3" as running
 

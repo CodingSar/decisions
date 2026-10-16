@@ -92,8 +92,11 @@ function Workspace({
         if (k === 'n') runs.runs.length === 0 ? runs.run() : runs.create()
         else if (k === 's' && current && current.status !== 'running')
           window.api.invoke('runs:start', current.id).catch(console.error)
-        else if (k === 'x' && current?.status === 'running')
-          window.api.invoke('runs:stop', current.id).catch(console.error)
+        // X stops a running Run and closes any other.
+        else if (k === 'x' && current)
+          window.api
+            .invoke(current.status === 'running' ? 'runs:stop' : 'runs:close', current.id)
+            .catch(console.error)
         return
       }
       if (k === 's') return setNewestFirst((o) => !o)
