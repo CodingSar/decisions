@@ -48,6 +48,11 @@ export const fakeRuntime: AgentRuntime = {
     let line = ''
     return {
       write(data) {
+        // Shift+Enter arrives as ESC CR: a newline inside the prompt.
+        if (data === '\x1b\r') {
+          out('⏎\r\n')
+          return
+        }
         for (const ch of data) {
           if (ch === '\r') {
             out('\r\n')

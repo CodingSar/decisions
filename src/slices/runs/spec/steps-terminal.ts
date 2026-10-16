@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test'
-import { Then } from '../../../shared/testing/fixtures'
+import { Then, When } from '../../../shared/testing/fixtures'
 
 const host = (page: import('@playwright/test').Page) => page.getByRole('log', { name: 'Terminal' })
 
@@ -72,4 +72,46 @@ Then('the terminal header shows {int}% progress', async ({ page }, pct: number) 
     'aria-valuenow',
     String(pct),
   )
+})
+
+When('I press {string} in the terminal', async ({ page }, key: string) => {
+  await host(page).click()
+  await page.keyboard.press(key)
+})
+
+When('I press {string}', async ({ page }, key: string) => {
+  await page.keyboard.press(key)
+})
+
+Then('the terminal shows the newline mark', async ({ page }) => {
+  await expect(host(page)).toContainText('⏎')
+})
+
+When('I search for {string}', async ({ page }, text: string) => {
+  await page.getByRole('searchbox', { name: 'Find in terminal' }).fill(text)
+})
+
+Then('the find bar shows {string}', async ({ page }, count: string) => {
+  await expect(page.locator('.term-search .count')).toHaveText(count)
+})
+
+When('I press Escape in the find bar', async ({ page }) => {
+  await page.getByRole('searchbox', { name: 'Find in terminal' }).press('Escape')
+})
+
+Then('the find bar is gone', async ({ page }) => {
+  await expect(page.getByRole('search')).toHaveCount(0)
+})
+
+When('I focus the terminal pane and press {string}', async ({ page }, key: string) => {
+  await page.getByRole('region', { name: 'Terminal pane' }).locator('.term-head').click()
+  await page.keyboard.press(key)
+})
+
+Then('the sidebar lists Run {string} as idle', async ({ page }, id: string) => {
+  await expect(page.getByRole('button', { name: `${id} · idle` })).toBeVisible()
+})
+
+Then('the terminal pane is hidden', async ({ page }) => {
+  await expect(page.getByRole('button', { name: 'Show terminal' })).toBeVisible()
 })

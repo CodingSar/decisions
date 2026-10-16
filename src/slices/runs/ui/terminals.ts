@@ -1,5 +1,8 @@
+import { ClipboardAddon } from '@xterm/addon-clipboard'
 import { FitAddon } from '@xterm/addon-fit'
+import { SearchAddon } from '@xterm/addon-search'
 import { Unicode11Addon } from '@xterm/addon-unicode11'
+import { WebLinksAddon } from '@xterm/addon-web-links'
 import { WebglAddon } from '@xterm/addon-webgl'
 import { Terminal as Xterm } from '@xterm/xterm'
 import type { Run } from '../model'
@@ -10,6 +13,7 @@ import { watchSignals } from './signals'
 export interface Live {
   term: Xterm
   fit: FitAddon
+  search: SearchAddon
   el: HTMLDivElement
   renderer: 'webgl' | 'dom'
   /** Chunks that arrived while the snapshot loads. */
@@ -27,6 +31,41 @@ declare global {
   }
 }
 window.terminals = { created: () => created }
+
+// The system clipboard lives in main (Electron `clipboard`), for OSC 52 and the copy/paste keys alike.
+const clipboard = {
+  readText: () => window.api.invoke('clipboard:read') as Promise<string>,
+  writeText: (_sel: unknown, text: string) =>
+    window.api.invoke('clipboard:write', text) as Promise<void>,
+}
+
+// Keys the app handles itself (search, hide, pane focus) and the ones a TUI needs verbatim.
+function keys(term: Xterm, id: string) {
+  term.attachCustomKeyEventHandler((e) => {
+    const mod = e.metaKey || e.ctrlKey
+    const k = e.key.toLowerCase()
+    const down = e.type === 'keydown'
+    // Claude Code: Shift+Enter is a newline inside the prompt.
+    if (e.key === 'Enter' && e.shiftKey && !mod && !e.altKey) {
+      if (down) {
+        e.preventDefault()
+        window.api.invoke('runs:input', id, '\x1b\r').catch(() => {})
+      }
+      return false
+    }
+    if (!mod || e.altKey) return true
+    if (e.shiftKey && k === 'c') {
+      if (down && term.hasSelection()) clipboard.writeText(undefined, term.getSelection())
+      return false
+    }
+    if (e.shiftKey && k === 'v') {
+      if (down) clipboard.readText().then((t) => t && term.paste(t))
+      return false
+    }
+    // Let the shell see these (focus.ts, App.tsx).
+    return !(!e.shiftKey && (k === 'f' || k === 'j' || /^[123]$/.test(k)))
+  })
+}
 
 // Each write is acknowledged so main can pause a Run that outruns the renderer.
 const write = (id: string, t: Live, data: string) =>
@@ -68,10 +107,15 @@ function create(id: string, host: HTMLElement): Live {
   const term = new Xterm({ ...OPTIONS, fontFamily: font(), theme: theme() })
   const fit = new FitAddon()
   term.loadAddon(fit)
+  const search = new SearchAddon()
+  term.loadAddon(search)
   term.loadAddon(new Unicode11Addon())
   term.unicode.activeVersion = '11'
+  term.loadAddon(new WebLinksAddon((_e, uri) => window.api.invoke('shell:open', uri)))
+  term.loadAddon(new ClipboardAddon(undefined, clipboard))
+  keys(term, id)
   term.open(el)
-  const t: Live = { term, fit, el, renderer: 'dom', buffer: [] }
+  const t: Live = { term, fit, search, el, renderer: 'dom', buffer: [] }
   render(t)
   created++
   term.onData((d) => {

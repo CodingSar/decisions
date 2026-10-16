@@ -65,8 +65,22 @@ function Workspace({
   useFocus(paths, active)
   const { layout, update } = useLayout()
 
+  // Plain letters act on the focused pane: N/S/X on Runs from the sidebar or terminal, views and sort elsewhere.
   useEffect(() => {
+    const unit = () =>
+      document.activeElement?.closest('[data-focus-unit]')?.getAttribute('data-focus-unit')
     const onKey = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase()
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+        if (k === 'j') {
+          e.preventDefault()
+          update('terminal', (s) => ({ hidden: !s.hidden }))
+        } else if (k === 'f' && unit() === 'terminal') {
+          e.preventDefault()
+          window.dispatchEvent(new Event('terminal:find'))
+        }
+        return
+      }
       if (
         e.metaKey ||
         e.ctrlKey ||
@@ -76,13 +90,23 @@ function Workspace({
       )
         return
       if (e.key === ',') return setSettings((o) => !o)
-      if (e.key.toLowerCase() === 's') return setNewestFirst((o) => !o)
-      const v = VIEWS.find((x) => x.key === e.key.toLowerCase())
+      const u = unit()
+      if (u === 'terminal' || u === 'sidebar') {
+        const { current } = runs
+        if (k === 'n') runs.create()
+        else if (k === 's' && current && current.status !== 'running')
+          window.api.invoke('runs:start', current.id).catch(console.error)
+        else if (k === 'x' && current?.status === 'running')
+          window.api.invoke('runs:stop', current.id).catch(console.error)
+        return
+      }
+      if (k === 's') return setNewestFirst((o) => !o)
+      const v = VIEWS.find((x) => x.key === k)
       if (v) setView(v.id)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [runs, update])
 
   // Scrollbars show only while their element scrolls.
   useEffect(() => {

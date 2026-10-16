@@ -46,3 +46,32 @@ Feature: Terminal
     Given Run "R1" is running
     When I type "progress 40" in the terminal
     Then the terminal header shows 40% progress
+
+  Scenario: Shift+Enter inserts a newline
+    Given Run "R1" is running
+    When I press "Shift+Enter" in the terminal
+    Then the terminal shows the newline mark
+
+  Scenario: Find in terminal
+    Given Run "R1" is running
+    When I type "needle" in the terminal
+    And I press "ControlOrMeta+f" in the terminal
+    And I search for "needle"
+    Then the find bar shows "1/1"
+    When I press Escape in the find bar
+    Then the find bar is gone
+
+  Scenario: Run shortcuts work from the terminal pane
+    When I focus the terminal pane and press "n"
+    Then the sidebar lists Run "R1" as idle
+    When I focus the terminal pane and press "s"
+    Then the sidebar lists Run "R1" as running
+    When I focus the terminal pane and press "x"
+    Then "R1" is marked stopped
+
+  Scenario: Hide and show the terminal with the keyboard
+    Given Run "R1" is running
+    When I press "ControlOrMeta+j" in the terminal
+    Then the terminal pane is hidden
+    When I press "ControlOrMeta+j"
+    Then the terminal shows "R1"

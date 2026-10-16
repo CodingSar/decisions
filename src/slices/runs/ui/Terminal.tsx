@@ -1,9 +1,18 @@
 import '@xterm/xterm/css/xterm.css'
-import { useEffect, useRef } from 'react'
-import { attach, detach } from './terminals'
+import { useEffect, useRef, useState } from 'react'
+import { Search } from './Search'
+import { attach, detach, type Live } from './terminals'
 
 export function Terminal({ runId, live }: { runId: string; live: boolean }) {
   const el = useRef<HTMLDivElement>(null)
+  const [finding, setFinding] = useState<Live>()
+
+  // ⌘F from the shell (App.tsx) opens find for the shown Run.
+  useEffect(() => {
+    const open = () => setFinding(attach(runId, el.current as HTMLDivElement))
+    window.addEventListener('terminal:find', open)
+    return () => window.removeEventListener('terminal:find', open)
+  }, [runId])
 
   useEffect(() => {
     const host = el.current as HTMLDivElement
@@ -40,6 +49,7 @@ export function Terminal({ runId, live }: { runId: string; live: boolean }) {
 
   return (
     <div className="term">
+      {finding && <Search live={finding} onClose={() => setFinding(undefined)} />}
       <div ref={el} className="term-host" role="log" aria-label="Terminal" data-readonly={!live} />
     </div>
   )

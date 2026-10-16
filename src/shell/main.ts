@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { app, BrowserWindow, ipcMain, Menu } from 'electron'
+import { app, BrowserWindow, clipboard, ipcMain, Menu, shell } from 'electron'
 import { type RuntimeKind, setRuntime, startMcpServer } from '../slices/agent-runtimes/main'
 import { componentIds, registerArchitecture } from '../slices/architecture/main'
 import { registerDecisions } from '../slices/decisions/main'
@@ -65,6 +65,12 @@ function createWindow(mcpUrl: string) {
   })
   registerScopes()
   registerLayout()
+  // Terminal tools: links open in the browser, the clipboard is the system one.
+  ipcMain.handle('shell:open', (_e, url: string) => {
+    if (/^https?:\/\//.test(url)) shell.openExternal(url)
+  })
+  ipcMain.handle('clipboard:read', () => clipboard.readText())
+  ipcMain.handle('clipboard:write', (_e, text: string) => clipboard.writeText(text))
   if (process.env.ELECTRON_RENDERER_URL) win.loadURL(process.env.ELECTRON_RENDERER_URL)
   else win.loadFile(join(import.meta.dirname, '../renderer/index.html'))
 }
