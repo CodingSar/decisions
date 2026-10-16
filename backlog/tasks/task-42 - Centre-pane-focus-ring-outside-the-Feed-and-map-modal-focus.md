@@ -1,9 +1,10 @@
 ---
 id: TASK-42
 title: Centre pane focus ring outside the Feed and map modal focus
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-10-16 20:27'
+updated_date: '2026-10-16 21:30'
 labels: []
 dependencies:
   - TASK-32
