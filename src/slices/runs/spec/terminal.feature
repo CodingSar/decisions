@@ -25,3 +25,24 @@ Feature: Terminal
     When I type "flood" in the terminal
     Then the terminal ends with "FLOOD-END"
     And the Run was paused at least once
+
+  Scenario: Run shows waiting state
+    Given Run "R1" is running
+    When I type "wait" in the terminal
+    Then the sidebar lists Run "R1" as waiting
+    And the terminal header shows the waiting chip
+    When I type "work" in the terminal
+    Then the sidebar lists Run "R1" as running
+
+  Scenario: Title names the Run
+    Given Run "R1" is running
+    When I type "title Fix tests" in the terminal
+    Then the sidebar and terminal header show "Fix tests" running
+    When I rename it to "Mine"
+    And I type "title Other" in the terminal
+    Then the sidebar and terminal header show "Mine" running
+
+  Scenario: Progress shows under the header
+    Given Run "R1" is running
+    When I type "progress 40" in the terminal
+    Then the terminal header shows 40% progress

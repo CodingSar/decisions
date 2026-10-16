@@ -53,3 +53,23 @@ Then('the terminal ends with {string}', async ({ page }, text: string) => {
 Then('the Run was paused at least once', async ({ page }) => {
   expect(await page.evaluate(() => window.api.invoke('runs:pauses', 'R1'))).toBeGreaterThan(0)
 })
+
+Then('the sidebar lists Run {string} as waiting', async ({ page }, id: string) => {
+  await expect(page.getByRole('button', { name: `${id} · waiting` })).toBeVisible()
+})
+
+Then('the terminal header shows the waiting chip', async ({ page }) => {
+  await expect(page.locator('.term-head .chip')).toHaveText('waiting')
+})
+
+Then('the sidebar and terminal header show {string} running', async ({ page }, name: string) => {
+  await expect(page.getByRole('button', { name: `${name} · running` })).toBeVisible()
+  await expect(page.getByRole('heading').getByText(name)).toBeVisible()
+})
+
+Then('the terminal header shows {int}% progress', async ({ page }, pct: number) => {
+  await expect(page.getByRole('progressbar', { name: 'Progress' })).toHaveAttribute(
+    'aria-valuenow',
+    String(pct),
+  )
+})

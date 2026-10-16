@@ -31,9 +31,17 @@ export const fakeRuntime: AgentRuntime = {
       }
       tick()
     }
+    const osc = (code: number, body: string) => out(`\x1b]${code};${body}\x07`)
     const run = (cmd: string) => {
-      if (cmd === 'exit') exit(0)
-      else if (cmd === 'flood') flood()
+      const [name, ...rest] = cmd.split(' ')
+      const arg = rest.join(' ')
+      if (name === 'exit') exit(0)
+      else if (name === 'flood') flood()
+      else if (name === 'wait' || name === 'work' || name === 'done')
+        osc(7501, name === 'wait' ? 'waiting' : name === 'work' ? 'working' : 'done')
+      else if (name === 'title') osc(0, arg)
+      else if (name === 'progress') osc(9, `4;1;${arg}`)
+      else if (name === 'bell') out('\x07')
     }
     out(`orchestrator session ${id}\r\n`)
     if (prompt) out(`${prompt}\r\n`)

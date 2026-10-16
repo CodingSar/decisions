@@ -1,8 +1,8 @@
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { type BrowserWindow, ipcMain } from 'electron'
+import { type BrowserWindow, ipcMain, Notification } from 'electron'
 import { type AgentSession, getRuntime } from '../../agent-runtimes/main'
-import type { Run } from '../model'
+import type { Run, Signal } from '../model'
 
 // Past Verdicts live in the folder; a Run that was not blocked on them reads them from there.
 const POINTER = 'Past Decisions are in .decisions/'
@@ -28,6 +28,10 @@ export function registerRuns(win: BrowserWindow, getCwd: () => string | undefine
   const flow = new Map<string, { unacked: number; paused: boolean; pauses: number }>()
   const cwds = new Map<string, string>()
   const pushRuns = () => win.webContents.send('runs:changed', runs)
+  const reset = (run: Run) => {
+    run.activity = undefined
+    run.progress = undefined
+  }
   const emit = (id: string, data: string) => {
     const s = scrollback.get(id) ?? { text: '', base: 0 }
     s.text += data
@@ -87,6 +91,7 @@ export function registerRuns(win: BrowserWindow, getCwd: () => string | undefine
     if (!run || !cwd || run.status === 'running') return
     const f = flow.get(id)
     if (f) Object.assign(f, { unacked: 0, paused: false })
+    reset(run)
     let session: AgentSession | undefined
     try {
       session = getRuntime().start({
@@ -108,6 +113,7 @@ export function registerRuns(win: BrowserWindow, getCwd: () => string | undefine
             return
           }
           run.status = code === 0 ? 'stopped' : 'failed'
+          reset(run)
           pushRuns()
         },
       })
@@ -128,12 +134,38 @@ export function registerRuns(win: BrowserWindow, getCwd: () => string | undefine
     const run = runs.find((r) => r.id === id)
     if (!run || !name.trim()) return
     run.name = name.trim()
+    run.renamed = true
+    pushRuns()
+  })
+  // Signals the renderer parsed out of the Run's output (see ui/signals.ts).
+  ipcMain.handle('runs:signal', (_e, id: string, s: Signal) => {
+    const run = runs.find((r) => r.id === id)
+    if (!run) return
+    if (s.kind === 'title') {
+      const title = s.value.trim()
+      if (run.renamed || !title || title === run.name) return
+      run.name = title
+    } else if (s.kind === 'activity') run.activity = s.value
+    else if (s.kind === 'progress') run.progress = s.value
+    else {
+      // The agent asks for attention while the human looks elsewhere: an OS notification brings them back.
+      if (win.isFocused() || !Notification.isSupported()) return
+      const n = new Notification({ title: run.name, body: s.value === '\x07' ? '' : s.value })
+      n.on('click', () => {
+        win.show()
+        win.focus()
+        win.webContents.send('runs:select', id)
+      })
+      n.show()
+      return
+    }
     pushRuns()
   })
   const stop = (id: string) => {
     const run = runs.find((r) => r.id === id)
     if (run?.status !== 'running') return
     run.status = 'stopped'
+    reset(run)
     sessions.get(id)?.stop()
     pushRuns()
   }

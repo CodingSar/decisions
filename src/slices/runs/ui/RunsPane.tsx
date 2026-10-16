@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react'
 import type { Run } from '../model'
 import { Terminal } from './Terminal'
 
+// The dot and label follow the agent's own report while it runs: amber while it waits for the human.
+const tone = (r: Run) => (r.status === 'running' && r.activity ? r.activity : r.status)
+const label = (r: Run) =>
+  `${r.name} · ${r.status === 'running' && r.activity === 'waiting' ? 'waiting' : r.status}`
+
 declare global {
   interface Window {
     api: {
@@ -63,6 +68,9 @@ export function useRuns(project: string) {
   const all = useAllRuns()
   const [selected, setSelected] = useState<string>()
 
+  // A notification click or a Decision card selects a Run from outside the list.
+  useEffect(() => window.api.on('runs:select', (id: string) => setSelected(id)), [])
+
   const runs = all.filter((r) => r.project === project)
   const current = runs.find((r) => r.id === selected) ?? runs.at(-1)
   return {
@@ -121,11 +129,11 @@ export function RunList({ runs, current, select, create }: Runs) {
           <li key={r.id}>
             <button
               type="button"
-              aria-label={`${r.name} · ${r.status}`}
+              aria-label={label(r)}
               aria-current={r.id === current?.id}
               onClick={() => select(r.id)}
             >
-              <span className={`dot ${r.status}`} />
+              <span className={`dot ${tone(r)}`} />
               <span className="grow">{r.name}</span>
               <small>{r.id}</small>
             </button>
@@ -177,8 +185,13 @@ export function RunTerminal({ current, run }: Pick<Runs, 'current' | 'run'>) {
   return (
     <>
       <div className="term-head">
-        {current && <span className={`dot ${current.status}`} />}
-        {current && <Name key={current.id} run={current} />}
+        <span className={`dot ${tone(current)}`} />
+        <Name key={current.id} run={current} />
+        {running && current.activity === 'waiting' && (
+          <span className="chip waiting" title="Waiting for your input">
+            waiting
+          </span>
+        )}
         <span className="grow" />
         <button
           type="button"
@@ -207,7 +220,16 @@ export function RunTerminal({ current, run }: Pick<Runs, 'current' | 'run'>) {
           </svg>
         </button>
       </div>
-      {current && <Terminal runId={current.id} live={running} />}
+      {running && current.progress !== undefined && (
+        <div
+          className="term-progress"
+          role="progressbar"
+          aria-label="Progress"
+          aria-valuenow={current.progress}
+          style={{ width: `${current.progress}%` }}
+        />
+      )}
+      <Terminal runId={current.id} live={running} />
     </>
   )
 }

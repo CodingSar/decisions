@@ -1,9 +1,10 @@
 ---
 id: TASK-28
 title: 'Terminal: OSC signals into the Run model'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-16 16:28'
+updated_date: '2026-10-16 16:40'
 labels: []
 dependencies:
   - TASK-27
@@ -18,6 +19,6 @@ Phase 3: parse OSC 0/2 title, 7501 activity, 9;4 progress, bell/9/777/99 notify;
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Scenario 'Run shows waiting state' passes
-- [ ] #2 Scenario 'Title names the Run' passes
+- [x] #1 Scenario 'Run shows waiting state' passes
+- [x] #2 Scenario 'Title names the Run' passes
 <!-- AC:END -->

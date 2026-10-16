@@ -4,6 +4,7 @@ import { WebglAddon } from '@xterm/addon-webgl'
 import { Terminal as Xterm } from '@xterm/xterm'
 import type { Run } from '../model'
 import { font, hasWebgl, OPTIONS, theme } from './look'
+import { watchSignals } from './signals'
 
 // One xterm per Run, kept alive for the Run's lifetime and re-parented on switch: no replay, no flash.
 export interface Live {
@@ -76,6 +77,7 @@ function create(id: string, host: HTMLElement): Live {
   term.onData((d) => {
     window.api.invoke('runs:input', id, d).catch(() => {})
   })
+  watchSignals(term, (s) => window.api.invoke('runs:signal', id, s).catch(() => {}))
   // Watching returns the scrollback so far and starts the ack count in main.
   window.api
     .invoke('runs:watch', id)
