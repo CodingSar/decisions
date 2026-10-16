@@ -32,8 +32,8 @@ async function startMcp() {
   // Test hook: only exists when the harness picked a runtime by env.
   if (process.env.DECISIONS_RUNTIME) {
     ipcMain.handle('agent:use-runtime', (_e, kind: RuntimeKind) => setRuntime(kind))
-    ipcMain.handle('agent:hide-claude', () => {
-      process.env.PATH = ''
+    ipcMain.handle('agent:env', (_e, patch: Record<string, string>) => {
+      Object.assign(process.env, patch)
     })
   }
   app.on('will-quit', mcp.close)
