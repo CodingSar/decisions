@@ -1,10 +1,10 @@
 ---
 id: TASK-35
 title: Keep exited Runs as stopped with their scrollback
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-10-16 20:27'
-updated_date: '2026-10-16 21:12'
+updated_date: '2026-10-16 21:20'
 labels: []
 dependencies:
   - TASK-32
@@ -19,5 +19,5 @@ UX review U13. Exit code 0 removes the Run and disposes its terminal (src/slices
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A Run whose session exits stays in the list as stopped with its scrollback; terminal.feature covers it
+- [x] #1 A Run whose session exits stays in the list as stopped with its scrollback; terminal.feature covers it
 <!-- AC:END -->
