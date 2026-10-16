@@ -1,9 +1,10 @@
 ---
 id: TASK-35
 title: Keep exited Runs as stopped with their scrollback
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-10-16 20:27'
+updated_date: '2026-10-16 21:12'
 labels: []
 dependencies:
   - TASK-32

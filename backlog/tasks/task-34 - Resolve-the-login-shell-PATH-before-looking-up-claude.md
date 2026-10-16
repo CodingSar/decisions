@@ -1,9 +1,10 @@
 ---
 id: TASK-34
 title: Resolve the login-shell PATH before looking up claude
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-10-16 20:27'
+updated_date: '2026-10-16 21:12'
 labels: []
 dependencies:
   - TASK-32
