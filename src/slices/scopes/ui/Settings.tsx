@@ -44,6 +44,10 @@ export function Settings({ project, onClose }: { project: string; onClose: () =>
         </button>
       </header>
       <h2>Decision Scopes</h2>
+      <p className="hint">
+        On: the agent waits for your Verdict. Off, or past the timeout: it decides itself and the
+        Decision lands in Review.
+      </p>
       {scopes.map((s) => (
         <div key={s.name} className={s.mine ? 'scope' : 'scope off'}>
           <input
@@ -60,12 +64,14 @@ export function Settings({ project, onClose }: { project: string; onClose: () =>
             key={s.timeout}
             aria-label={`Timeout ${s.name}`}
             title="Timeout before an in-Scope Decision auto-resolves"
-            defaultValue={s.timeout ?? 'none'}
+            defaultValue={s.timeout ?? ''}
+            placeholder="none · 30m, 2h"
+            onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
             onBlur={(e) => {
               const v = e.target.value.trim()
-              if (isTimeout(v)) patch(s.name, { timeout: v })
-              else patch(s.name, { timeout: undefined })
-              if (!isTimeout(v)) e.target.value = 'none'
+              const ok = !v || isTimeout(v)
+              e.target.ariaInvalid = ok ? null : 'true' // invalid keeps the text
+              if (ok) patch(s.name, { timeout: v || undefined })
             }}
           />
           {isSeeded(s.name) ? null : (
@@ -94,7 +100,7 @@ export function Settings({ project, onClose }: { project: string; onClose: () =>
       ))}
       <input
         aria-label="Add Scope"
-        title="Add Scope (N)"
+        title="Add Scope"
         placeholder="+ Add Scope"
         onKeyDown={(e) => {
           const name = e.currentTarget.value.trim()

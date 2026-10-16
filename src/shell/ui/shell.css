@@ -630,8 +630,20 @@ dialog {
   color: var(--muted);
   font: inherit;
 }
-.scope input:not([role])[value]:not([value="none"]) {
+.scope input:not([role])[value]:not([value=""]) {
   color: var(--amber);
+}
+.scope input[aria-invalid="true"] {
+  color: var(--error);
+}
+.settings .hint {
+  margin: 0 24px 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.files-view .empty {
+  padding: 16px 24px;
+  color: var(--muted);
 }
 .settings > input {
   width: calc(100% - 48px);
