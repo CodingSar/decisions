@@ -6,7 +6,7 @@ import { WebLinksAddon } from '@xterm/addon-web-links'
 import { WebglAddon } from '@xterm/addon-webgl'
 import { type IMarker, Terminal as Xterm } from '@xterm/xterm'
 import type { Run } from '../model'
-import { font, hasWebgl, OPTIONS, theme } from './look'
+import { font, hasWebgl, OPTIONS, theme, v } from './look'
 import { watchSignals } from './signals'
 
 // One xterm per Run, kept alive for the Run's lifetime and re-parented on switch: no replay, no flash.
@@ -39,17 +39,19 @@ declare global {
     }
   }
 }
-window.terminals = {
-  created: () => created,
-  marks: (id) =>
-    [...(live.get(id)?.marks ?? [])].map(([decision, m]) => ({ decision, line: m?.line ?? null })),
-  viewport: (id) => {
-    const t = live.get(id)
-    return t && { y: t.term.buffer.active.viewportY, rows: t.term.rows }
-  },
-}
-
-const AMBER = '#e5b567'
+if (window.api.env.test)
+  window.terminals = {
+    created: () => created,
+    marks: (id) =>
+      [...(live.get(id)?.marks ?? [])].map(([decision, m]) => ({
+        decision,
+        line: m && !m.isDisposed ? m.line : null,
+      })),
+    viewport: (id) => {
+      const t = live.get(id)
+      return t && { y: t.term.buffer.active.viewportY, rows: t.term.rows }
+    },
+  }
 
 // An amber dot in the gutter and a mark in the overview ruler on the line the Decision was raised.
 function mark(id: string, t: Live, decision: string) {
@@ -63,7 +65,7 @@ function mark(id: string, t: Live, decision: string) {
         marker,
         x: 0,
         width: 1,
-        overviewRulerOptions: { color: AMBER, position: 'left' },
+        overviewRulerOptions: { color: v('--amber'), position: 'left' },
       })
       ?.onRender((el) => {
         el.classList.add('dmark')
@@ -84,12 +86,14 @@ export function showDecision(id: string, decision: string) {
   if (t && m && !m.isDisposed) t.term.scrollToLine(m.line)
 }
 
-// The system clipboard lives in main (Electron `clipboard`), for OSC 52 and the copy/paste keys alike.
+// The system clipboard lives in main (Electron `clipboard`). Programs may write it (OSC 52) but never
+// read it: a read would hand the human's clipboard to whatever runs in the pty.
 const clipboard = {
   readText: () => window.api.invoke('clipboard:read') as Promise<string>,
   writeText: (_sel: unknown, text: string) =>
     window.api.invoke('clipboard:write', text) as Promise<void>,
 }
+const osc52 = { readText: () => '', writeText: clipboard.writeText }
 
 // Keys the app handles itself (search, hide, pane focus) and the ones a TUI needs verbatim.
 function keys(term: Xterm, id: string) {
@@ -134,11 +138,14 @@ function subscribe() {
     else write(m.id, t, m.data)
   })
   window.api.on('runs:changed', (runs: Run[]) => {
-    for (const id of live.keys()) if (!runs.some((r) => r.id === id)) dispose(id)
+    const gone = (id: string) => !runs.some((r) => r.id === id)
+    for (const id of live.keys()) if (gone(id)) dispose(id)
+    for (const id of pending.keys()) if (gone(id)) pending.delete(id)
   })
+  // xterm parses writes asynchronously: the mark queues behind the output it belongs to.
   window.api.on('runs:mark', ({ id, decision }: Mark) => {
     const t = live.get(id)
-    if (t && !t.buffer) mark(id, t, decision)
+    if (t && !t.buffer) t.term.write('', () => mark(id, t, decision))
     else pending.set(id, [...(pending.get(id) ?? []), decision])
   })
 }
@@ -169,7 +176,7 @@ function create(id: string, host: HTMLElement): Live {
   term.loadAddon(new Unicode11Addon())
   term.unicode.activeVersion = '11'
   term.loadAddon(new WebLinksAddon((_e, uri) => window.api.invoke('shell:open', uri)))
-  term.loadAddon(new ClipboardAddon(undefined, clipboard))
+  term.loadAddon(new ClipboardAddon(undefined, osc52))
   keys(term, id)
   term.open(el)
   const t: Live = { term, fit, search, el, renderer: 'dom', buffer: [], marks: new Map() }
@@ -178,13 +185,18 @@ function create(id: string, host: HTMLElement): Live {
   term.onData((d) => {
     window.api.invoke('runs:input', id, d).catch(() => {})
   })
-  watchSignals(term, (s) => window.api.invoke('runs:signal', id, s).catch(() => {}))
   // Watching returns the scrollback so far and starts the ack count in main.
   window.api
     .invoke('runs:watch', id)
     .then((s) => {
       const { text, length } = s as { text: string; length: number }
-      term.write(text)
+      term.write(text, () => {
+        // Replayed output is history: its signals were handled when they happened, and Decisions
+        // raised before the terminal existed land at its end.
+        watchSignals(term, (s) => window.api.invoke('runs:signal', id, s).catch(() => {}))
+        for (const d of pending.get(id) ?? []) mark(id, t, d)
+        pending.delete(id)
+      })
       // Chunks already inside the snapshot are skipped (or trimmed).
       for (const c of t.buffer ?? []) {
         const skip = length - c.offset
@@ -194,9 +206,6 @@ function create(id: string, host: HTMLElement): Live {
     .catch(() => {})
     .finally(() => {
       t.buffer = undefined
-      // Decisions raised before the terminal existed land at the end of the replayed scrollback.
-      for (const d of pending.get(id) ?? []) mark(id, t, d)
-      pending.delete(id)
     })
   return t
 }
@@ -208,7 +217,7 @@ export function attach(id: string, host: HTMLElement): Live {
   if (!t) {
     t = create(id, host)
     live.set(id, t)
-  } else host.append(t.el)
+  } else if (t.el.parentNode !== host) host.append(t.el)
   return t
 }
 

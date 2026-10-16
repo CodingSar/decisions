@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
+import { v } from './look'
 import type { Live } from './terminals'
 
-const DECOR = {
-  matchBackground: '#4a3a2a',
-  matchOverviewRuler: '#e5b567',
-  activeMatchBackground: '#d97757',
-  activeMatchColorOverviewRuler: '#d97757',
-}
+const decor = () => ({
+  matchBackground: v('--accent-bg'),
+  matchOverviewRuler: v('--amber'),
+  activeMatchBackground: v('--accent-solid'),
+  activeMatchColorOverviewRuler: v('--accent-solid'),
+})
 
 const Arrow = ({ up }: { up?: boolean }) => (
   <svg
@@ -35,8 +36,8 @@ export function Search({ live, onClose }: { live: Live; onClose: () => void }) {
       live.search.clearDecorations()
     }
   }, [live])
-  const next = (term = q) => live.search.findNext(term, { incremental: true, decorations: DECOR })
-  const prev = () => live.search.findPrevious(q, { decorations: DECOR })
+  const next = (term = q) => live.search.findNext(term, { incremental: true, decorations: decor() })
+  const prev = () => live.search.findPrevious(q, { decorations: decor() })
   const close = () => {
     onClose()
     live.term.focus()

@@ -78,7 +78,10 @@ Feature: Terminal
 
   Scenario: Jump from a Decision to its Run
     Given Runs "R1" and "R2" are running and "R2" is selected
+    When I select "R1" in the sidebar
     And an agent of Run "R1" requests a Decision
-    When I press "Show in Run" on the card
-    Then the terminal shows "R1"
-    And the Decision marker of "D1" is in view
+    And I type "lines 200" in the terminal
+    And I select "R2" in the sidebar
+    And I press "Show in Run" on the card
+    Then "R1" is selected in the sidebar
+    And the terminal is scrolled so the Decision marker of "D1" is in view

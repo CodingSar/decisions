@@ -56,7 +56,7 @@ function createWindow(mcpUrl: string) {
       files.stop(path)
     },
   )
-  runs = registerRuns(win, projects.active, mcpUrl)
+  runs = registerRuns(win, projects.active, mcpUrl, projects.focus)
   projectOf = runs.projectOf
   decisions = registerDecisions(
     win,
@@ -71,7 +71,7 @@ function createWindow(mcpUrl: string) {
   registerLayout()
   // Terminal tools: links open in the browser, the clipboard is the system one.
   ipcMain.handle('shell:open', (_e, url: string) => {
-    if (/^https?:\/\//.test(url)) shell.openExternal(url)
+    if (/^https?:\/\//i.test(url)) shell.openExternal(url)
   })
   ipcMain.handle('clipboard:read', () => clipboard.readText())
   ipcMain.handle('clipboard:write', (_e, text: string) => clipboard.writeText(text))

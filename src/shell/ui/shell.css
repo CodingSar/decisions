@@ -220,11 +220,6 @@ main {
   top: 10px;
   right: 16px;
   z-index: 2;
-  background: var(--accent-bg);
-  color: var(--amber);
-  font-size: 11px;
-  padding: 1px 7px;
-  border-radius: 9px;
 }
 .handle {
   position: absolute;
@@ -374,7 +369,8 @@ main {
     opacity: 0.35;
   }
 }
-.term-head .chip.waiting {
+.term-head .chip.waiting,
+.term .chip.decision {
   background: var(--accent-bg);
   color: var(--amber);
   font-size: 11px;

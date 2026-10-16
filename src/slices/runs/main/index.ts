@@ -18,7 +18,12 @@ function hasDecisions(cwd: string) {
   }
 }
 
-export function registerRuns(win: BrowserWindow, getCwd: () => string | undefined, mcpUrl: string) {
+export function registerRuns(
+  win: BrowserWindow,
+  getCwd: () => string | undefined,
+  mcpUrl: string,
+  focusProject: (path: string) => void,
+) {
   const runs: Run[] = []
   let seq = 0
   const sessions = new Map<string, AgentSession>()
@@ -36,8 +41,10 @@ export function registerRuns(win: BrowserWindow, getCwd: () => string | undefine
     const s = scrollback.get(id) ?? { text: '', base: 0 }
     s.text += data
     if (s.text.length > SCROLLBACK) {
-      s.base += s.text.length - SCROLLBACK
-      s.text = s.text.slice(-SCROLLBACK)
+      // Cut at a line start so the snapshot never opens mid escape sequence.
+      const cut = s.text.indexOf('\n', s.text.length - SCROLLBACK) + 1
+      s.base += cut
+      s.text = s.text.slice(cut)
     }
     scrollback.set(id, s)
     win.webContents.send('runs:data', { id, data, offset: s.base + s.text.length - data.length })
@@ -142,7 +149,7 @@ export function registerRuns(win: BrowserWindow, getCwd: () => string | undefine
     const run = runs.find((r) => r.id === id)
     if (!run) return
     if (s.kind === 'title') {
-      const title = s.value.trim()
+      const title = s.value.replace(/\p{C}/gu, '').trim().slice(0, 80)
       if (run.renamed || !title || title === run.name) return
       run.name = title
     } else if (s.kind === 'activity') run.activity = s.value
@@ -154,6 +161,7 @@ export function registerRuns(win: BrowserWindow, getCwd: () => string | undefine
       n.on('click', () => {
         win.show()
         win.focus()
+        if (run.project) focusProject(run.project)
         win.webContents.send('runs:select', id)
       })
       n.show()

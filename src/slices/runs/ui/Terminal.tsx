@@ -5,6 +5,7 @@ import { attach, chipOf, detach, type Live } from './terminals'
 
 export function Terminal({ runId, live }: { runId: string; live: boolean }) {
   const el = useRef<HTMLDivElement>(null)
+  const ref = useRef<Live>(undefined)
   const [finding, setFinding] = useState<Live>()
   const [chip, setChip] = useState<string>()
 
@@ -18,7 +19,7 @@ export function Terminal({ runId, live }: { runId: string; live: boolean }) {
 
   // ⌘F from the shell (App.tsx) opens find for the shown Run.
   useEffect(() => {
-    const open = () => setFinding(attach(runId, el.current as HTMLDivElement))
+    const open = () => setFinding(ref.current)
     window.addEventListener('terminal:find', open)
     return () => window.removeEventListener('terminal:find', open)
   }, [runId])
@@ -26,6 +27,7 @@ export function Terminal({ runId, live }: { runId: string; live: boolean }) {
   useEffect(() => {
     const host = el.current as HTMLDivElement
     const t = attach(runId, host)
+    ref.current = t
     host.dataset.renderer = t.renderer
     // Fit on the unpadded host, once per frame; always tell the PTY, so the TUI redraws at the real size.
     let frame = 0
@@ -52,9 +54,8 @@ export function Terminal({ runId, live }: { runId: string; live: boolean }) {
   }, [runId])
 
   useEffect(() => {
-    const t = attach(runId, el.current as HTMLDivElement)
-    t.term.options.disableStdin = !live
-  }, [runId, live])
+    if (ref.current) ref.current.term.options.disableStdin = !live
+  }, [live])
 
   return (
     <div className="term">

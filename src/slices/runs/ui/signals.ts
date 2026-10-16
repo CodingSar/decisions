@@ -23,7 +23,11 @@ export function watchSignals(term: Xterm, send: (s: Signal) => void) {
     if (data.startsWith('4;')) {
       const [, state, pct] = data.split(';')
       const on = state === '1' || state === '2' || state === '4'
-      send({ kind: 'progress', value: on ? Math.min(100, Number(pct) || 0) : undefined })
+      // States 0 (off) and 3 (indeterminate) clear the bar.
+      send({
+        kind: 'progress',
+        value: on ? Math.min(100, Math.max(0, Number(pct) || 0)) : undefined,
+      })
     } else send({ kind: 'notify', value: data })
     return true
   })

@@ -22,7 +22,9 @@ const ANSI = {
 }
 
 /** Theme built from the shell.css tokens, so the terminal follows the app. */
-const v = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+/** A shell.css token's value. */
+export const v = (name: string) =>
+  getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 
 /** Font stack from the `--mono` token. */
 export const font = () => v('--mono')

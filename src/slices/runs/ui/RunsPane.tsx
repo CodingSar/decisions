@@ -10,7 +10,7 @@ const label = (r: Run) =>
 declare global {
   interface Window {
     api: {
-      env: { renderer?: string }
+      env: { renderer?: string; test: boolean }
       invoke(channel: string, ...args: unknown[]): Promise<unknown>
       on(channel: string, cb: (payload: never) => void): () => void
     }
@@ -229,7 +229,7 @@ export function RunTerminal({ current, run }: Pick<Runs, 'current' | 'run'>) {
           style={{ width: `${current.progress}%` }}
         />
       )}
-      <Terminal runId={current.id} live={running} />
+      <Terminal key={current.id} runId={current.id} live={running} />
     </>
   )
 }

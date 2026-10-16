@@ -62,7 +62,7 @@ export function Pane({
         <button
           type="button"
           aria-label={`Show ${label(side)}`}
-          title={`Show ${label(side)}`}
+          title={left ? 'Show sidebar' : `Show terminal (${MOD}J)`}
           onClick={() => onChange({ hidden: false })}
         >
           <svg

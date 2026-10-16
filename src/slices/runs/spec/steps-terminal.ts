@@ -126,17 +126,32 @@ When('I press {string} on the card', async ({ page }, name: string) => {
   await page.getByRole('article').getByRole('button', { name }).click()
 })
 
-Then('the Decision marker of {string} is in view', async ({ page }, decision: string) => {
-  await expect
-    .poll(() =>
-      page.evaluate(
-        ([d]) => {
-          const line = window.terminals.marks('R1').find((m) => m.decision === d)?.line
-          const v = window.terminals.viewport('R1')
-          return line !== null && line !== undefined && v && line >= v.y && line < v.y + v.rows
-        },
-        [decision],
-      ),
-    )
-    .toBe(true)
+Then('{string} is selected in the sidebar', async ({ page }, id: string) => {
+  await expect(page.getByRole('button', { name: new RegExp(`^${id} · `) })).toHaveAttribute(
+    'aria-current',
+    'true',
+  )
 })
+
+// The marker sits above 200 later lines, so only a real scroll (viewport off the bottom) shows it.
+Then(
+  'the terminal is scrolled so the Decision marker of {string} is in view',
+  async ({ page }, decision: string) => {
+    await expect
+      .poll(() =>
+        page.evaluate(
+          ([d]) => {
+            const line = window.terminals.marks('R1').find((m) => m.decision === d)?.line
+            const v = window.terminals.viewport('R1')
+            if (line === null || line === undefined || !v) return 'no marker'
+            const bottom = v.y + v.rows
+            return line >= v.y && line < bottom && bottom < line + 100
+              ? 'in view'
+              : `line ${line} viewport ${v.y}-${bottom}`
+          },
+          [decision],
+        ),
+      )
+      .toBe('in view')
+  },
+)

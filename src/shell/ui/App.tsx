@@ -85,7 +85,8 @@ function Workspace({
         return
       if (e.key === ',') return setSettings((o) => !o)
       const u = unit()
-      if (u === 'terminal' || u === 'sidebar') {
+      const onRuns = u === 'terminal' || u === 'sidebar'
+      if (onRuns && 'nsx'.includes(k)) {
         const { current } = runs
         if (k === 'n') runs.create()
         else if (k === 's' && current && current.status !== 'running')

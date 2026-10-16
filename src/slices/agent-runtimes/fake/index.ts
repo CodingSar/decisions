@@ -42,6 +42,7 @@ export const fakeRuntime: AgentRuntime = {
       else if (name === 'title') osc(0, arg)
       else if (name === 'progress') osc(9, `4;1;${arg}`)
       else if (name === 'bell') out('\x07')
+      else if (name === 'lines') for (let i = 1; i <= Number(arg); i++) out(`line ${i}\r\n`)
     }
     out(`orchestrator session ${id}\r\n`)
     if (prompt) out(`${prompt}\r\n`)
