@@ -7,13 +7,20 @@ import { Projects } from '../../slices/projects'
 import { RunList, RunTerminal, showDecision, useBusy, useRuns } from '../../slices/runs'
 import { Settings } from '../../slices/scopes'
 import { useFocus } from './focus'
-import { columns, Pane, useLayout } from './Panes'
+import { columns, MOD, Pane, useLayout } from './Panes'
 import './shell.css'
 
+// `key`: the shortcut shown in the tooltip; a single letter also switches the view on its own.
 const VIEWS = [
-  { id: 'feed', name: 'Feed', key: 'f', d: 'M4 6h16M4 12h16M4 18h16' },
-  { id: 'review', name: 'Review', key: 'r', d: 'M5 13l4 4L19 7' },
-  { id: 'history', name: 'History', key: 'h', d: 'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2' },
+  { id: 'feed', name: 'Feed', key: 'F', d: 'M4 6h16M4 12h16M4 18h16' },
+  { id: 'review', name: 'Review', key: 'R', d: 'M5 13l4 4L19 7' },
+  { id: 'history', name: 'History', key: 'H', d: 'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2' },
+  {
+    id: 'files',
+    name: 'Files',
+    key: `${MOD}⇧E`,
+    d: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  },
 ] as const
 
 const GEAR =
@@ -72,6 +79,10 @@ function Workspace({
       document.activeElement?.closest('[data-focus-unit]')?.getAttribute('data-focus-unit')
     const onKey = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase()
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && !e.altKey && k === 'e') {
+        e.preventDefault()
+        return setView('files')
+      }
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
         if (k === 'j' || k === 'b') {
           e.preventDefault()
@@ -100,7 +111,7 @@ function Workspace({
         return
       }
       if (k === 's') return setNewestFirst((o) => !o)
-      const v = VIEWS.find((x) => x.key === k)
+      const v = VIEWS.find((x) => x.key.toLowerCase() === k)
       if (v) setView(v.id)
     }
     window.addEventListener('keydown', onKey)
@@ -158,10 +169,10 @@ function Workspace({
               type="button"
               aria-label={v.name}
               aria-pressed={view === v.id}
-              title={`${v.name} (${v.key.toUpperCase()})`}
+              title={`${v.name} (${v.key})`}
               onClick={() => setView(v.id)}
             >
-              {v.id === 'history' ? (
+              {v.id === 'history' || v.id === 'files' ? (
                 <Icon d={v.d} />
               ) : (
                 <>

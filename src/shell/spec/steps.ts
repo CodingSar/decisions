@@ -107,6 +107,11 @@ When('I press Cmd+B', async ({ page }) => {
   await page.keyboard.press('ControlOrMeta+b')
 })
 
+When('I press Cmd+Shift+E', async ({ page }) => {
+  await expect(page.getByRole('button', { name: /^(Hide|Show) sidebar/ })).toBeVisible()
+  await page.keyboard.press('ControlOrMeta+Shift+e')
+})
+
 Then('the next Project tab is focused', async ({ page }) => {
   await expect(page.getByRole('tab', { selected: true })).toHaveText('api-service') // wraps from "shop"
 })
