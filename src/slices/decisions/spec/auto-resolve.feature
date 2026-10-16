@@ -27,6 +27,11 @@ Feature: Auto-resolve a Decision
     When I press Esc
     Then the timers resume
 
+  Scenario: Leaving an empty comment box resumes the timers
+    Given a pending Decision with a timeout
+    When I press C and then Cmd+1
+    Then the timers resume
+
   Scenario: Closing the app leaves Decisions pending
     Given a pending Decision with a timeout
     When I close and relaunch the app

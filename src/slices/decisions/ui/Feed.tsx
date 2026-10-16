@@ -48,27 +48,37 @@ function Waited({ since }: { since: number }) {
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
-// Enter sends, Esc cancels; an empty comment is ignored.
+// Enter sends; an empty comment is ignored. Leaving the box empty closes it, so keys and timers
+// resume (an overturn copy stays: only Esc discards it); a typed draft survives a blur but not Esc,
+// which cancels from anywhere (other text fields and dialogs keep their own Esc).
 function CommentBox({
   hint,
   onSend,
   onCancel,
+  onLeave,
 }: {
   hint: string
   onSend: (text: string) => void
   onCancel: () => void
+  onLeave: () => void
 }) {
   const ref = useRef<HTMLInputElement>(null)
   useEffect(() => ref.current?.focus(), [])
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && (e.target === ref.current || !keysBlocked(e))) onCancel()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onCancel])
   return (
     <input
       ref={ref}
       aria-label="Comment"
       placeholder={hint}
+      onBlur={(e) => e.currentTarget.value.trim() || onLeave()}
       onKeyDown={(e) => {
-        if (e.key === 'Escape') onCancel()
-        else if (e.key === 'Enter' && e.currentTarget.value.trim())
-          onSend(e.currentTarget.value.trim())
+        if (e.key === 'Enter' && e.currentTarget.value.trim()) onSend(e.currentTarget.value.trim())
       }}
     />
   )
@@ -308,6 +318,7 @@ export function Feed({
                     ? window.api.invoke('decisions:discard', project, d.id)
                     : setCommenting(false)
                 }
+                onLeave={() => setCommenting(false)}
               />
             ) : undefined
           }
