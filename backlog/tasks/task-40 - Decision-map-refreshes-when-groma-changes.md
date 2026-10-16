@@ -1,9 +1,10 @@
 ---
 id: TASK-40
 title: Decision map refreshes when groma/ changes
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-10-16 20:27'
+updated_date: '2026-10-16 21:27'
 labels: []
 dependencies:
   - TASK-32

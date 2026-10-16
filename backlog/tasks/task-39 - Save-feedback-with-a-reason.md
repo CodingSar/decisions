@@ -1,10 +1,10 @@
 ---
 id: TASK-39
 title: Save feedback with a reason
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-10-16 20:27'
-updated_date: '2026-10-16 21:20'
+updated_date: '2026-10-16 21:27'
 labels: []
 dependencies:
   - TASK-32
@@ -19,5 +19,5 @@ UX review V8. Autosave gives no success feedback; 'Save failed' is muted, 3 s, w
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A refused write shows why; a successful write shows Saved; edit-files.feature covers both
+- [x] #1 A refused write shows why; a successful write shows Saved; edit-files.feature covers both
 <!-- AC:END -->
