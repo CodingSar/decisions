@@ -62,12 +62,14 @@ function Workspace({
   }
   const [settings, setSettings] = useState(false)
   const [newestFirst, setNewestFirst] = useState(false)
-  // An overturn opens the Feed on its new copy.
-  const [focus, setFocus] = useState<number>()
-  const overturned = (id: number) => {
-    setFocus(id)
-    setView('feed')
+  // The Decision to land on: an overturn's new copy in the Feed, or one opened from the map.
+  // A fresh object each time, so opening the same one again focuses it again.
+  const [focus, setFocus] = useState<{ id: number }>()
+  const open = (id: number, v: 'feed' | 'history') => {
+    setFocus({ id })
+    setView(v)
   }
+  const overturned = (id: number) => open(id, 'feed')
   const runs = useRuns(active)
   const all = useAll(active)
   useFocus(paths, active)
@@ -218,7 +220,7 @@ function Workspace({
         ) : view === 'review' ? (
           <Review project={active} onOverturn={overturned} />
         ) : (
-          <History project={active} onOverturn={overturned} />
+          <History project={active} focus={focus} onOverturn={overturned} />
         )}
       </main>
       <Pane side="terminal" state={layout.terminal} onChange={(p) => update('terminal', p)}>
@@ -227,7 +229,7 @@ function Workspace({
           <DecisionMap
             project={active}
             decisions={all}
-            onOpen={(d) => setView(d.status === 'pending' ? 'feed' : 'history')}
+            onOpen={(d) => open(d.id, d.status === 'pending' ? 'feed' : 'history')}
           />
         </section>
       </Pane>

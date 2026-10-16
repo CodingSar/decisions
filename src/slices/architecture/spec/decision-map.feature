@@ -95,3 +95,23 @@ Feature: Decision map
     Then the map says "No Decision map yet" with a build button
     When "bare" gets a "groma/" with the Container "main-process" and the Components "decision-store" and "decision-ipc"
     Then the mini map shows "main-process" without its Components
+
+  Scenario: An element without Decisions says so
+    When I click "decision-ipc" in the mini map
+    Then the modal opens with "decision-ipc" selected
+    And the side panel says "No Decisions"
+
+  Scenario: Open a pending Decision from the map
+    Given a pending Decision D1 touches "decision-ipc"
+    And a pending Decision D7 touches "decision-store"
+    When I click "decision-store" in the mini map
+    And I open D7 from the side panel
+    Then the modal closes
+    And the Feed view shows D7 focused
+
+  Scenario: Open an answered Decision from the map
+    Given an answered Decision from yesterday touches "decision-ipc"
+    When I click "decision-ipc" in the mini map
+    And I open D1 from the side panel
+    Then the modal closes
+    And the History view shows D1 focused

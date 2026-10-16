@@ -16,7 +16,7 @@ export function Review({
   const all = useAll(project)
   const auto = all.filter((d) => d.by === 'auto')
   return (
-    <section aria-label="Review">
+    <section aria-label="Review" data-focus-unit="feed" tabIndex={-1}>
       {!auto.length && (
         <p className="empty">Nothing to review. Auto-resolved Decisions land here.</p>
       )}

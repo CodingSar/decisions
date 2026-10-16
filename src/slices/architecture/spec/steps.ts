@@ -239,6 +239,32 @@ Then('the side panel lists {word}', async ({ page }, id: string) => {
   ).toContainText(id)
 })
 
+Then('the side panel says {string}', async ({ page }, text: string) => {
+  await expect(
+    page.getByRole('dialog', { name: 'Decision map' }).getByRole('complementary'),
+  ).toContainText(text)
+})
+
+When('I open {word} from the side panel', async ({ page }, id: string) => {
+  await page
+    .getByRole('dialog', { name: 'Decision map' })
+    .getByRole('complementary')
+    .getByRole('button')
+    .filter({ hasText: id })
+    .click()
+})
+
+Then('the modal closes', async ({ page }) => {
+  await expect(page.getByRole('dialog', { name: 'Decision map' })).toHaveCount(0)
+})
+
+// The Decision's card or row holds the focus, so it shows the ring.
+Then('the {word} view shows {word} focused', async ({ page }, view: string, id: string) => {
+  const el = page.getByRole('region', { name: view }).locator(`[aria-label="${id}"]`)
+  await expect(el).toBeVisible()
+  await expect.poll(() => el.evaluate((e) => e.contains(document.activeElement))).toBe(true)
+})
+
 Then('the map shows only {string} and {string}', async ({ page }, a: string, b: string) => {
   await expect(node(page, a)).toBeVisible()
   await expect(node(page, b)).toBeVisible()

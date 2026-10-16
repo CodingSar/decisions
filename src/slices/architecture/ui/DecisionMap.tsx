@@ -502,6 +502,7 @@ export function DecisionMap({
               <div className="graph">{graph(true)}</div>
               <aside aria-label="Decisions">
                 <b>{model.nodes.find((n) => n.id === selected)?.title ?? 'Select an element'}</b>
+                {selected && !side.length ? <p>No Decisions</p> : null}
                 <Rows
                   ids={side}
                   decisions={decisions}

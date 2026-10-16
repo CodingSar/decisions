@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { type Decision, supersededBy } from '../model'
 
 // One past Decision: struck through once Superseded, otherwise it can be overturned.
@@ -5,6 +6,7 @@ export function Row({
   d,
   all,
   project,
+  focus,
   onOverturn,
   tag,
   actions,
@@ -12,6 +14,8 @@ export function Row({
   d: Decision
   all: Decision[]
   project: string
+  /** Focus this row when it is the one asked for. */
+  focus?: { id: number }
   /** Receives the id of the new pending copy. */
   onOverturn: (id: number) => void
   /** Right-aligned note, e.g. why it was Auto-resolved. */
@@ -21,8 +25,18 @@ export function Row({
 }) {
   const by = supersededBy(all, d.id)
   const copying = all.some((x) => x.supersedes === d.id && x.status === 'pending')
+  const ref = useRef<HTMLLIElement>(null)
+  useEffect(() => {
+    if (focus?.id === d.id) ref.current?.focus()
+  }, [focus, d.id])
   return (
-    <li className={by ? 'sup' : undefined}>
+    <li
+      ref={ref}
+      className={by ? 'sup' : undefined}
+      aria-label={`D${d.id}`}
+      data-focus-unit="feed"
+      tabIndex={-1}
+    >
       {by ? (
         <>
           <s>D{d.id}</s>

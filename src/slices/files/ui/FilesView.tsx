@@ -112,7 +112,7 @@ export function FilesView({
 
   if (!path)
     return (
-      <section aria-label="Files view" className="files-view">
+      <section aria-label="Files view" className="files-view" data-focus-unit="feed" tabIndex={-1}>
         <p className="empty">No file open. Pick one in the sidebar.</p>
       </section>
     )
@@ -121,7 +121,7 @@ export function FilesView({
   const locked = !decisions && !!run && !unlocked
   const readOnly = decisions || locked
   return (
-    <section aria-label="Files view" className="files-view">
+    <section aria-label="Files view" className="files-view" data-focus-unit="feed" tabIndex={-1}>
       <div className="file-head">
         <h2>{path}</h2>
         {status && (

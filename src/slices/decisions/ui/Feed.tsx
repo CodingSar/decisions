@@ -232,14 +232,15 @@ export function Feed({
   pending: Decision[]
   /** Runs that still exist: only their Decisions offer Show in Run. */
   runIds: string[]
-  /** The card focused at first, e.g. a fresh overturn copy. */
-  focus?: number
+  /** The card to focus, e.g. a fresh overturn copy or one opened from the map. */
+  focus?: { id: number }
   newestFirst?: boolean
   /** Jump to the terminal line where the Decision was raised. */
   onShowRun?: (d: Decision) => void
 }) {
-  const [focusId, setFocusId] = useState(focus)
+  const [focusId, setFocusId] = useState(focus?.id)
   const [commenting, setCommenting] = useState(false)
+  const ref = useRef<HTMLElement>(null)
   const first = pending.find((d) => d.id === focusId) ?? pending[0]
   const hasRun = (d: Decision) => d.run !== undefined && runIds.includes(d.run)
 
@@ -253,11 +254,18 @@ export function Feed({
   // key pressed as soon as it shows acts on it instead of being lost or undone by the reset.
   // biome-ignore lint/correctness/useExhaustiveDependencies: only a change of card resets it
   useLayoutEffect(() => setCommenting(first?.supersedes !== undefined), [first?.id])
-  // With nothing focused, focus lands on the first card, so the ring always shows where keys act.
+  // With nothing (or only the view) focused, focus lands on the first card, so the ring always
+  // shows where keys act.
   useEffect(() => {
-    if (first && document.activeElement === document.body)
+    const at = document.activeElement
+    if (first && (at === document.body || at === ref.current))
       document.querySelector<HTMLElement>(`[aria-label="D${first.id}"]`)?.focus()
   }, [first])
+  useEffect(() => {
+    if (!focus) return
+    setFocusId(focus.id)
+    document.querySelector<HTMLElement>(`[aria-label="D${focus.id}"]`)?.focus()
+  }, [focus])
   useLayoutEffect(() => {
     if (!first || commenting) return
     const onKey = (e: KeyboardEvent) => {
@@ -285,7 +293,7 @@ export function Feed({
   }, [project, first, commenting, onShowRun, runIds])
 
   return (
-    <section className="cards" aria-label="Feed" data-pane="feed" tabIndex={-1}>
+    <section ref={ref} className="cards" aria-label="Feed" data-focus-unit="feed" tabIndex={-1}>
       {!pending.length && (
         <p className="empty">
           No pending Decisions. Start a Run and give it a task; its questions land here.

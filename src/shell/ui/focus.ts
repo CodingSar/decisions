@@ -59,8 +59,9 @@ export function useFocus(paths: string[], active: string) {
       if (pane) {
         e.preventDefault()
         suspend()
+        // The first unit that nests no other: a card rather than the view holding it.
         const units = [...document.querySelectorAll(`[data-focus-unit="${pane}"]`)]
-        focusEl(units[0] ?? document.querySelector(`[data-pane="${pane}"]`))
+        focusEl(units.find((u) => !u.querySelector(UNIT)) ?? units[0])
         return
       }
       const step = e.shiftKey ? { BracketRight: 1, BracketLeft: -1 }[e.code] : undefined

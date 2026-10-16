@@ -52,10 +52,14 @@ Then('the {string} tab badge increases', async ({ page }, name: string) => {
   await expect(page.getByRole('tab', { name }).getByRole('status')).toHaveText('1')
 })
 
-// Focus: a unit shows the ring when it holds the DOM focus.
+// Focus: a unit shows the ring (an inset shadow) when it holds the DOM focus.
 const hasFocus = (unit: Locator) => unit.evaluate((el) => el.contains(document.activeElement))
-const expectFocus = (unit: Locator, focused = true) =>
-  expect.poll(() => hasFocus(unit)).toBe(focused)
+const ringed = (unit: Locator) =>
+  unit.evaluate((el) => el.matches(':focus-within') && getComputedStyle(el).boxShadow !== 'none')
+const expectFocus = async (unit: Locator, focused = true) => {
+  await expect.poll(() => hasFocus(unit)).toBe(focused)
+  if (focused) await expect.poll(() => ringed(unit)).toBe(true)
+}
 
 const card = (page: Page) => page.getByRole('article').first()
 const terminal = (page: Page) => page.getByRole('region', { name: 'Terminal pane' })
@@ -105,6 +109,19 @@ When('I press Cmd+Shift+]', async ({ page }) => {
 When('I press Cmd+B', async ({ page }) => {
   await expect(page.getByRole('button', { name: /^(Hide|Show) sidebar/ })).toBeVisible()
   await page.keyboard.press('ControlOrMeta+b')
+})
+
+When('I press Cmd+2', async ({ page }) => {
+  await expect(page.getByRole('button', { name: /^(Hide|Show) sidebar/ })).toBeVisible()
+  await page.keyboard.press('Meta+2')
+})
+
+When('I show the History view', async ({ page }) => {
+  await page.getByRole('button', { name: 'History' }).click()
+})
+
+Then('the {word} view has the focus ring', async ({ page }, name: string) => {
+  await expectFocus(page.getByRole('region', { name }))
 })
 
 When('I press Cmd+Shift+E', async ({ page }) => {

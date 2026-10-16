@@ -131,7 +131,8 @@ button:focus-visible {
 [data-focus-unit] {
   outline: none;
 }
-[data-focus-unit]:focus-within {
+/* Units nest (a card in its view): only the innermost focused one rings. */
+[data-focus-unit]:focus-within:not(:has([data-focus-unit]:focus-within)) {
   border-color: var(--accent);
   box-shadow:
     inset 0 0 0 1px var(--accent),
@@ -256,19 +257,6 @@ main {
 .terminal {
   background: var(--deep);
   border-left: 1px solid var(--line);
-}
-/* focus must not recolour the divider shared with the neighbouring pane */
-.sidebar[data-focus-unit]:focus-within {
-  border-right-color: var(--line);
-  box-shadow:
-    inset -1px 0 0 1px var(--accent),
-    inset 0 0 14px rgb(217 119 87 / 12%);
-}
-.terminal[data-focus-unit]:focus-within {
-  border-left-color: var(--line);
-  box-shadow:
-    inset 1px 0 0 1px var(--accent),
-    inset 0 0 14px rgb(217 119 87 / 12%);
 }
 .strip {
   display: flex;

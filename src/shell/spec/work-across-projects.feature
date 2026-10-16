@@ -51,3 +51,12 @@ Feature: Work across Projects and Runs
     Given "api-service" has no running Run
     When I close the "api-service" tab
     Then it closes without confirmation
+
+  Scenario: Cmd+2 rings the centre view
+    When I show the History view
+    And I press Cmd+2
+    Then the History view has the focus ring
+
+  Scenario: Cmd+2 rings an empty Feed
+    When I press Cmd+2
+    Then the Feed view has the focus ring
