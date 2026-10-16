@@ -61,10 +61,17 @@ const card = (page: Page) => page.getByRole('article').first()
 const terminal = (page: Page) => page.getByRole('region', { name: 'Terminal pane' })
 const sidebar = (page: Page) => page.getByRole('complementary', { name: 'Sidebar' })
 
-// Hovering waits past the 150 ms dwell.
+// Hovering waits past the 150 ms dwell. Parallel workers share one X display, so another
+// worker's window appearing or closing sends the real pointer (parked at the window centre)
+// into this window and restarts the dwell elsewhere; hover again until the unit holds focus.
 const rest = async (page: Page, unit: Locator) => {
-  await unit.hover()
-  await page.waitForTimeout(250)
+  await expect
+    .poll(async () => {
+      await unit.hover()
+      await page.waitForTimeout(250)
+      return hasFocus(unit)
+    })
+    .toBe(true)
 }
 
 When('the mouse rests on a Feed card for 150 ms', async ({ page }) => {

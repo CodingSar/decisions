@@ -20,6 +20,8 @@ export interface Decision {
   answered?: number
   /** Groma Component ids the Decision touches. */
   components?: string[]
+  /** The Run whose agent asked, e.g. "R1". */
+  run?: string
 }
 
 /** The human's response; `option` is an index, `like` approves the recommendation. */
@@ -54,8 +56,9 @@ export function serialize(d: Decision): string {
   const accepted = d.accepted ? 'accepted: true\n' : ''
   const supersedes = d.supersedes ? `supersedes: D${d.supersedes}\n` : ''
   const components = d.components?.length ? `components: ${d.components.join(', ')}\n` : ''
+  const run = d.run ? `run: ${d.run}\n` : ''
   const verdict = d.verdict ? `\n## Verdict\n\n${d.verdict}\n` : ''
-  return `---\nscope: ${d.scope}\nstatus: ${d.status}\n${asked}${by}${accepted}${supersedes}${components}---\n# ${d.question}\n\nAsked by: ${d.agent}\n\n${options.join('\n')}\n${verdict}`
+  return `---\nscope: ${d.scope}\nstatus: ${d.status}\n${asked}${by}${accepted}${supersedes}${components}${run}---\n# ${d.question}\n\nAsked by: ${d.agent}\n\n${options.join('\n')}\n${verdict}`
 }
 
 export function parse(id: number, text: string): Decision {
@@ -85,6 +88,7 @@ export function parse(id: number, text: string): Decision {
     components: field(/^components: (.*)$/m)
       .split(', ')
       .filter(Boolean),
+    run: field(/^run: (.*)$/m) || undefined,
     verdict: /^## Verdict\n\n(.*)$/m.exec(text)?.[1],
   }
 }

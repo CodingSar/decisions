@@ -64,6 +64,11 @@ Feature: Decision map
     When I hover "decision-store" in the mini map
     Then D7 is listed
 
+  Scenario: Hover list rows are readable
+    Given a pending Decision D7 touches "decision-store"
+    When I hover "decision-store" in the mini map
+    Then the listed row shows "Which storage?" as plain text
+
   Scenario: Open the modal
     When I click the expand icon
     Then the Decision map modal covers the window
@@ -81,6 +86,6 @@ Feature: Decision map
 
   Scenario: No Groma model
     Given the Project "bare" has no "groma/" folder
-    Then the map shows an empty state with a curate button
-    When I click the curate button
+    Then the map says "No Decision map yet" with a build button
+    When I click the build button
     Then a Run starts with a prompt to curate the architecture

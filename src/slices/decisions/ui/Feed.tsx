@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Decision, Verdict } from '../model'
 import './feed.css'
 
@@ -54,9 +54,11 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 // Enter sends, Esc cancels; an empty comment is ignored.
 function CommentBox({
+  hint,
   onSend,
   onCancel,
 }: {
+  hint: string
   onSend: (text: string) => void
   onCancel: () => void
 }) {
@@ -66,6 +68,7 @@ function CommentBox({
     <input
       ref={ref}
       aria-label="Comment"
+      placeholder={hint}
       onKeyDown={(e) => {
         if (e.key === 'Escape') onCancel()
         else if (e.key === 'Enter' && e.currentTarget.value.trim())
@@ -80,6 +83,7 @@ const LIKE =
 const DISLIKE =
   'M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17'
 const COMMENT = 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'
+const TERMINAL = 'M4 17l6-5-6-5M12 19h8'
 
 function Act({
   label,
@@ -127,6 +131,7 @@ function Card({
   onFocus,
   onBlur,
   onComment,
+  onShowRun,
 }: {
   d: Decision
   project: string
@@ -135,6 +140,7 @@ function Card({
   onFocus: () => void
   onBlur: () => void
   onComment: () => void
+  onShowRun?: () => void
 }) {
   return (
     <article
@@ -158,6 +164,7 @@ function Card({
             <button
               type="button"
               aria-label={`${i + 1} ${o}`}
+              title={`Choose option ${i + 1} (${i + 1})`}
               onClick={() => send(project, d.id, { option: i })}
             >
               <span>{i + 1}</span>
@@ -172,6 +179,7 @@ function Card({
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
+                <title>Recommended</title>
                 <path d="M12 2l3 7 7 .6-5.3 4.7 1.6 7.2L12 17.8 5.7 21.5l1.6-7.2L2 9.6 9 9z" />
               </svg>
             )}
@@ -180,7 +188,7 @@ function Card({
       </ul>
       <div className="actions">
         <Act
-          label="Like (L)"
+          label="Like: take the recommended option (L)"
           name="Like"
           d={LIKE}
           solid
@@ -193,6 +201,12 @@ function Card({
           onClick={() => send(project, d.id, { dislike: true })}
         />
         <Act label="Comment (C)" name="Comment" d={COMMENT} onClick={onComment} />
+        {d.run && onShowRun && (
+          <>
+            <span className="grow" />
+            <Act label="Show in Run (J)" name="Show in Run" d={TERMINAL} onClick={onShowRun} />
+          </>
+        )}
       </div>
       {box}
     </article>
@@ -203,16 +217,25 @@ function Card({
 export function Feed({
   project,
   pending,
+  runIds,
+  focus,
   newestFirst = false,
+  onShowRun,
 }: {
   project: string
   pending: Decision[]
+  /** Runs that still exist: only their Decisions offer Show in Run. */
+  runIds: string[]
+  /** The card focused at first, e.g. a fresh overturn copy. */
+  focus?: number
   newestFirst?: boolean
+  /** Jump to the terminal line where the Decision was raised. */
+  onShowRun?: (d: Decision) => void
 }) {
-  const [focusId, setFocusId] = useState<number>()
+  const [focusId, setFocusId] = useState(focus)
   const [commenting, setCommenting] = useState(false)
   const first = pending.find((d) => d.id === focusId) ?? pending[0]
-  const oldest = pending[0]
+  const hasRun = (d: Decision) => d.run !== undefined && runIds.includes(d.run)
 
   // An open comment box pauses every timeout.
   useEffect(() => {
@@ -220,14 +243,16 @@ export function Feed({
     return () => void window.api.invoke('decisions:working', false)
   }, [commenting])
   // A new oldest card starts without a comment box, except an overturn, which opens with one.
+  // Layout effects: the box state and the key listener settle before the card is painted, so a
+  // key pressed as soon as it shows acts on it instead of being lost or undone by the reset.
   // biome-ignore lint/correctness/useExhaustiveDependencies: only a change of card resets it
-  useEffect(() => setCommenting(first?.supersedes !== undefined), [first?.id])
-  // With nothing focused, focus lands on the oldest card, so the ring always shows where keys act.
+  useLayoutEffect(() => setCommenting(first?.supersedes !== undefined), [first?.id])
+  // With nothing focused, focus lands on the first card, so the ring always shows where keys act.
   useEffect(() => {
-    if (oldest && document.activeElement === document.body)
-      document.querySelector<HTMLElement>(`[aria-label="D${oldest.id}"]`)?.focus()
-  }, [oldest])
-  useEffect(() => {
+    if (first && document.activeElement === document.body)
+      document.querySelector<HTMLElement>(`[aria-label="D${first.id}"]`)?.focus()
+  }, [first])
+  useLayoutEffect(() => {
     if (!first || commenting) return
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || typesText(e.target)) return
@@ -237,6 +262,7 @@ export function Feed({
         setCommenting(true)
         return
       }
+      if (k === 'j') return first.run && runIds.includes(first.run) && onShowRun?.(first)
       const option = Number(k) - 1
       const verdict: Verdict | undefined =
         k === 'l'
@@ -250,10 +276,15 @@ export function Feed({
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [project, first, commenting])
+  }, [project, first, commenting, onShowRun, runIds])
 
   return (
     <section className="cards" aria-label="Feed" data-pane="feed" tabIndex={-1}>
+      {!pending.length && (
+        <p className="empty">
+          No pending Decisions. Start a Run and give it a task; its questions land here.
+        </p>
+      )}
       {(newestFirst ? [...pending].reverse() : pending).map((d) => (
         <Card
           key={d.id}
@@ -266,9 +297,15 @@ export function Feed({
             setFocusId(d.id)
             setCommenting(true)
           }}
+          onShowRun={hasRun(d) ? () => onShowRun?.(d) : undefined}
           box={
             commenting && d === first ? (
               <CommentBox
+                hint={
+                  d.supersedes
+                    ? 'Why overturn? · ↵ sends · Esc discards'
+                    : 'Your direction · ↵ sends · Esc cancels'
+                }
                 onSend={(comment) => send(project, d.id, { comment })}
                 onCancel={() =>
                   d.supersedes

@@ -207,6 +207,7 @@
   gap: 6px;
 }
 .map li button,
+.map li .row,
 .map-modal li button {
   width: 100%;
   height: auto;

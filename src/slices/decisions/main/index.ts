@@ -12,11 +12,13 @@ export interface ScopeRule {
 
 const toMs = (t: string) => Number.parseInt(t, 10) * (t.endsWith('h') ? 3600_000 : 60_000)
 
-// `projectOf` resolves a Run to the Project folder it works in; `ruleOf` gives the Scope's settings there.
+// `projectOf` resolves a Run to the Project folder it works in; `ruleOf` gives the Scope's settings there;
+// `mark` tells the Run's terminal where the Decision was raised.
 export function registerDecisions(
   win: BrowserWindow,
   projectOf: (runId: string) => string | undefined,
   ruleOf: (project: string, scope: string) => ScopeRule,
+  mark: (runId: string, decision: string) => void = () => {},
 ) {
   // Blocked agent calls, keyed by Project folder and Decision ID. No entry: the agent is gone.
   // `left` is the time to timeout; it only runs down while the app runs and the human is not working on a card.
@@ -74,14 +76,16 @@ export function registerDecisions(
     write(project, { ...d, accepted: true })
     changed(project)
   })
-  // Overturn: a pending copy linked to the old Decision; nothing reaches any agent.
+  // Overturn: a pending copy linked to the old Decision; nothing reaches any agent. Returns the copy's id.
   ipcMain.handle('decisions:overturn', (_e, project: string, id: number) => {
     const all = readAll(project)
     const old = all.find((x) => x.id === id && x.status === 'answered')
     if (!old || supersededBy(all, id)) return
+    if (all.some((x) => x.supersedes === id && x.status === 'pending')) return
     const { id: _, by, reason, accepted, verdict, answered, ...copy } = old
-    create(project, { ...copy, status: 'pending', asked: Date.now(), supersedes: id })
+    const d = create(project, { ...copy, status: 'pending', asked: Date.now(), supersedes: id })
     changed(project)
+    return d.id
   })
   // Cancelling an overturn drops its pending Decision.
   ipcMain.handle('decisions:discard', (_e, project: string, id: number) => {
@@ -112,6 +116,7 @@ export function registerDecisions(
       if (!rule.mine) {
         const d = create(project, {
           ...req,
+          run: runId,
           status: 'answered',
           answered: Date.now(),
           by: 'auto',
@@ -119,10 +124,12 @@ export function registerDecisions(
         })
         const reply = verdictText(d, { like: true })
         write(project, { ...d, verdict: reply })
+        mark(runId, `D${d.id}`)
         changed(project)
         return Promise.resolve(reply)
       }
-      const d = create(project, { ...req, status: 'pending', asked: Date.now() })
+      const d = create(project, { ...req, run: runId, status: 'pending', asked: Date.now() })
+      mark(runId, `D${d.id}`)
       changed(project)
       return new Promise((reply) =>
         waiting.set(key(project, d.id), {

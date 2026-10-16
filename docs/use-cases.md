@@ -57,13 +57,8 @@ Actor: the human (single user). Terms per `GLOSSARY.md`.
 4. While any Run is active, the editor is read-only with a banner ("Run R2 is active") and an edit-anyway icon. No active Run: editing is free. The lock is Project-wide.
 5. `.decisions/` is visible but always read-only (the app writes Verdicts there).
 
-## UC9 Review and ship with Git
-1. A Git section in the left sidebar shows the current branch (with switcher), changed files, a commit message box, and push / pull icons. If the folder is not a repo, the Git icon is greyed and offers `git init` in one click.
-2. Clicking a changed file opens its diff in the Git view (Monaco diff). Stage and unstage per file.
-3. Human types a commit message and commits; push and pull use the system `git` CLI and its existing credentials. No generated messages, no Decision links in commits.
-4. Branch switching is disabled while any Run is active. Stage, commit, push and pull stay allowed, with the same "Run active" banner.
-5. A failed push, pull or checkout shows git's stderr in an inline error strip. Merge, rebase and conflicts are left to the terminal.
-6. Status refreshes live via the file watcher.
+## UC9 Review and ship with Git (removed 2026-10-16)
+Git stays in the Run terminal: the human asks the agent to commit, push or pull, or types `git` there. The in-app Git section and diff view were removed (TASK-31) so one tool, not two, owns the repo state.
 
 ## UC10 See Decisions on the architecture
 1. `request_decision` takes an optional `components` list (Groma element ids). At Run start the app reads the ids from the Project's `groma/` and lists them in the tool description; unknown ids are dropped. The field is stored in the D-file frontmatter. An overturn copies it to the new Decision.

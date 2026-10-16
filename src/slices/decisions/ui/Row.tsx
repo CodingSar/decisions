@@ -12,13 +12,15 @@ export function Row({
   d: Decision
   all: Decision[]
   project: string
-  onOverturn: () => void
+  /** Receives the id of the new pending copy. */
+  onOverturn: (id: number) => void
   /** Right-aligned note, e.g. why it was Auto-resolved. */
   tag?: string
   /** Extra icon buttons, shown before Overturn. */
   actions?: React.ReactNode
 }) {
   const by = supersededBy(all, d.id)
+  const copying = all.some((x) => x.supersedes === d.id && x.status === 'pending')
   return (
     <li className={by ? 'sup' : undefined}>
       {by ? (
@@ -44,9 +46,12 @@ export function Row({
               className="overturn"
               type="button"
               aria-label={`Overturn D${d.id}`}
-              title="Overturn"
+              title={copying ? 'Overturn pending' : 'Overturn'}
+              disabled={copying}
               onClick={() =>
-                window.api.invoke('decisions:overturn', project, d.id).then(onOverturn)
+                window.api
+                  .invoke('decisions:overturn', project, d.id)
+                  .then((id) => onOverturn(id as number))
               }
             >
               <svg

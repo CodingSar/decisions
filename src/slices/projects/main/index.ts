@@ -44,11 +44,12 @@ export function registerProjects(
     changed()
     if (setup) onSetup(path)
   })
-  ipcMain.handle('projects:focus', (_e, path: string) => {
+  const focus = (path: string) => {
     if (!paths.includes(path) || !existsSync(path)) return
     active = path
     changed()
-  })
+  }
+  ipcMain.handle('projects:focus', (_e, path: string) => focus(path))
   ipcMain.handle('projects:close', (_e, path: string) => {
     onClose(path)
     paths = paths.filter((p) => p !== path)
@@ -57,5 +58,5 @@ export function registerProjects(
     changed()
   })
 
-  return { active: () => active }
+  return { active: () => active, focus }
 }

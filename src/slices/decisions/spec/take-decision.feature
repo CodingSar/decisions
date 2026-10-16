@@ -10,6 +10,7 @@ Feature: Take a Decision
     When agent "orchestrator > api-agent" requests an "Architecture" Decision with options 1 and 2, recommending 1
     Then a card shows the Scope, the asking agent, the question and both options
     And the recommended option is marked
+    And option 1 offers "Choose option 1 (1)"
     And the agent is blocked
     And the tab badge increases
 
@@ -32,7 +33,9 @@ Feature: Take a Decision
 
   Scenario: Comment
     Given a pending Decision
-    When I press C, type "use plain files, no index" and press Enter
+    When I press C
+    Then the comment box hints "Your direction · ↵ sends · Esc cancels"
+    When I type "use plain files, no index" and press Enter
     Then the agent receives that direction
 
   Scenario: Cancel a comment
@@ -59,6 +62,9 @@ Feature: Take a Decision
     Given a pending Decision
     When 4 minutes pass
     Then the card shows "4m" waited
+
+  Scenario: Empty Feed says where Decisions come from
+    Then the Feed says "No pending Decisions. Start a Run and give it a task; its questions land here."
 
   Scenario: Answered Decision goes to History
     When I give a Verdict on a pending Decision

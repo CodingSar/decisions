@@ -30,7 +30,8 @@ export function FilesView({
   run?: { name: string }
   onOpen: (path: string) => void
 }) {
-  const [text, setText] = useState<string>()
+  // undefined: loading; null: not on disk.
+  const [text, setText] = useState<string | null>()
   const [source, setSource] = useState(false)
   const [unlocked, setUnlocked] = useState(false)
   const [failed, setFailed] = useState(false)
@@ -78,7 +79,7 @@ export function FilesView({
       pending.current ||
       window.api
         .invoke('files:read', project, path)
-        .then((t) => !stale && !pending.current && setText(t as string))
+        .then((t) => !stale && !pending.current && setText((t as string | undefined) ?? null))
         .catch(() => {})
     load()
     const off = window.api.on('files:changed', (p: string) => p === project && load())
@@ -131,6 +132,11 @@ export function FilesView({
           </>
         )}
       </div>
+      {decisions && (
+        <div role="status" className="file-lock">
+          <span>Decisions files are read-only</span>
+        </div>
+      )}
       {locked && (
         <div role="status" className="file-lock">
           <span>Run {run.name} is active</span>
@@ -138,7 +144,10 @@ export function FilesView({
             type="button"
             aria-label="Edit anyway"
             title="Edit anyway"
-            onClick={() => setUnlocked(true)}
+            onClick={() => {
+              setUnlocked(true)
+              setSource(true) // editing happens in the source
+            }}
           >
             <Glyph d={PENCIL} />
           </button>
@@ -149,7 +158,9 @@ export function FilesView({
           <span>Save failed</span>
         </div>
       )}
-      {text === undefined ? null : rendered ? (
+      {text === undefined ? null : text === null ? (
+        <p className="empty">{path} not found</p>
+      ) : rendered ? (
         <div className="md">
           <Markdown
             remarkPlugins={[remarkGfm]}

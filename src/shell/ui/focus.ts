@@ -12,13 +12,15 @@ function focusEl(el: Element | null | undefined) {
   ;(inner ?? el).focus({ preventScroll: true })
 }
 
-// Hover focus: resting on a focus unit for 150 ms focuses it. A keyboard focus move suspends
-// hover focus until the mouse moves again. `paths`/`active` are the Project tabs for tab shortcuts.
+// Hover focus: resting on a focus unit for 150 ms focuses it. A focus move by other means (keys,
+// a click, the app itself) suspends hover focus until the mouse moves again, so a pending dwell
+// cannot undo it. `paths`/`active` are the Project tabs for tab shortcuts.
 export function useFocus(paths: string[], active: string) {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined
     let candidate: Element | null | undefined
     let suspended = false
+    let own = false
 
     const hover = (t: EventTarget | null) => {
       if (suspended) return
@@ -29,7 +31,11 @@ export function useFocus(paths: string[], active: string) {
       timer = setTimeout(() => {
         const at = document.activeElement
         if (unit) {
-          if (!unit.contains(at)) focusEl(unit)
+          if (!unit.contains(at)) {
+            own = true
+            focusEl(unit)
+            own = false
+          }
         } else if (at instanceof HTMLElement && unitOf(at)) at.blur()
       }, DWELL_MS)
     }
@@ -43,6 +49,9 @@ export function useFocus(paths: string[], active: string) {
       hover(e.target)
     }
     const onOver = (e: MouseEvent) => hover(e.target)
+    const onFocusIn = () => {
+      if (!own) suspend()
+    }
 
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || e.altKey) return
@@ -64,11 +73,13 @@ export function useFocus(paths: string[], active: string) {
 
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseover', onOver)
+    window.addEventListener('focusin', onFocusIn)
     window.addEventListener('keydown', onKey)
     return () => {
       clearTimeout(timer)
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseover', onOver)
+      window.removeEventListener('focusin', onFocusIn)
       window.removeEventListener('keydown', onKey)
     }
   }, [paths, active])

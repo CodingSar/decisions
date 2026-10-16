@@ -22,10 +22,13 @@ export function useLayout() {
       .invoke('layout:get')
       .then((l) => setLayout({ ...DEFAULTS, ...(l as Partial<Layout>) }))
   }, [])
-  const update = (side: Side, patch: Partial<PaneState>) =>
+  const update = (side: Side, patch: Partial<PaneState> | ((s: PaneState) => Partial<PaneState>)) =>
     setLayout((l) => {
       if (!l) return l
-      const next = { ...l, [side]: { ...l[side], ...patch } }
+      const next = {
+        ...l,
+        [side]: { ...l[side], ...(typeof patch === 'function' ? patch(l[side]) : patch) },
+      }
       window.api.invoke('layout:set', next)
       return next
     })
@@ -38,6 +41,7 @@ export const columns = (l: Layout) =>
   `${l.sidebar.hidden ? EDGE : l.sidebar.width}px 1fr ${l.terminal.hidden ? EDGE : l.terminal.width}px`
 
 const label = (side: Side) => (side === 'sidebar' ? 'sidebar' : 'terminal')
+export const MOD = navigator.platform.startsWith('Mac') ? '⌘' : 'Ctrl+'
 
 // A hideable pane with a drag handle on its inner edge; hidden, only an arrow strip remains.
 export function Pane({
@@ -58,7 +62,7 @@ export function Pane({
         <button
           type="button"
           aria-label={`Show ${label(side)}`}
-          title={`Show ${label(side)}`}
+          title={left ? 'Show sidebar' : `Show terminal (${MOD}J)`}
           onClick={() => onChange({ hidden: false })}
         >
           <svg
@@ -101,7 +105,7 @@ export function Pane({
         type="button"
         className="hide"
         aria-label={`Hide ${label(side)}`}
-        title={`Hide ${label(side)}`}
+        title={left ? 'Hide sidebar' : `Hide terminal (${MOD}J)`}
         onClick={() => onChange({ hidden: true })}
       >
         <svg

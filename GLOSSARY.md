@@ -91,3 +91,7 @@ _Avoid_: Generate, scan
 **Edit anyway**:
 The override that unlocks the read-only editor while a Run is active.
 _Avoid_: Force edit
+
+**Terminal**:
+The pane that shows the selected Run's session (xterm). The only place git is used (ADR 0009); it also marks where Decisions were raised and reports the agent's activity.
+_Avoid_: Console, shell

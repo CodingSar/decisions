@@ -1,6 +1,19 @@
 # Terminal modernization
 
-Status: approved 2026-10-16, not started. Decisions below are final (TUI kept, JetBrains Mono, phase order 1-5).
+Status: done 2026-10-16, phases 1-5 shipped (TASK-26..30), one commit each; `terminal.feature` covers them. Decisions below are final (TUI kept, JetBrains Mono, phase order 1-5).
+
+## As built (deviations from the phases below)
+- Renderer: headless CI has no WebGL2, so the DOM path is what tests exercise; WebGL is probed per terminal (`look.ts`), `window.api.env.renderer = 'dom'` forces DOM.
+- Font stack lives in the `--mono` CSS token; `look.ts` reads it and the theme tokens, so the terminal follows `shell.css`.
+- `runs:output` became `runs:watch` / `runs:unwatch` (snapshot + start of the ack count). Flow control only applies to Runs with a live terminal.
+- The fake adapter is now a small echoing shell: `exit`, `flood`, `wait|work|done`, `title X`, `progress N`, `bell`; `ESC CR` prints `⏎`.
+- Sidebar label shows `· waiting` only; `working`/`done` only change the dot. Status label stays `running`.
+- `S` sorts the Feed unless focus is in the sidebar or terminal pane, where N/S/X act on Runs (hover focus applies).
+- Search bar and the alt-screen Decision chip float in the top right of `.term`, not in `.term-head`.
+- Marks for a Run whose terminal was never shown land at the end of the replayed scrollback on first show.
+- Review fixes (critic pass, same day): marks queue behind xterm's async parser (`term.write('', cb)`), signals only attach after the snapshot replay, OSC 52 can write but never read the clipboard, titles are stripped of control chars and capped at 80, the 2 MB cap cuts at a line start, a notification click also focuses the Run's Project, `Run.title` was dropped (titles rename directly), the fake's `pause/resume` really queue.
+- Ctrl+J and Ctrl+F never reach the pty on Linux/Windows (they are app keys); F/R/H view keys work everywhere, N/S/X only on the Runs panes.
+- Not verified here: real WebGL rendering, OS notifications, OSC 52 from a real CLI, Claude Code fullscreen (alt screen) marks. Try on a desktop.
 
 ## Running this plan unattended
 - One phase per commit. Per phase: write the failing scenario, implement, `npm run typecheck`, `npm test -- start-run.feature` (or `terminal.feature`), then `npm run lint`. Full `npm test` before the last commit.

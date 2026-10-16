@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react'
 import { DecisionMap } from '../../slices/architecture'
 import { Feed, History, Review, ReviewBadge, useAll, usePending } from '../../slices/decisions'
 import { FilesView, FileTree } from '../../slices/files'
-import { DiffView, GitSection } from '../../slices/git'
 import { Projects } from '../../slices/projects'
-import { RunList, RunTerminal, useBusy, useRuns } from '../../slices/runs'
+import { RunList, RunTerminal, showDecision, useBusy, useRuns } from '../../slices/runs'
 import { Settings } from '../../slices/scopes'
 import { useFocus } from './focus'
 import { columns, Pane, useLayout } from './Panes'
@@ -47,26 +46,41 @@ function Workspace({
   paths: string[]
   pending: ReturnType<typeof usePending>[string]
 }) {
-  const [view, setView] = useState<'feed' | 'review' | 'history' | 'files' | 'git'>('feed')
+  const [view, setView] = useState<'feed' | 'review' | 'history' | 'files'>('feed')
   const [file, setFile] = useState<string>()
   const openFile = (path: string) => {
     setFile(path)
     setView('files')
   }
-  const [change, setChange] = useState<string>()
-  const openChange = (path: string) => {
-    setChange(path)
-    setView('git')
-  }
   const [settings, setSettings] = useState(false)
   const [newestFirst, setNewestFirst] = useState(false)
+  // An overturn opens the Feed on its new copy.
+  const [focus, setFocus] = useState<number>()
+  const overturned = (id: number) => {
+    setFocus(id)
+    setView('feed')
+  }
   const runs = useRuns(active)
   const all = useAll(active)
   useFocus(paths, active)
   const { layout, update } = useLayout()
 
+  // Plain letters act on the focused pane: N/S/X on Runs from the sidebar or terminal, views and sort elsewhere.
   useEffect(() => {
+    const unit = () =>
+      document.activeElement?.closest('[data-focus-unit]')?.getAttribute('data-focus-unit')
     const onKey = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase()
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+        if (k === 'j') {
+          e.preventDefault()
+          update('terminal', (s) => ({ hidden: !s.hidden }))
+        } else if (k === 'f' && unit() === 'terminal') {
+          e.preventDefault()
+          window.dispatchEvent(new Event('terminal:find'))
+        }
+        return
+      }
       if (
         e.metaKey ||
         e.ctrlKey ||
@@ -76,13 +90,24 @@ function Workspace({
       )
         return
       if (e.key === ',') return setSettings((o) => !o)
-      if (e.key.toLowerCase() === 's') return setNewestFirst((o) => !o)
-      const v = VIEWS.find((x) => x.key === e.key.toLowerCase())
+      const u = unit()
+      const onRuns = u === 'terminal' || u === 'sidebar'
+      if (onRuns && 'nsx'.includes(k)) {
+        const { current } = runs
+        if (k === 'n') runs.create()
+        else if (k === 's' && current && current.status !== 'running')
+          window.api.invoke('runs:start', current.id).catch(console.error)
+        else if (k === 'x' && current?.status === 'running')
+          window.api.invoke('runs:stop', current.id).catch(console.error)
+        return
+      }
+      if (k === 's') return setNewestFirst((o) => !o)
+      const v = VIEWS.find((x) => x.key === k)
       if (v) setView(v.id)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [runs, update])
 
   // Scrollbars show only while their element scrolls.
   useEffect(() => {
@@ -113,7 +138,6 @@ function Workspace({
         <aside aria-label="Sidebar" data-focus-unit="sidebar" tabIndex={-1}>
           <RunList {...runs} />
           <FileTree project={active} onOpen={openFile} />
-          <GitSection project={active} run={running} onOpen={openChange} />
           <button
             type="button"
             className="gear"
@@ -166,15 +190,26 @@ function Workspace({
           ) : null}
         </div>
         {view === 'feed' ? (
-          <Feed project={active} pending={pending} newestFirst={newestFirst} />
-        ) : view === 'git' && change ? (
-          <DiffView project={active} path={change} />
+          <Feed
+            project={active}
+            pending={pending}
+            runIds={runs.runs.map((r) => r.id)}
+            focus={focus}
+            newestFirst={newestFirst}
+            onShowRun={(d) => {
+              if (!d.run) return
+              runs.select(d.run)
+              update('terminal', { hidden: false })
+              // After the switch has rendered, so the viewport is the shown terminal's.
+              requestAnimationFrame(() => showDecision(d.run as string, `D${d.id}`))
+            }}
+          />
         ) : view === 'files' ? (
           <FilesView project={active} path={file} run={running} onOpen={openFile} />
         ) : view === 'review' ? (
-          <Review project={active} onOverturn={() => setView('feed')} />
+          <Review project={active} onOverturn={overturned} />
         ) : (
-          <History project={active} onOverturn={() => setView('feed')} />
+          <History project={active} onOverturn={overturned} />
         )}
       </main>
       <Pane side="terminal" state={layout.terminal} onChange={(p) => update('terminal', p)}>

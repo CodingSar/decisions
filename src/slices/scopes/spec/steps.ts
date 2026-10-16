@@ -32,15 +32,45 @@ When('I set the timeout of {string} to {word}', async ({ page }, scope: string, 
   await input.blur()
 })
 
+When(
+  'I set the timeout of {string} to {word} with Enter',
+  async ({ page }, scope: string, t: string) => {
+    await openSettings(page)
+    const input = dialog(page).getByRole('textbox', { name: `Timeout ${scope}` })
+    await input.fill(t)
+    await input.press('Enter')
+  },
+)
+
 Then('all {int} seeded Scopes are marked mine', async ({ page }, n: number) => {
   await expect(dialog(page).getByRole('switch', { checked: true })).toHaveCount(n)
 })
 
-Then('every timeout is {string}', async ({ page }, value: string) => {
+Then('no timeout is set', async ({ page }) => {
   for (const box of await dialog(page)
     .getByRole('textbox', { name: /^Timeout / })
     .all())
-    await expect(box).toHaveValue(value)
+    await expect(box).toHaveValue('')
+})
+
+Then(
+  'the timeout of {string} still reads {string} and is flagged invalid',
+  async ({ page }, scope: string, text: string) => {
+    const input = dialog(page).getByRole('textbox', { name: `Timeout ${scope}` })
+    await expect(input).toHaveValue(text)
+    await expect(input).toHaveAttribute('aria-invalid', 'true')
+  },
+)
+
+Then('a hint says {string}', async ({ page }, text: string) => {
+  await expect(dialog(page).locator('.hint')).toContainText(text)
+})
+
+Then('the Add Scope field is titled {string}', async ({ page }, title: string) => {
+  await expect(dialog(page).getByRole('textbox', { name: 'Add Scope' })).toHaveAttribute(
+    'title',
+    title,
+  )
 })
 
 // After a relaunch the `page` fixture is stale; read the session's current page.

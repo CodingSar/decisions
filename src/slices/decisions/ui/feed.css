@@ -44,6 +44,10 @@ main section[aria-label] {
   flex-direction: column;
   gap: 16px;
 }
+section .empty {
+  margin: 0;
+  color: var(--soft);
+}
 section ul {
   list-style: none;
   margin: 0;

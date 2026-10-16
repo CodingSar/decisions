@@ -7,7 +7,9 @@ Feature: Configure Decision Scopes
   Scenario: A new Project takes every seeded Scope
     When I open the project settings
     Then all 11 seeded Scopes are marked mine
-    And every timeout is "none"
+    And no timeout is set
+    And a hint says "On: the agent waits for your Verdict"
+    And the Add Scope field is titled "Add Scope"
 
   Scenario: Deselect a Scope
     When I toggle off "Dependencies"
@@ -29,6 +31,12 @@ Feature: Configure Decision Scopes
   Scenario: Set a timeout
     When I set the timeout of "Security" to 30m
     Then ".decisions/config.json" records 30m for "Security"
+    When I set the timeout of "Security" to 2h with Enter
+    Then ".decisions/config.json" records 2h for "Security"
+
+  Scenario: Invalid timeout is flagged
+    When I set the timeout of "Security" to soon
+    Then the timeout of "Security" still reads "soon" and is flagged invalid
 
   Scenario: Settings persist
     Given I toggled off "Performance"

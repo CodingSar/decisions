@@ -29,6 +29,18 @@ Feature: Edit files
     Then the editor is editable
     And the banner is gone
 
+  Scenario: Edit anyway on a rendered file opens the source
+    Given the Run "R2" is running
+    And "docs/plan.md" is open rendered
+    When I click the edit-anyway icon
+    Then the editor is editable
+
+  Scenario: Decisions files are read-only
+    When I open ".decisions/D1.md"
+    Then a banner says "Decisions files are read-only"
+    And there is no edit-anyway icon
+    And the editor is read-only
+
   Scenario: Markdown toggles to source for editing
     Given "docs/plan.md" is open rendered
     When I toggle to the source and change it

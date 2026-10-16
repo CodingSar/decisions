@@ -1,6 +1,9 @@
 export interface AgentSession {
   write(data: string): void
   resize(cols: number, rows: number): void
+  /** Flow control: hold output while the renderer catches up. */
+  pause(): void
+  resume(): void
   stop(): void
 }
 

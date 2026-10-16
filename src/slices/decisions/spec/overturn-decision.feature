@@ -8,7 +8,18 @@ Feature: Review and overturn
   Scenario: Overturn creates a linked pending Decision
     When I overturn D5 in Review
     Then a new pending Decision D6 with the same question and options opens with a comment box
+    And the comment box hints "Why overturn? · ↵ sends · Esc discards"
     And D5 is still not superseded
+
+  Scenario: Overturning twice creates one copy
+    Given I overturned D5 as D6
+    When I overturn D5 again
+    Then only D6 is pending and Overturn D5 is disabled
+
+  Scenario: Overturn with other pending Decisions focuses the copy
+    Given D1 is pending
+    When I overturn D5 in Review
+    Then D6 is focused with a comment box
 
   Scenario: Verdict completes the overturn
     Given I overturned D5 as D6
@@ -43,3 +54,4 @@ Feature: Review and overturn
 
   Scenario: History lists everything newest first
     Then History lists answered, Auto-resolved and Superseded Decisions newest first
+    And History tags D1 "you"
