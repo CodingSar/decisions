@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Decisions Collapsed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+:root{--bg:#141413;--side:#181715;--panel:#1d1c1a;--raise:#262522;--line:#3a3835;--text:#faf9f5;--muted:#a3a097;--accent:#d97757;--accent-bg:#2e1f19;--green:#3fb950;--amber:#e5b567}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;box-sizing:border-box;background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;display:flex;flex-direction:column;overflow:hidden">
+
+  <div style="height:40px;flex:none;display:flex;align-items:flex-end;gap:2px;padding:0 12px;background:#0f0f0e;border-bottom:1px solid var(--line)">
+    <div style="padding:0 16px;height:32px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;margin-bottom:-1px">
+      <span style="font-weight:500">decisions</span>
+      <span style="background:var(--accent);color:#141413;font-size:11px;font-weight:600;border-radius:9px;padding:1px 7px">3</span>
+    </div>
+  </div>
+
+  <div style="flex:1;min-height:0;display:flex;position:relative">
+
+    <!-- left edge: hover reveals the arrow -->
+    <button title="Show sidebar (⌘B)" aria-label="Show sidebar" style="all:unset;box-sizing:border-box;cursor:pointer;width:20px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--side);border-right:1px solid var(--line);color:var(--accent)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <div style="height:44px;flex:none;display:flex;align-items:center;gap:24px;padding:0 24px;border-bottom:1px solid var(--line)">
+        <span style="font-weight:600;border-bottom:2px solid var(--accent);height:42px;display:flex;align-items:center">Feed <span style="margin-left:8px;color:var(--accent)">3</span></span>
+        <span style="color:var(--muted)">Review <span style="margin-left:8px">2</span></span>
+      </div>
+      <div style="flex:1;min-height:0;overflow:hidden;padding:24px;display:flex;flex-direction:column;gap:16px;align-items:center">
+        <div style="width:760px;background:var(--panel);border:1px solid var(--accent);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:12px">
+            <span style="color:var(--muted)">D7</span>
+            <span style="background:var(--accent-bg);color:var(--accent);border-radius:4px;padding:2px 8px;font-weight:500">Architecture</span>
+            <span style="color:var(--muted)">orchestrator › api-agent</span>
+            <span style="flex:1"></span>
+            <span title="Agent is blocked, waiting 4 minutes" style="color:var(--amber);display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>4m</span>
+          </div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:17px;font-weight:600">Persist Decisions as plain files or in SQLite?</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--accent);background:var(--accent-bg);border-radius:6px">
+              <span style="color:var(--accent)">A</span>
+              <span style="flex:1">Plain files in .decisions/</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)" aria-label="Recommended"><title>Recommended</title><path d="M12 2l3 7 7 .6-5.3 4.7 1.6 7.2L12 17.8 5.7 21.5l1.6-7.2L2 9.6 9 9z"/></svg>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:6px">
+              <span style="color:var(--muted)">B</span>
+              <span style="flex:1">SQLite in app data dir</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- right edge -->
+    <button title="Show terminal (⌘J)" aria-label="Show terminal" style="all:unset;box-sizing:border-box;cursor:pointer;width:20px;flex:none;display:flex;align-items:center;justify-content:center;background:#0f0f0e;border-left:1px solid var(--line);color:var(--accent)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

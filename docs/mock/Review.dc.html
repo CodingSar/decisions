@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Decisions Review</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+:root{--bg:#141413;--side:#181715;--panel:#1d1c1a;--raise:#262522;--line:#3a3835;--text:#faf9f5;--muted:#a3a097;--accent:#d97757;--accent-bg:#2e1f19;--green:#3fb950;--amber:#e5b567}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;box-sizing:border-box;background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;display:flex;flex-direction:column;overflow:hidden">
+
+  <div style="height:40px;flex:none;display:flex;align-items:flex-end;gap:2px;padding:0 12px;background:#0f0f0e;border-bottom:1px solid var(--line)">
+    <div style="padding:0 16px;height:32px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;margin-bottom:-1px">
+      <span style="font-weight:500">decisions</span>
+      <span style="background:var(--accent);color:#141413;font-size:11px;font-weight:600;border-radius:9px;padding:1px 7px">3</span>
+    </div>
+    <div style="padding:0 16px;height:32px;display:flex;align-items:center;gap:8px;color:var(--muted)">
+      <span>api-service</span>
+      <span style="background:var(--raise);color:var(--text);font-size:11px;font-weight:600;border-radius:9px;padding:1px 7px">1</span>
+    </div>
+  </div>
+
+  <div style="flex:1;min-height:0;display:flex">
+    <div style="width:220px;flex:none;box-sizing:border-box;padding:16px 14px;background:var(--side);border-right:1px solid var(--line)">
+      <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Runs</div>
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--raise);border-radius:6px">
+        <span style="width:8px;height:8px;border-radius:4px;background:var(--green)"></span>
+        <span style="flex:1">Add MCP server</span>
+        <span style="font-size:11px;color:var(--muted)">R2</span>
+      </div>
+    </div>
+
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <div style="height:44px;flex:none;display:flex;align-items:center;gap:24px;padding:0 24px;border-bottom:1px solid var(--line)">
+        <span style="color:var(--muted)">Feed <span style="margin-left:8px">3</span></span>
+        <span style="font-weight:600;border-bottom:2px solid var(--amber);height:42px;display:flex;align-items:center">Review <span style="margin-left:8px;color:var(--amber)">2</span></span>
+        <span style="flex:1"></span>
+        
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;padding:24px;display:flex;flex-direction:column;gap:16px">
+
+        <div style="background:var(--panel);border:1px solid var(--amber);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:12px">
+            <span style="color:var(--muted)">D5</span>
+            <span style="background:#34312a;color:#d8c9a8;border-radius:4px;padding:2px 8px;font-weight:500">Dependencies</span>
+            <span style="color:var(--muted)">orchestrator › api-agent</span>
+            <span style="flex:1"></span>
+            <span title="Auto-resolved: out of Scope" style="color:var(--muted)">auto · 12m</span>
+          </div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:600">Which MCP SDK to use?</div>
+          <div style="padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--side)">
+            Went with <span style="font-weight:500">@modelcontextprotocol/sdk</span>
+            <span style="color:var(--muted)"> over a hand-rolled JSON-RPC server</span>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button title="Accept (A)" aria-label="Accept" style="all:unset;box-sizing:border-box;cursor:pointer;width:36px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:6px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+            </button>
+            <button title="Overturn (O)" aria-label="Overturn" style="all:unset;box-sizing:border-box;cursor:pointer;width:36px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid var(--amber);color:var(--amber);border-radius:6px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:12px">
+            <span style="color:var(--muted)">D6</span>
+            <span style="background:#34312a;color:#d8c9a8;border-radius:4px;padding:2px 8px;font-weight:500">Testing strategy</span>
+            <span style="color:var(--muted)">orchestrator</span>
+            <span style="flex:1"></span>
+            <span title="Auto-resolved: timed out" style="color:var(--muted)">auto · 6m</span>
+          </div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600">Fake Agent Runtime: in-memory or scripted file replay?</div>
+          <div style="color:var(--muted)">Went with in-memory</div>
+        </div>
+
+        <div style="background:var(--side);border:1px dashed var(--line);border-radius:8px;padding:14px 20px;color:var(--muted);display:flex;align-items:center;gap:10px">
+          <span>D3</span>
+          <span style="text-decoration:line-through">Use SQLite for the Decision index</span>
+          <span style="flex:1"></span>
+          <span style="color:var(--amber)">superseded by D7</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

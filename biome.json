@@ -1,0 +1,22 @@
+{
+  "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
+  "javascript": { "formatter": { "quoteStyle": "single", "semicolons": "asNeeded" } },
+  "files": {
+    "includes": [
+      "**",
+      "!out",
+      "!.features-gen",
+      "!node_modules",
+      "!playwright-report",
+      "!test-results",
+      "!backlog",
+      "!.tessl",
+      "!docs",
+      "!tessl.json",
+      "!.tessl",
+      "!.claude",
+      "!.mcp.json",
+      "!package-lock.json"
+    ]
+  }
+}

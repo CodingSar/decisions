@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Decisions Feed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+button:focus-visible{outline:2px solid rgba(217,119,87,.6);outline-offset:2px}
+:root{--bg:#141413;--side:#181715;--panel:#1d1c1a;--raise:#262522;--line:#3a3835;--text:#faf9f5;--muted:#a3a097;--accent:#d97757;--accent-bg:#2e1f19;--green:#3fb950;--amber:#e5b567}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;box-sizing:border-box;background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;display:flex;flex-direction:column;overflow:hidden">
+
+  <!-- project tabs -->
+  <div style="height:40px;flex:none;display:flex;align-items:flex-end;gap:2px;padding:0 12px;background:#0f0f0e;border-bottom:1px solid var(--line)">
+    <div style="padding:0 16px;height:32px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;margin-bottom:-1px">
+      <span style="font-weight:500">decisions</span>
+      <span style="background:var(--accent);color:#141413;font-size:11px;font-weight:600;border-radius:9px;padding:1px 7px">3</span>
+    </div>
+    <div style="padding:0 16px;height:32px;display:flex;align-items:center;gap:8px;color:var(--muted)">
+      <span>api-service</span>
+      <span style="background:var(--raise);color:var(--text);font-size:11px;font-weight:600;border-radius:9px;padding:1px 7px">1</span>
+    </div>
+    <div style="padding:0 14px;height:32px;display:flex;align-items:center;color:var(--muted)" aria-label="New tab">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </div>
+  </div>
+
+  <div style="flex:1;min-height:0;display:flex">
+
+    <!-- sidebar -->
+    <div style="width:220px;flex:none;box-sizing:border-box;padding:16px 14px;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:24px">
+      <div>
+        <div style="display:flex;align-items:center;margin-bottom:8px"><span style="flex:1;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Runs</span><button title="New Run (N)" aria-label="New Run" style="all:unset;cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:var(--muted)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button title="Hide sidebar (⌘B)" aria-label="Hide sidebar" style="all:unset;cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:var(--muted)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--raise);border-radius:6px">
+            <span style="width:8px;height:8px;border-radius:4px;background:var(--green)"></span>
+            <span title="Rename (F2)" style="flex:1">Add MCP server</span>
+            <span style="font-size:11px;color:var(--muted)">R2</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;color:var(--muted)">
+            <span style="width:8px;height:8px;border-radius:4px;background:#5b5852"></span>
+            <span style="flex:1">Feed UI</span>
+            <span style="font-size:11px">R1</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:auto">
+        <button title="Project settings (,)" aria-label="Project settings" style="all:unset;box-sizing:border-box;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--muted)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div title="Drag to resize" style="width:5px;flex:none;margin:0 -2px;z-index:1;cursor:col-resize"></div>
+
+    <!-- feed -->
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg);box-shadow:inset 0 0 0 1px rgba(217,119,87,.55),inset 0 0 14px rgba(217,119,87,.12)">
+      <div style="height:44px;flex:none;display:flex;align-items:center;gap:24px;padding:0 24px;border-bottom:1px solid var(--line)">
+        <span style="font-weight:600;border-bottom:2px solid var(--accent);height:42px;display:flex;align-items:center">Feed <span style="margin-left:8px;color:var(--accent)">3</span></span>
+        <span style="color:var(--muted)">Review <span style="margin-left:8px">2</span></span>
+        <span title="History (H)" aria-label="History" style="color:var(--muted);display:flex;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2"/></svg></span>
+        <span style="flex:1"></span>
+        <span title="Oldest first" style="color:var(--muted);display:flex"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;padding:24px;display:flex;flex-direction:column;gap:16px">
+
+        <!-- focused card -->
+        <div style="background:var(--panel);border:1px solid var(--accent);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:12px">
+            <span style="color:var(--muted)">D7</span>
+            <span style="background:var(--accent-bg);color:var(--accent);border-radius:4px;padding:2px 8px;font-weight:500">Architecture</span>
+            <span style="color:var(--muted)">orchestrator › api-agent</span>
+            <span style="flex:1"></span>
+            <span title="Agent is blocked, waiting 4 minutes" style="color:var(--amber);display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>4m</span>
+          </div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:17px;font-weight:600">Persist Decisions as plain files or in SQLite?</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--accent);background:var(--accent-bg);border-radius:6px">
+              <span style="color:var(--accent)">A</span>
+              <span style="flex:1">Plain files in .decisions/</span>
+              <svg title="Recommended" width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)" aria-label="Recommended"><title>Recommended</title><path d="M12 2l3 7 7 .6-5.3 4.7 1.6 7.2L12 17.8 5.7 21.5l1.6-7.2L2 9.6 9 9z"/></svg>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:6px">
+              <span style="color:var(--muted)">B</span>
+              <span style="flex:1">SQLite in app data dir</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button title="Like (L)" aria-label="Like" style="all:unset;box-sizing:border-box;cursor:pointer;width:36px;height:34px;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#141413;border-radius:6px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+            </button>
+            <button title="Dislike (D)" aria-label="Dislike" style="all:unset;box-sizing:border-box;cursor:pointer;width:36px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:6px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
+            </button>
+            <button title="Comment (C)" aria-label="Comment" style="all:unset;box-sizing:border-box;cursor:pointer;width:36px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:6px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- card 2 -->
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:12px">
+            <span style="color:var(--muted)">D8</span>
+            <span style="background:#34312a;color:#d8c9a8;border-radius:4px;padding:2px 8px;font-weight:500">UI</span>
+            <span style="color:var(--muted)">orchestrator</span>
+            <span style="flex:1"></span>
+            <span style="color:var(--muted)">2m</span>
+          </div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600">Show Scope as a chip or a left-edge color bar on cards?</div>
+          <div style="color:var(--muted)">A Chip <span style="color:var(--accent)">★</span> · B Color bar</div>
+        </div>
+
+        <!-- card 3 -->
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:12px">
+            <span style="color:var(--muted)">D9</span>
+            <span style="background:#34312a;color:#d8c9a8;border-radius:4px;padding:2px 8px;font-weight:500">UX</span>
+            <span style="color:var(--muted)">orchestrator › ui-agent</span>
+            <span style="flex:1"></span>
+            <span style="color:var(--muted)">1m</span>
+          </div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600">Confirm before overturning a Verdict?</div>
+          <div style="color:var(--muted)">A No confirm, undo instead <span style="color:var(--accent)">★</span> · B Confirm dialog</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div title="Drag to resize" style="width:5px;flex:none;margin:0 -2px;z-index:1;cursor:col-resize;display:flex;justify-content:center"><div style="width:1px;height:100%;background:var(--line)"></div></div>
+
+    <!-- terminal -->
+    <div style="width:460px;flex:none;display:flex;flex-direction:column;background:#0f0f0e;border-left:1px solid var(--line)">
+      <div style="height:44px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px 0 16px;border-bottom:1px solid var(--line)">
+        <span style="width:8px;height:8px;border-radius:4px;background:var(--green)"></span>
+        <span style="font-weight:500">R2 · Add MCP server</span>
+        <span style="flex:1"></span>
+        <button title="Agent Runtime: Claude Code" aria-label="Agent Runtime: Claude Code" style="all:unset;box-sizing:border-box;cursor:pointer;height:28px;padding:0 6px;display:flex;align-items:center;gap:4px;color:var(--muted);border-radius:4px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l6-5-6-5M12 19h8"/></svg><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button disabled title="Start (running)" aria-label="Start run, disabled while running" style="all:unset;box-sizing:border-box;cursor:not-allowed;opacity:.3;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:var(--green);border-radius:4px;background:var(--raise)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4l14 8-14 8z"/></svg>
+        </button>
+        <button title="Stop run" aria-label="Stop run" style="all:unset;box-sizing:border-box;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#f85149;border-radius:4px;background:var(--raise)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        </button>
+        <button title="Hide terminal (⌘J)" aria-label="Hide terminal" style="all:unset;box-sizing:border-box;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:var(--muted)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
+        </button>
+      </div>
+      <div style="flex:1;min-height:0;overflow:hidden;box-sizing:border-box;padding:16px;font-size:12.5px;line-height:1.6;color:#d6d3cc">
+        <div style="color:var(--muted)">$ claude</div>
+        <div style="color:var(--accent)">✻ Welcome to Claude Code</div>
+        <div>&gt; Add an MCP server exposing request_decision</div>
+        <div>● Reading src/slices/decisions/main/mcp.ts</div>
+        <div>● Scaffolding tool schema</div>
+        <div style="color:var(--muted)">  question ≤ 120 chars</div>
+        <div style="color:var(--muted)">  options 2-4, one line each</div>
+        <div style="color:var(--amber)">● request_decision → D7</div>
+        <div style="color:var(--amber)">  waiting for Verdict…</div>
+        <div style="color:var(--muted)">▌</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,564 @@
+:root {
+  --bg: #141413;
+  --side: #181715;
+  --panel: #1d1c1a;
+  --raise: #262522;
+  --deep: #0f0f0e;
+  --line: #3a3835;
+  --text: #faf9f5;
+  --muted: #a3a097;
+  --accent-solid: #d97757;
+  --accent: rgb(217 119 87 / 55%);
+  --accent-bg: #2e1f19;
+  --green: #3fb950;
+  --amber: #e5b567;
+  --red: #f85149;
+  --sans: "IBM Plex Sans", sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    13px "IBM Plex Mono",
+    monospace;
+}
+#root {
+  display: flex;
+  flex-direction: column;
+}
+h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+button {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  border-radius: 6px;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+[role="status"] {
+  background: var(--raise);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 9px;
+  padding: 1px 7px;
+  margin-left: 8px;
+}
+[role="tablist"] {
+  height: 40px;
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 0 12px;
+  background: var(--deep);
+  border-bottom: 1px solid var(--line);
+}
+.tab {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  margin-bottom: -1px;
+}
+.tab:has([aria-selected="true"]) {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--text);
+}
+.tab [role="tab"] {
+  height: 100%;
+  padding: 0 8px 0 16px;
+  border-radius: 0;
+  color: inherit;
+  font-weight: 500;
+}
+.tab [role="tab"][aria-selected="true"] [role="status"] {
+  background: var(--accent-solid);
+  color: var(--bg);
+}
+.tab [role="tab"][aria-disabled="true"] {
+  text-decoration: line-through;
+}
+.tab-close {
+  width: 20px;
+  height: 20px;
+}
+.tab-new {
+  width: 32px;
+  height: 32px;
+}
+[data-focus-unit] {
+  outline: none;
+}
+[data-focus-unit]:focus-within {
+  border-color: var(--accent);
+  box-shadow:
+    inset 0 0 0 1px var(--accent),
+    inset 0 0 14px rgb(217 119 87 / 12%);
+}
+.panes {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+}
+.pane {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+.pane > [data-focus-unit] {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+main {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.xterm {
+  max-width: 100%;
+}
+.handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  z-index: 1;
+}
+.handle::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line); /* neutral, never accent */
+}
+.sidebar .handle {
+  right: -2px;
+}
+.terminal .handle {
+  left: -2px;
+}
+.sidebar {
+  background: var(--side);
+  border-right: 1px solid var(--line);
+}
+.terminal {
+  background: var(--deep);
+  border-left: 1px solid var(--line);
+}
+/* focus must not recolour the divider shared with the neighbouring pane */
+.sidebar[data-focus-unit]:focus-within {
+  border-right-color: var(--line);
+  box-shadow:
+    inset -1px 0 0 1px var(--accent),
+    inset 0 0 14px rgb(217 119 87 / 12%);
+}
+.terminal[data-focus-unit]:focus-within {
+  border-left-color: var(--line);
+  box-shadow:
+    inset 1px 0 0 1px var(--accent),
+    inset 0 0 14px rgb(217 119 87 / 12%);
+}
+.strip {
+  display: flex;
+}
+.strip button {
+  width: 20px;
+  height: 100%;
+  color: var(--accent-solid);
+  background: var(--side);
+  font-size: 16px;
+}
+
+.pane .hide {
+  position: absolute;
+  z-index: 2;
+  width: 24px;
+  height: 24px;
+}
+.sidebar .hide {
+  top: 16px;
+  right: 14px;
+}
+.terminal .hide {
+  top: 10px;
+  right: 12px;
+}
+.sidebar aside {
+  padding: 16px 14px;
+  gap: 8px;
+}
+.side-head {
+  display: flex;
+  align-items: center;
+  padding-right: 28px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.side-head span {
+  flex: 1;
+}
+.side-head button {
+  width: 24px;
+  height: 24px;
+}
+.runs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.runs button {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 7px 10px;
+}
+.runs button[aria-current="true"] {
+  background: var(--raise);
+  color: var(--text);
+}
+.runs small {
+  font-size: 11px;
+}
+.grow {
+  flex: 1;
+  text-align: left;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: #5b5852;
+  flex: none;
+}
+.dot.running {
+  background: var(--green);
+}
+.dot.failed {
+  background: var(--red);
+}
+.gear {
+  margin-top: auto;
+  width: 32px;
+  height: 32px;
+}
+.term-head {
+  height: 44px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 44px 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+.run-name {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  font: inherit;
+  font-weight: 500;
+  color: var(--text);
+}
+.run-name button {
+  color: inherit;
+}
+.term-head .start,
+.term-head .stop {
+  width: 28px;
+  height: 28px;
+  background: var(--raise);
+}
+.term-head .start {
+  color: var(--green);
+}
+.term-head .stop {
+  color: var(--red);
+}
+.term {
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.new-project {
+  flex: 1;
+  width: 760px;
+  max-width: 100%;
+  margin: 0 auto;
+  align-content: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.new-project h2 {
+  grid-column: 1 / -1;
+  margin: 0 0 12px;
+  font: 600 22px var(--sans);
+}
+.new-project button {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 8px;
+  color: var(--muted);
+  line-height: 1.5;
+  text-align: left;
+}
+.new-project button strong {
+  color: var(--text);
+}
+.new-project button:nth-of-type(2) {
+  border-color: var(--accent-solid);
+  background: var(--accent-bg);
+  color: var(--accent-solid);
+}
+.new-project button:nth-of-type(2) strong {
+  color: var(--accent-solid);
+}
+.new-project button:nth-of-type(2) span {
+  color: var(--muted);
+}
+.new-project ul {
+  grid-column: 1 / -1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.new-project ul button {
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px 14px;
+}
+.new-project ul button span:first-of-type {
+  flex: 1;
+  text-align: left;
+}
+dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  z-index: 10;
+  padding: 0;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 100vmax rgb(0 0 0 / 62%),
+    0 20px 60px rgb(0 0 0 / 50%);
+}
+.settings {
+  width: 720px;
+  max-width: 100%;
+  height: fit-content;
+  max-height: 820px;
+  padding-bottom: 16px;
+  font: inherit;
+}
+.settings header {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px 0 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+}
+.settings header button {
+  width: 28px;
+  height: 28px;
+}
+.settings h2,
+.settings .scope,
+.settings > input {
+  margin-left: 24px;
+  margin-right: 24px;
+}
+.settings h2 {
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.settings .scope {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+}
+.settings .scope.off {
+  color: var(--muted);
+}
+.scope input[role="switch"] {
+  appearance: none;
+  margin: 0;
+  width: 30px;
+  height: 16px;
+  border-radius: 8px;
+  flex: none;
+  position: relative;
+  background: var(--raise);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.scope input[role="switch"]::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--muted);
+}
+.scope input[role="switch"]:checked {
+  background: var(--accent-solid);
+  border-color: var(--accent-solid);
+}
+.scope input[role="switch"]:checked::after {
+  left: auto;
+  right: 1px;
+  background: var(--bg);
+}
+.scope input:not([role]) {
+  width: 90px;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font: inherit;
+}
+.scope input:not([role])[value]:not([value="none"]) {
+  color: var(--amber);
+}
+.settings > input {
+  width: calc(100% - 48px);
+  margin-top: 4px;
+  padding: 8px 10px;
+  background: none;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
+}
+.settings .scope button {
+  width: 28px;
+  height: 24px;
+}
+.settings {
+  overflow: auto;
+}
+.files ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.files li > span {
+  display: block;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+.files button {
+  all: unset;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.files-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.file-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+.file-head h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+}
+.file-head button[aria-pressed="true"] {
+  background: var(--raise);
+  color: var(--text);
+}
+.md {
+  flex: 1;
+  overflow: auto;
+  padding: 28px 36px;
+  font-family: "IBM Plex Sans", sans-serif;
+  line-height: 1.65;
+}
+.md > * {
+  max-width: 720px;
+}
+.md a {
+  color: var(--accent);
+  cursor: pointer;
+}
+.code {
+  flex: 1;
+  min-height: 0;
+}

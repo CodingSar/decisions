@@ -1,0 +1,84 @@
+# MVP use cases
+
+Actor: the human (single user). Terms per `GLOSSARY.md`.
+
+## UC1 Open a Project
+1. A new tab offers: open an existing folder, or set up a new project. Any folder works; git is not required.
+2. Set up: a native folder picker (can create a folder), then the grill-with-docs interview runs in the terminal; it writes GLOSSARY.md and ADRs into the folder.
+3. The folder appears as a Project tab; the app creates `.decisions/` on first use. Opening an already-open folder focuses its tab.
+4. On launch, all previously open Project tabs return, last-active focused, with Feed and past Decisions. Runs do not resume; pending Decisions from stopped Runs still show.
+5. A remembered folder that was moved or deleted shows its tab as unavailable, with a close icon.
+
+## UC2 Configure Decision Scopes
+1. A gear icon at the bottom of the sidebar opens a per-Project settings modal (more Project settings can join later). Its first section is Decision Scopes.
+2. A new Project starts with all seeded Scopes marked mine (toggle on). Human toggles off the ones they don't take personally; those Decisions are Auto-resolved.
+3. Human may add a Scope, delete a user-added one (old Decisions untouched; seeded Scopes can only be toggled), and set a timeout per Scope (default: none).
+4. Stored per Project in `.decisions/config.json`. An unknown Scope from an agent counts as In-Scope; the tool schema lists the valid Scopes.
+
+## UC3 Start a Run
+1. A plus icon in the sidebar Runs header creates a new Run (named R<n>, click to rename). A picker icon in the terminal header chooses its Agent Runtime (Claude Code is the only entry in v1; the Fake adapter is test-only and hidden).
+2. Human presses the start icon in the terminal header; no dialog. App starts the orchestrator in the terminal pane and injects the `request_decision` tool. The human types the task there.
+3. Start and stop act on the selected Run. Start is idempotent: greyed out while that Run runs, so only stop is active. Several Runs may go in parallel; the terminal shows the selected Run.
+4. Selecting a stopped Run shows its scrollback read-only (kept until the app closes; after a restart only its name and Decisions remain).
+5. If the `claude` CLI is missing or not logged in, the terminal shows its error and the Run is marked failed. No setup wizard.
+
+## UC4 Take a Decision
+1. An agent (orchestrator or subagent) calls `request_decision`: Scope, one-line question, 2-4 one-line options, recommended option.
+2. In-Scope: card appears in the Feed (oldest first), labeled with the asking agent; the agent blocks.
+3. Human gives a Verdict by keyboard: Like (L) approves the recommended option; pressing an option number (1-4) picks and likes that option; Dislike (D) rejects; Comment (C) opens an inline box (Enter sends, Esc cancels). A comment alone means "none of these, here is my direction".
+4. Verdict returns to the asking agent, which continues. Decision is saved. The card leaves the Feed, focus moves to the next oldest card, and the answered Decision appears in History.
+5. If the Run stops while an agent is blocked, the card stays pending; a later Verdict is saved to the file and the next Run picks it up.
+6. A new card raises the badge count on its Project tab. No sounds or OS notifications in v1.
+
+## UC5 Auto-resolve a Decision
+1. Out-of-Scope Decision, or an in-Scope one past its timeout: the agent proceeds on its recommendation.
+2. Decision is saved as Auto-resolved (`by: auto`, reason `out-of-scope` or `timeout`) and listed in the Review tab. Human Verdicts are `by: human`.
+3. Timeouts count only while the app runs and the agent is blocked; closing the app leaves the Decision pending. While the human is working on any card (comment box open), the timers of all cards pause.
+4. Review lists only Auto-resolved Decisions, newest first; unseen ones carry a badge, cleared by accepting.
+
+## UC6 Review and overturn
+1. Human scans the Review tab (Auto-resolved Decisions: accept or overturn) and the History tab (every past Decision: answered, auto-resolved, superseded; newest first; overturn only).
+2. Overturn works on any Decision that is not already Superseded, including ones the human answered. It creates a new pending In-Scope Decision with the old question and options, opened with a comment box; the human picks an option or writes direction. Cancelling leaves the old Decision unchanged.
+3. Once the new Verdict is saved, the old Decision becomes Superseded (struck through, "superseded by D<n>") and the new one carries `supersedes: D<old>`. Overturning an overturn works; only the latest is active.
+4. A running asking agent is not interrupted; the next Run is pointed at `.decisions/` and finds the new Verdict.
+
+## UC7 Work across Projects and Runs
+1. Human switches Project tabs; each has its own Feed and Runs.
+2. Focus follows the mouse: hovering a focus unit (a Feed card, the terminal view, or the sidebar) for 150 ms focuses it, and hovering elsewhere moves focus away. The focused unit shows a soft orange border. There is no typing pin.
+3. ⌘1/2/3 focus the sidebar, Feed and terminal; ⌘⇧[ / ⌘⇧] switch Project tabs and a number key jumps to one. A keyboard focus move suspends mouse focus until the mouse moves again.
+4. Sidebar and terminal are resizable by dragging their edge, and hide with a minus icon. A hidden pane leaves an edge strip with an arrow that shows it again. Widths and hidden state are remembered per app (app data, not `.decisions/`).
+5. An x icon on a Project tab closes it and stops its Runs; a confirmation appears only if a Run is active. Its Decisions stay in `.decisions/` and return on reopen.
+6. Human stops a Run; its unanswered Decisions stay pending in the Feed.
+
+## UC8 Browse and edit files
+1. A Files section in the left sidebar, directly under Runs, shows the Project tree. It respects `.gitignore` and hides `.git/`; a file watcher keeps it current.
+2. Clicking a file opens it in the Files view (a tab beside Feed / Review / History). Code opens in Monaco; `.md` opens rendered, with a toggle to edit source. Save is ⌘S; a dot marks unsaved changes.
+3. In rendered `.md`, relative links open that file in the Files view; external links open in the system browser.
+4. While any Run is active, the editor is read-only with a banner ("Run R2 is active") and an edit-anyway icon. No active Run: editing is free. The lock is Project-wide.
+5. `.decisions/` is visible but always read-only (the app writes Verdicts there).
+
+## UC9 Review and ship with Git
+1. A Git section in the left sidebar shows the current branch (with switcher), changed files, a commit message box, and push / pull icons. If the folder is not a repo, the Git icon is greyed and offers `git init` in one click.
+2. Clicking a changed file opens its diff in the Git view (Monaco diff). Stage and unstage per file.
+3. Human types a commit message and commits; push and pull use the system `git` CLI and its existing credentials. No generated messages, no Decision links in commits.
+4. Branch switching is disabled while any Run is active. Stage, commit, push and pull stay allowed, with the same "Run active" banner.
+5. A failed push, pull or checkout shows git's stderr in an inline error strip. Merge, rebase and conflicts are left to the terminal.
+6. Status refreshes live via the file watcher.
+
+## UC10 See Decisions on the architecture
+1. `request_decision` takes an optional `components` list (Groma element ids). At Run start the app reads the ids from the Project's `groma/` and lists them in the tool description; unknown ids are dropped. The field is stored in the D-file frontmatter. An overturn copies it to the new Decision.
+2. The Decision map sits in the right sidebar under the terminal (resizable, hideable). It shows the top level (actors, externals, systems/containers); clicking a container drills into its Components. A Component with pending Decisions glows orange with a count, rolled up to its parents. Decisions answered or Auto-resolved in the last 7 days give a faint tint. Superseded ones and Decisions without `components` do not appear.
+3. Hovering a Component lists its Decisions. The expand icon (⌘⇧M), or clicking a Component, opens the Decision map as a modal over the whole window: the same map, larger, focused on that Component, with a side panel listing its Decisions. Esc closes it.
+4. No `groma/` folder: the view shows an empty state with a button that starts a Run prompted to curate the architecture. The app never edits Groma files.
+5. Parked: Flow view (stepping through Groma `flows/`), module/dependency graph, run activity heatmap.
+
+## Rules
+- UC4: a dislike without a comment means "reject the recommendation completely". If that is ambiguous for the question, the agent asks for a comment in its next Decision.
+
+- The app writes every Verdict into the Decision file itself (deterministic, no agent needed). A live agent's `request_decision` call returns it; otherwise the next Run reads it from `.decisions/`.
+
+- IDs are `D<n>`, sequential per Project, file `.decisions/D<n>.md`; an overturn creates a new ID with `supersedes: D<n>`.
+- Start run adds one line to the initial prompt pointing at `.decisions/` for answered Decisions the agent hasn't seen; no contents are injected.
+
+## Open for the walkthrough
+- None. Walkthrough of UC1-UC7 done.

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New project</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+:root{--bg:#141413;--side:#181715;--panel:#1d1c1a;--raise:#262522;--line:#3a3835;--text:#faf9f5;--muted:#a3a097;--accent:#d97757;--accent-bg:#2e1f19;--green:#3fb950;--amber:#e5b567}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;box-sizing:border-box;background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;display:flex;flex-direction:column;overflow:hidden">
+
+  <div style="height:40px;flex:none;display:flex;align-items:flex-end;gap:2px;padding:0 12px;background:#0f0f0e;border-bottom:1px solid var(--line)">
+    <div style="padding:0 16px;height:32px;display:flex;align-items:center;color:var(--muted)">decisions</div>
+    <div style="padding:0 16px;height:32px;display:flex;align-items:center;color:var(--muted)">api-service</div>
+    <div style="padding:0 16px;height:32px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;margin-bottom:-1px">
+      <span style="font-weight:500">New project</span>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--bg)">
+    <div style="width:760px;display:flex;flex-direction:column;gap:28px">
+      <div style="font-family:'IBM Plex Sans',sans-serif;font-size:22px;font-weight:600">Open a project</div>
+
+      <div style="display:flex;gap:16px">
+        <button style="all:unset;box-sizing:border-box;cursor:pointer;flex:1;padding:20px;border:1px solid var(--line);background:var(--panel);border-radius:8px;display:flex;flex-direction:column;gap:10px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span style="font-weight:600">Open existing folder</span>
+          <span style="color:var(--muted);line-height:1.5">Pick a folder. Past Decisions load from .decisions/.</span>
+        </button>
+        <button style="all:unset;box-sizing:border-box;cursor:pointer;flex:1;padding:20px;border:1px solid var(--accent);background:var(--accent-bg);border-radius:8px;display:flex;flex-direction:column;gap:10px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
+          <span style="font-weight:600;color:var(--accent)">Set up a new project</span>
+          <span style="color:var(--muted);line-height:1.5">An interview (grill-with-docs) resolves the design, then writes GLOSSARY.md and ADRs into the new folder.</span>
+        </button>
+      </div>
+
+      <div>
+        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Recent</div>
+        <div style="border:1px solid var(--line);border-radius:8px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel)">
+            <span style="flex:1;font-weight:500">decisions</span>
+            <span style="color:var(--muted)">~/Code/decisions</span>
+            <span style="background:var(--accent);color:#141413;font-size:11px;font-weight:600;border-radius:9px;padding:1px 7px">3</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-top:1px solid var(--line)">
+            <span style="flex:1;font-weight:500">api-service</span>
+            <span style="color:var(--muted)">~/Code/api-service</span>
+            <span style="background:var(--raise);font-size:11px;font-weight:600;border-radius:9px;padding:1px 7px">1</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

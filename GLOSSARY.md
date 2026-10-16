@@ -1,0 +1,69 @@
+# decisions
+
+A single-user, local-first desktop IDE for orchestrating agentic development. The human curates the Decisions an autonomous agent run needs, while the agents write the code.
+
+## Language
+
+**Decision**:
+A question an agent raises mid-run that needs the human's judgment, carrying context, options, and the agent's recommendation.
+_Avoid_: Approval, prompt, ticket, ADR
+
+**Pending Decision**:
+A Decision with no Verdict yet. It stays pending when its Run stops or its agent disconnects, until the human gives a Verdict.
+_Avoid_: Open, unanswered, queued
+
+**Verdict**:
+The human's response to a Decision: a like, a dislike, and/or a comment, returned to the waiting agent.
+_Avoid_: Answer, vote, reaction
+
+**Auto-resolved Decision**:
+A Decision outside the human's Decision Scopes (or past its timeout) that the agent settled on its own recommendation, kept for after-the-fact review.
+_Avoid_: Implicit decision, silent decision
+
+**Superseded Decision**:
+A Decision whose Verdict the human later overturned, linked to the Decision that replaced it.
+_Avoid_: Reverted, deleted
+
+**Project**:
+A folder the app has open in a tab, with its own Feed and Decision log.
+_Avoid_: Workspace, repo
+
+**Run**:
+One orchestrator agent thread on a Project, plus any subagents it spawns, started from the app. Decisions raised by the subagents belong to the Run.
+_Avoid_: Job, task, session
+
+**Feed**:
+The stream of pending Decisions presented for the human to Verdict.
+_Avoid_: Inbox, queue, timeline
+
+**Decision Scope**:
+A category of Decision the human chooses to take personally (for example architecture, UI, UX); Decisions outside the chosen Scopes are left to the agent.
+_Avoid_: Vector, topic, filter, domain
+
+**Agent Runtime**:
+A pluggable backend that runs agents and surfaces their Decisions; Claude Code is one, none is privileged.
+_Avoid_: Provider, engine, model
+
+**Dark Factory**:
+An autonomous agent run that produces code with the human involved only through Decisions.
+_Avoid_: Pipeline, autopilot
+
+**Review**:
+The tab listing Auto-resolved Decisions, where the human accepts or overturns them.
+_Avoid_: Audit, inbox
+
+**History**:
+The tab listing every past Decision (answered, Auto-resolved, Superseded), newest first, where any non-Superseded one can be overturned.
+_Avoid_: Archive, log
+
+**Overturn**:
+The human's act of replacing an earlier Verdict or Auto-resolution: it opens a new linked Decision and, once answered, makes the old one Superseded.
+_Avoid_: Revert, undo
+
+**Component**:
+An element of the Project's Groma architecture model that a Decision can touch.
+_Avoid_: Module, node, box
+
+**Decision map**:
+The view of the architecture colored by the Decisions that touch each Component.
+_Avoid_: Architecture view, diagram, heatmap

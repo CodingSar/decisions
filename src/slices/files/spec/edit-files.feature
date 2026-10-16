@@ -1,0 +1,40 @@
+Feature: Edit files
+  The human may edit files, except while a Run is active.
+
+  Background:
+    Given the Project "api-service" is open
+    And it contains "src/app.ts"
+
+  Scenario: Edit and save with no Run active
+    When I open "src/app.ts"
+    And I change it and press save
+    Then the file on disk has my change
+    And the unsaved dot is gone
+
+  Scenario: Unsaved changes are marked
+    When I open "src/app.ts" and change it
+    Then "src/app.ts" shows an unsaved dot
+
+  Scenario: Read-only while a Run is active
+    Given the Run "R2" is running
+    When I open "src/app.ts"
+    Then the editor is read-only
+    And a banner says "Run R2 is active"
+
+  Scenario: Edit anyway
+    Given the Run "R2" is running
+    And I open "src/app.ts"
+    When I click the edit-anyway icon
+    Then the editor is editable
+
+  Scenario: The lock lifts when the Run stops
+    Given the Run "R2" is running
+    And I open "src/app.ts"
+    When I stop "R2"
+    Then the editor is editable
+    And the banner is gone
+
+  Scenario: Markdown toggles to source for editing
+    Given "docs/plan.md" is open rendered
+    When I toggle to the source and change it
+    Then the rendered view shows my change after save
