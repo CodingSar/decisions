@@ -703,6 +703,12 @@ dialog {
   font-size: 13px;
   font-weight: 400;
 }
+.save-state {
+  font-size: 12px;
+}
+.save-state[data-state="error"] {
+  color: var(--error);
+}
 .file-head button[aria-pressed="true"] {
   background: var(--raise);
   color: var(--text);

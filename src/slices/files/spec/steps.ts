@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { expect, type Page } from '@playwright/test'
 import { Given, Then, When } from '../../../shared/testing/fixtures'
@@ -143,6 +143,21 @@ const typeIn = async (page: Page) => {
 }
 
 When('I change it', async ({ page }) => typeIn(page))
+
+// Inside the save debounce, so the write finds no file.
+When('the file vanishes from disk', async ({ folder }) =>
+  unlinkSync(join(folder('api-service'), 'src/app.ts')),
+)
+
+const status = (page: Page) => view(page).locator('.save-state')
+
+Then('the status says {string}', async ({ page }, text: string) => {
+  await expect(status(page)).toHaveText(text)
+})
+
+Then('the status is an error', async ({ page }) => {
+  await expect(status(page)).toHaveAttribute('data-state', 'error')
+})
 
 Then('the file on disk has my change', async ({ folder }) => {
   const file = join(folder('api-service'), 'src/app.ts')
