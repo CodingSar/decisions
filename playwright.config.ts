@@ -19,7 +19,6 @@ const testDir = defineBddConfig({
     'src/slices/projects/spec/recent-projects.feature',
     'src/slices/files/spec/browse-files.feature',
     'src/slices/files/spec/edit-files.feature',
-    'src/slices/git/spec/review-and-ship.feature',
     'src/slices/architecture/spec/decision-map.feature',
   ],
   missingSteps: 'skip-scenario', // slices land one scenario at a time

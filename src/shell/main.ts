@@ -4,7 +4,6 @@ import { type RuntimeKind, setRuntime, startMcpServer } from '../slices/agent-ru
 import { componentIds, registerArchitecture } from '../slices/architecture/main'
 import { registerDecisions } from '../slices/decisions/main'
 import { registerFiles } from '../slices/files/main'
-import { registerGit } from '../slices/git/main'
 import { registerProjects } from '../slices/projects/main'
 import { registerRuns } from '../slices/runs/main'
 import { registerScopes, scopeNames, scopeSettings } from '../slices/scopes/main'
@@ -82,7 +81,6 @@ function createWindow(mcpUrl: string) {
 
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(null) // no File/Edit/View/Window bar
-  registerGit()
   registerArchitecture(() =>
     runs.startRun('Curate the architecture: run `groma agent-instructions` and follow it'),
   )

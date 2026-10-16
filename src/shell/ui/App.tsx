@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { DecisionMap } from '../../slices/architecture'
 import { Feed, History, Review, ReviewBadge, useAll, usePending } from '../../slices/decisions'
 import { FilesView, FileTree } from '../../slices/files'
-import { DiffView, GitSection } from '../../slices/git'
 import { Projects } from '../../slices/projects'
 import { RunList, RunTerminal, showDecision, useBusy, useRuns } from '../../slices/runs'
 import { Settings } from '../../slices/scopes'
@@ -47,16 +46,11 @@ function Workspace({
   paths: string[]
   pending: ReturnType<typeof usePending>[string]
 }) {
-  const [view, setView] = useState<'feed' | 'review' | 'history' | 'files' | 'git'>('feed')
+  const [view, setView] = useState<'feed' | 'review' | 'history' | 'files'>('feed')
   const [file, setFile] = useState<string>()
   const openFile = (path: string) => {
     setFile(path)
     setView('files')
-  }
-  const [change, setChange] = useState<string>()
-  const openChange = (path: string) => {
-    setChange(path)
-    setView('git')
   }
   const [settings, setSettings] = useState(false)
   const [newestFirst, setNewestFirst] = useState(false)
@@ -137,7 +131,6 @@ function Workspace({
         <aside aria-label="Sidebar" data-focus-unit="sidebar" tabIndex={-1}>
           <RunList {...runs} />
           <FileTree project={active} onOpen={openFile} />
-          <GitSection project={active} run={running} onOpen={openChange} />
           <button
             type="button"
             className="gear"
@@ -202,8 +195,6 @@ function Workspace({
               requestAnimationFrame(() => showDecision(d.run as string, `D${d.id}`))
             }}
           />
-        ) : view === 'git' && change ? (
-          <DiffView project={active} path={change} />
         ) : view === 'files' ? (
           <FilesView project={active} path={file} run={running} onOpen={openFile} />
         ) : view === 'review' ? (

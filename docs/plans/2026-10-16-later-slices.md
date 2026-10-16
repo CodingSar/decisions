@@ -2,7 +2,7 @@
 
 Order after the MVP (Decision loop):
 
-1. Git: pull, add, commit, push (built); per-Run worktrees (open).
+1. Git: in-app section built, then removed 2026-10-16 (TASK-31); git lives in the Run terminal. Per-Run worktrees (open) would be a terminal/agent concern.
 2. File tree and editor (Monaco) (built).
 3. Architecture visualization: Decision map built; Flow view open (see below).
 4. Agent, skill, and configuration builder.

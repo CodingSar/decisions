@@ -1,9 +1,10 @@
 ---
 id: TASK-31
 title: Remove the git slice
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-16 16:28'
+updated_date: '2026-10-16 17:15'
 labels: []
 dependencies: []
 ordinal: 35
@@ -17,5 +18,5 @@ Git work happens in the Run terminal through the agent; the in-app Git section, 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 No src/slices/git, App has no git view, full npm test passes
+- [x] #1 No src/slices/git, App has no git view, full npm test passes
 <!-- AC:END -->
