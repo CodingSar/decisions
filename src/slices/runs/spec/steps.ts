@@ -112,6 +112,10 @@ When('I press stop', async ({ page }) => {
   await page.getByRole('button', { name: 'Stop' }).click()
 })
 
+When('I press Close', async ({ page }) => {
+  await page.getByRole('button', { name: 'Close', exact: true }).click()
+})
+
 Then('the start icon is disabled', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Start' })).toBeDisabled()
 })

@@ -231,18 +231,40 @@ export function RunTerminal({ current, run }: Pick<Runs, 'current' | 'run'>) {
             <path d="M6 4l14 8-14 8z" />
           </svg>
         </button>
-        <button
-          type="button"
-          className="stop"
-          aria-label="Stop"
-          title="Stop (X)"
-          disabled={!running}
-          onClick={() => current && window.api.invoke('runs:stop', current.id).catch(console.error)}
-        >
-          <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <rect x={4} y={4} width={16} height={16} rx={2} />
-          </svg>
-        </button>
+        {running ? (
+          <button
+            type="button"
+            className="stop"
+            aria-label="Stop"
+            title="Stop (X)"
+            onClick={() => window.api.invoke('runs:stop', current.id).catch(console.error)}
+          >
+            <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <rect x={4} y={4} width={16} height={16} rx={2} />
+            </svg>
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="stop"
+            aria-label="Close"
+            title="Close (X)"
+            onClick={() => window.api.invoke('runs:close', current.id).catch(console.error)}
+          >
+            <svg
+              width={12}
+              height={12}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        )}
       </div>
       {running && current.progress !== undefined && (
         <div
