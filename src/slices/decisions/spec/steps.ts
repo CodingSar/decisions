@@ -107,7 +107,7 @@ Then('the card offers no {string}', async ({ page }, name: string) => {
 })
 
 // Empty states; the Feed is the view already shown.
-Then('the {word} says {string}', async ({ page }, view: string, text: string) => {
+Then(/^the (Feed|Review|History) says "(.*)"$/, async ({ page }, view: string, text: string) => {
   if (view !== 'Feed') await page.getByRole('button', { name: view }).click()
   await expect(page.getByRole('region', { name: view })).toHaveText(text)
 })
