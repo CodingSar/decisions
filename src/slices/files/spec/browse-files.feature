@@ -34,6 +34,11 @@ Feature: Browse files
     When I click the link
     Then the Files view shows "GLOSSARY.md"
 
+  Scenario: A link to a missing file says not found
+    Given "docs/use-cases.md" links to "./missing.md"
+    When I click the link
+    Then the Files view says "docs/missing.md not found"
+
   Scenario: An external link opens in the system browser
     Given "GLOSSARY.md" links to "https://example.com"
     When I click the link

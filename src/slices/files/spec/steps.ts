@@ -84,6 +84,10 @@ Then('the Files view shows {string}', async ({ page }, path: string) => {
   await expect(view(page).getByRole('heading', { name: path, exact: true, level: 2 })).toBeVisible()
 })
 
+Then('the Files view says {string}', async ({ page }, text: string) => {
+  await expect(view(page).locator('.empty')).toHaveText(text)
+})
+
 Then('the system browser opens {string}', async ({ page }, url: string) => {
   await expect.poll(() => page.evaluate(() => window.api.invoke('files:last-external'))).toBe(url)
 })
