@@ -80,6 +80,7 @@ const LIKE =
 const DISLIKE =
   'M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17'
 const COMMENT = 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'
+const TERMINAL = 'M4 17l6-5-6-5M12 19h8'
 
 function Act({
   label,
@@ -127,6 +128,7 @@ function Card({
   onFocus,
   onBlur,
   onComment,
+  onShowRun,
 }: {
   d: Decision
   project: string
@@ -135,6 +137,7 @@ function Card({
   onFocus: () => void
   onBlur: () => void
   onComment: () => void
+  onShowRun?: () => void
 }) {
   return (
     <article
@@ -193,6 +196,12 @@ function Card({
           onClick={() => send(project, d.id, { dislike: true })}
         />
         <Act label="Comment (C)" name="Comment" d={COMMENT} onClick={onComment} />
+        {d.run && onShowRun && (
+          <>
+            <span className="grow" />
+            <Act label="Show in Run (J)" name="Show in Run" d={TERMINAL} onClick={onShowRun} />
+          </>
+        )}
       </div>
       {box}
     </article>
@@ -204,10 +213,13 @@ export function Feed({
   project,
   pending,
   newestFirst = false,
+  onShowRun,
 }: {
   project: string
   pending: Decision[]
   newestFirst?: boolean
+  /** Jump to the terminal line where the Decision was raised. */
+  onShowRun?: (d: Decision) => void
 }) {
   const [focusId, setFocusId] = useState<number>()
   const [commenting, setCommenting] = useState(false)
@@ -237,6 +249,7 @@ export function Feed({
         setCommenting(true)
         return
       }
+      if (k === 'j') return first.run && onShowRun?.(first)
       const option = Number(k) - 1
       const verdict: Verdict | undefined =
         k === 'l'
@@ -250,7 +263,7 @@ export function Feed({
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [project, first, commenting])
+  }, [project, first, commenting, onShowRun])
 
   return (
     <section className="cards" aria-label="Feed" data-pane="feed" tabIndex={-1}>
@@ -266,6 +279,7 @@ export function Feed({
             setFocusId(d.id)
             setCommenting(true)
           }}
+          onShowRun={() => onShowRun?.(d)}
           box={
             commenting && d === first ? (
               <CommentBox

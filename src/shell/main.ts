@@ -59,10 +59,15 @@ function createWindow(mcpUrl: string) {
   )
   runs = registerRuns(win, projects.active, mcpUrl)
   projectOf = runs.projectOf
-  decisions = registerDecisions(win, runs.projectOf, (project, scope) => {
-    const s = scopeSettings(project).find((x) => x.name.toLowerCase() === scope.toLowerCase())
-    return s ?? { mine: true } // an unknown Scope counts as In-Scope
-  })
+  decisions = registerDecisions(
+    win,
+    runs.projectOf,
+    (project, scope) => {
+      const s = scopeSettings(project).find((x) => x.name.toLowerCase() === scope.toLowerCase())
+      return s ?? { mine: true } // an unknown Scope counts as In-Scope
+    },
+    runs.mark,
+  )
   registerScopes()
   registerLayout()
   // Terminal tools: links open in the browser, the clipboard is the system one.

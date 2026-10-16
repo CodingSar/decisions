@@ -4,7 +4,7 @@ import { Feed, History, Review, ReviewBadge, useAll, usePending } from '../../sl
 import { FilesView, FileTree } from '../../slices/files'
 import { DiffView, GitSection } from '../../slices/git'
 import { Projects } from '../../slices/projects'
-import { RunList, RunTerminal, useBusy, useRuns } from '../../slices/runs'
+import { RunList, RunTerminal, showDecision, useBusy, useRuns } from '../../slices/runs'
 import { Settings } from '../../slices/scopes'
 import { useFocus } from './focus'
 import { columns, Pane, useLayout } from './Panes'
@@ -190,7 +190,18 @@ function Workspace({
           ) : null}
         </div>
         {view === 'feed' ? (
-          <Feed project={active} pending={pending} newestFirst={newestFirst} />
+          <Feed
+            project={active}
+            pending={pending}
+            newestFirst={newestFirst}
+            onShowRun={(d) => {
+              if (!d.run) return
+              runs.select(d.run)
+              update('terminal', { hidden: false })
+              // After the switch has rendered, so the viewport is the shown terminal's.
+              requestAnimationFrame(() => showDecision(d.run as string, `D${d.id}`))
+            }}
+          />
         ) : view === 'git' && change ? (
           <DiffView project={active} path={change} />
         ) : view === 'files' ? (

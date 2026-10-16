@@ -1,11 +1,20 @@
 import '@xterm/xterm/css/xterm.css'
 import { useEffect, useRef, useState } from 'react'
 import { Search } from './Search'
-import { attach, detach, type Live } from './terminals'
+import { attach, chipOf, detach, type Live } from './terminals'
 
 export function Terminal({ runId, live }: { runId: string; live: boolean }) {
   const el = useRef<HTMLDivElement>(null)
   const [finding, setFinding] = useState<Live>()
+  const [chip, setChip] = useState<string>()
+
+  // A Decision raised on the alternate screen (TUI) has no line to mark: the chip names it.
+  useEffect(() => {
+    setChip(chipOf(runId))
+    const on = (e: Event) => (e as CustomEvent<string>).detail === runId && setChip(chipOf(runId))
+    window.addEventListener('terminal:marks', on)
+    return () => window.removeEventListener('terminal:marks', on)
+  }, [runId])
 
   // ⌘F from the shell (App.tsx) opens find for the shown Run.
   useEffect(() => {
@@ -50,6 +59,11 @@ export function Terminal({ runId, live }: { runId: string; live: boolean }) {
   return (
     <div className="term">
       {finding && <Search live={finding} onClose={() => setFinding(undefined)} />}
+      {chip && !finding && (
+        <span className="chip decision" title="Decision raised in this screen">
+          {chip}
+        </span>
+      )}
       <div ref={el} className="term-host" role="log" aria-label="Terminal" data-readonly={!live} />
     </div>
   )

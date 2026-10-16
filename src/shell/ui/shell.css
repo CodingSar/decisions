@@ -207,6 +207,29 @@ main {
   width: 22px;
   height: 22px;
 }
+/* Where a Decision was raised: an amber dot in the gutter (the pane's padding). */
+.dmark::before {
+  content: "";
+  position: absolute;
+  left: -11px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 3px;
+  background: var(--amber);
+}
+.term .chip.decision {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  z-index: 2;
+  background: var(--accent-bg);
+  color: var(--amber);
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 9px;
+}
 .handle {
   position: absolute;
   top: 0;

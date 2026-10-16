@@ -75,3 +75,10 @@ Feature: Terminal
     Then the terminal pane is hidden
     When I press "ControlOrMeta+j"
     Then the terminal shows "R1"
+
+  Scenario: Jump from a Decision to its Run
+    Given Runs "R1" and "R2" are running and "R2" is selected
+    And an agent of Run "R1" requests a Decision
+    When I press "Show in Run" on the card
+    Then the terminal shows "R1"
+    And the Decision marker of "D1" is in view

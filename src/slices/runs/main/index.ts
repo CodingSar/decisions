@@ -186,5 +186,7 @@ export function registerRuns(win: BrowserWindow, getCwd: () => string | undefine
     startRun: (prompt: string) => start(create(), prompt),
     /** Project folder the Run was started in. */
     projectOf: (id: string) => cwds.get(id),
+    /** A Decision was raised at the Run's cursor: the terminal marks the line. */
+    mark: (id: string, decision: string) => win.webContents.send('runs:mark', { id, decision }),
   }
 }

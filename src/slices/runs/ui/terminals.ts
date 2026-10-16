@@ -4,7 +4,7 @@ import { SearchAddon } from '@xterm/addon-search'
 import { Unicode11Addon } from '@xterm/addon-unicode11'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { WebglAddon } from '@xterm/addon-webgl'
-import { Terminal as Xterm } from '@xterm/xterm'
+import { type IMarker, Terminal as Xterm } from '@xterm/xterm'
 import type { Run } from '../model'
 import { font, hasWebgl, OPTIONS, theme } from './look'
 import { watchSignals } from './signals'
@@ -18,19 +18,71 @@ export interface Live {
   renderer: 'webgl' | 'dom'
   /** Chunks that arrived while the snapshot loads. */
   buffer?: Chunk[]
+  /** Decision id -> the line it was raised on; null when raised on the alternate screen (TUI), where only a chip can show it. */
+  marks: Map<string, IMarker | null>
 }
 type Chunk = { id: string; data: string; offset: number }
+type Mark = { id: string; decision: string }
 
 const live = new Map<string, Live>()
+// Marks for Runs whose terminal does not exist yet; placed after the first snapshot.
+const pending = new Map<string, string[]>()
 let created = 0
 
 declare global {
   interface Window {
     /** Test hook. */
-    terminals: { created(): number }
+    terminals: {
+      created(): number
+      marks(id: string): { decision: string; line: number | null }[]
+      viewport(id: string): { y: number; rows: number } | undefined
+    }
   }
 }
-window.terminals = { created: () => created }
+window.terminals = {
+  created: () => created,
+  marks: (id) =>
+    [...(live.get(id)?.marks ?? [])].map(([decision, m]) => ({ decision, line: m?.line ?? null })),
+  viewport: (id) => {
+    const t = live.get(id)
+    return t && { y: t.term.buffer.active.viewportY, rows: t.term.rows }
+  },
+}
+
+const AMBER = '#e5b567'
+
+// An amber dot in the gutter and a mark in the overview ruler on the line the Decision was raised.
+function mark(id: string, t: Live, decision: string) {
+  if (t.term.buffer.active.type === 'alternate') {
+    t.marks.set(decision, null)
+  } else {
+    const marker = t.term.registerMarker(0)
+    t.marks.set(decision, marker)
+    t.term
+      .registerDecoration({
+        marker,
+        x: 0,
+        width: 1,
+        overviewRulerOptions: { color: AMBER, position: 'left' },
+      })
+      ?.onRender((el) => {
+        el.classList.add('dmark')
+        el.title = decision
+      })
+  }
+  window.dispatchEvent(new CustomEvent('terminal:marks', { detail: id }))
+}
+
+/** The latest Decision that could only be shown as a chip (raised on the alternate screen). */
+export const chipOf = (id: string) =>
+  [...(live.get(id)?.marks ?? [])].findLast(([, m]) => m === null)?.[0]
+
+/** Scrolls the Run's terminal to where the Decision was raised. */
+export function showDecision(id: string, decision: string) {
+  const t = live.get(id)
+  const m = t?.marks.get(decision)
+  if (t && m && !m.isDisposed) t.term.scrollToLine(m.line)
+}
 
 // The system clipboard lives in main (Electron `clipboard`), for OSC 52 and the copy/paste keys alike.
 const clipboard = {
@@ -84,6 +136,11 @@ function subscribe() {
   window.api.on('runs:changed', (runs: Run[]) => {
     for (const id of live.keys()) if (!runs.some((r) => r.id === id)) dispose(id)
   })
+  window.api.on('runs:mark', ({ id, decision }: Mark) => {
+    const t = live.get(id)
+    if (t && !t.buffer) mark(id, t, decision)
+    else pending.set(id, [...(pending.get(id) ?? []), decision])
+  })
 }
 
 // WebGL when the GPU allows it, the DOM renderer otherwise (and after a context loss).
@@ -115,7 +172,7 @@ function create(id: string, host: HTMLElement): Live {
   term.loadAddon(new ClipboardAddon(undefined, clipboard))
   keys(term, id)
   term.open(el)
-  const t: Live = { term, fit, search, el, renderer: 'dom', buffer: [] }
+  const t: Live = { term, fit, search, el, renderer: 'dom', buffer: [], marks: new Map() }
   render(t)
   created++
   term.onData((d) => {
@@ -137,6 +194,9 @@ function create(id: string, host: HTMLElement): Live {
     .catch(() => {})
     .finally(() => {
       t.buffer = undefined
+      // Decisions raised before the terminal existed land at the end of the replayed scrollback.
+      for (const d of pending.get(id) ?? []) mark(id, t, d)
+      pending.delete(id)
     })
   return t
 }
@@ -159,6 +219,7 @@ function dispose(id: string) {
   const t = live.get(id)
   if (!t) return
   live.delete(id)
+  pending.delete(id)
   t.term.dispose()
   t.el.remove()
   window.api.invoke('runs:unwatch', id).catch(() => {})

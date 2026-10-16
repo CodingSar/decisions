@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test'
-import { Then, When } from '../../../shared/testing/fixtures'
+import { request } from '../../../shared/testing/fake-agent'
+import { Given, Then, When } from '../../../shared/testing/fixtures'
 
 const host = (page: import('@playwright/test').Page) => page.getByRole('log', { name: 'Terminal' })
 
@@ -114,4 +115,28 @@ Then('the sidebar lists Run {string} as idle', async ({ page }, id: string) => {
 
 Then('the terminal pane is hidden', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Show terminal' })).toBeVisible()
+})
+
+Given('an agent of Run {string} requests a Decision', async ({ page }, id: string) => {
+  await request(page, id, 'orchestrator > api-agent', 'Architecture')
+  await expect(page.getByRole('article')).toHaveCount(1)
+})
+
+When('I press {string} on the card', async ({ page }, name: string) => {
+  await page.getByRole('article').getByRole('button', { name }).click()
+})
+
+Then('the Decision marker of {string} is in view', async ({ page }, decision: string) => {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        ([d]) => {
+          const line = window.terminals.marks('R1').find((m) => m.decision === d)?.line
+          const v = window.terminals.viewport('R1')
+          return line !== null && line !== undefined && v && line >= v.y && line < v.y + v.rows
+        },
+        [decision],
+      ),
+    )
+    .toBe(true)
 })
