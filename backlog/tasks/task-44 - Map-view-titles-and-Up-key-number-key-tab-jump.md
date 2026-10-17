@@ -1,9 +1,10 @@
 ---
 id: TASK-44
 title: Map view titles and Up key; number-key tab jump
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-10-16 20:27'
+updated_date: '2026-10-17 06:09'
 labels: []
 dependencies:
   - TASK-32
