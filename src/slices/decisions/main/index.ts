@@ -1,7 +1,8 @@
 import { type BrowserWindow, ipcMain } from 'electron'
 import type { DecisionRequest } from '../../agent-runtimes/main'
 import { componentIds } from '../../architecture/main'
-import { supersededBy, type Verdict, verdictText } from '../model'
+import { approveMockup, MOCKUP_RULE, validMockup } from '../../mockups/main'
+import { approves, type Decision, supersededBy, type Verdict, verdictText } from '../model'
 import { create, readAll, remove, write } from '../store'
 
 export interface ScopeRule {
@@ -30,6 +31,11 @@ export function registerDecisions(
   let working = false
 
   const changed = (project: string) => win.webContents.send('decisions:changed', project)
+  // Every Verdict lands in the file; an approving one also promotes the Mock-up (ADR 0010).
+  const settle = (project: string, d: Decision, reply: string) => {
+    write(project, { ...d, verdict: reply })
+    if (d.mockup && approves(reply)) approveMockup(project, d.mockup)
+  }
 
   function advance(ms: number) {
     if (working) return
@@ -45,14 +51,11 @@ export function registerDecisions(
         continue
       }
       const reply = verdictText(d, { like: true })
-      write(w.project, {
-        ...d,
-        status: 'answered',
-        answered: Date.now(),
-        by: 'auto',
-        reason: 'timeout',
-        verdict: reply,
-      })
+      settle(
+        w.project,
+        { ...d, status: 'answered', answered: Date.now(), by: 'auto', reason: 'timeout' },
+        reply,
+      )
       w.reply(reply)
       waiting.delete(k)
       changed(w.project)
@@ -98,7 +101,7 @@ export function registerDecisions(
     const d = readAll(project).find((x) => x.id === id && x.status === 'pending')
     if (!d) return
     const reply = verdictText(d, v)
-    write(project, { ...d, status: 'answered', answered: Date.now(), by: 'human', verdict: reply })
+    settle(project, { ...d, status: 'answered', answered: Date.now(), by: 'human' }, reply)
     waiting.get(key(project, id))?.reply(reply)
     waiting.delete(key(project, id))
     changed(project)
@@ -112,6 +115,8 @@ export function registerDecisions(
       const known = componentIds(project)
       const components = req.components?.filter((c) => known.includes(c))
       req = { ...req, components: components?.length ? components : undefined }
+      if (req.mockup !== undefined && !validMockup(project, req.mockup))
+        return Promise.reject(new Error(MOCKUP_RULE))
       const rule = ruleOf(project, req.scope)
       if (!rule.mine) {
         const d = create(project, {
@@ -123,7 +128,7 @@ export function registerDecisions(
           reason: 'out-of-scope',
         })
         const reply = verdictText(d, { like: true })
-        write(project, { ...d, verdict: reply })
+        settle(project, d, reply)
         mark(runId, `D${d.id}`)
         changed(project)
         return Promise.resolve(reply)

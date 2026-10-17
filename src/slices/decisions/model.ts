@@ -22,6 +22,8 @@ export interface Decision {
   components?: string[]
   /** The Run whose agent asked, e.g. "R1". */
   run?: string
+  /** Project-relative path of the Mock-up under approval (ADR 0010). */
+  mockup?: string
 }
 
 /** The human's response; `option` is an index, `like` approves the recommendation. */
@@ -30,6 +32,8 @@ export interface Verdict {
   like?: boolean
   dislike?: boolean
   comment?: string
+  /** Marks from the Inspector, one line each (e.g. `remove: button "Sort"`). */
+  marks?: string[]
 }
 
 const num = (i: number) => String(i + 1)
@@ -42,10 +46,15 @@ export const supersededBy = (all: Decision[], id: number) =>
 export function verdictText(d: Decision, v: Verdict): string {
   const approved = v.option ?? (v.like ? d.recommended : undefined)
   const comment = v.comment ? `. ${v.comment}` : ''
-  if (approved !== undefined) return `Approved: ${num(approved)}${comment}`
-  if (v.dislike) return `Rejected: ${v.comment ?? 'reject the recommendation completely'}`
-  return `Direction: ${v.comment ?? ''}`
+  const marks = v.marks?.length ? `\n${v.marks.map((m) => `- ${m}`).join('\n')}` : ''
+  if (approved !== undefined) return `Approved: ${num(approved)}${comment}${marks}`
+  if (v.dislike)
+    return `Rejected: ${v.comment ?? (marks ? 'revise the mock-up' : 'reject the recommendation completely')}${marks}`
+  return `Direction: ${v.comment ?? ''}${marks}`
 }
+
+/** Whether the Verdict text takes the recommendation or an option. */
+export const approves = (verdict: string) => verdict.startsWith('Approved:')
 
 // ADR 0003: tiny frontmatter, the rest is for humans and agents to read.
 export function serialize(d: Decision): string {
@@ -57,8 +66,9 @@ export function serialize(d: Decision): string {
   const supersedes = d.supersedes ? `supersedes: D${d.supersedes}\n` : ''
   const components = d.components?.length ? `components: ${d.components.join(', ')}\n` : ''
   const run = d.run ? `run: ${d.run}\n` : ''
+  const mockup = d.mockup ? `mockup: ${d.mockup}\n` : ''
   const verdict = d.verdict ? `\n## Verdict\n\n${d.verdict}\n` : ''
-  return `---\nscope: ${d.scope}\nstatus: ${d.status}\n${asked}${by}${accepted}${supersedes}${components}${run}---\n# ${d.question}\n\nAsked by: ${d.agent}\n\n${options.join('\n')}\n${verdict}`
+  return `---\nscope: ${d.scope}\nstatus: ${d.status}\n${asked}${by}${accepted}${supersedes}${components}${run}${mockup}---\n# ${d.question}\n\nAsked by: ${d.agent}\n\n${options.join('\n')}\n${verdict}`
 }
 
 export function parse(id: number, text: string): Decision {
@@ -89,6 +99,8 @@ export function parse(id: number, text: string): Decision {
       .split(', ')
       .filter(Boolean),
     run: field(/^run: (.*)$/m) || undefined,
-    verdict: /^## Verdict\n\n(.*)$/m.exec(text)?.[1],
+    mockup: field(/^mockup: (.*)$/m) || undefined,
+    // Marks follow the first line, one per line.
+    verdict: /^## Verdict\n\n([\s\S]*)$/m.exec(text)?.[1]?.trimEnd(),
   }
 }

@@ -31,4 +31,6 @@ export interface DecisionRequest {
   recommended: number
   /** Groma Component ids the Decision touches. */
   components?: string[]
+  /** Project-relative path of a Mock-up named `*-for-approval.html` (ADR 0010). */
+  mockup?: string
 }

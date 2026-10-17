@@ -22,6 +22,13 @@ const input = (scopes: string[], components: string[]) => ({
     .describe(
       `Optional Components of the architecture this touches${components.length ? `, from: ${components.join(', ')}` : ''}`,
     ),
+  mockup: z
+    .string()
+    .max(200)
+    .optional()
+    .describe(
+      'For impactful UI changes: project-relative path of a self-contained HTML Mock-up you wrote first, named docs/mock/<name>-for-approval.html (1440x900). On approval the app renames it <name>-approved.html; otherwise revise it in place and ask again. Verdicts may carry Marks: lines like `remove: button "Sort"`.',
+    ),
 })
 
 /** Resolves to the reply text the agent receives. `runId` is the last path segment of the MCP URL the agent was started with. */

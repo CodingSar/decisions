@@ -9,6 +9,7 @@ import {
 import { componentIds, registerArchitecture } from '../slices/architecture/main'
 import { registerDecisions } from '../slices/decisions/main'
 import { registerFiles } from '../slices/files/main'
+import { registerMockups } from '../slices/mockups/main'
 import { registerProjects } from '../slices/projects/main'
 import { registerRuns } from '../slices/runs/main'
 import { registerScopes, scopeNames, scopeSettings } from '../slices/scopes/main'
@@ -74,6 +75,7 @@ function createWindow(mcpUrl: string) {
     runs.mark,
   )
   registerScopes()
+  registerMockups()
   registerLayout()
   // Terminal tools: links open in the browser, the clipboard is the system one.
   ipcMain.handle('shell:open', (_e, url: string) => {
