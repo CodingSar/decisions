@@ -1,10 +1,10 @@
 ---
 id: TASK-36
 title: Run keys that work with the xterm textarea focused
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-10-16 20:27'
-updated_date: '2026-10-17 05:58'
+updated_date: '2026-10-17 06:12'
 labels: []
 dependencies:
   - TASK-32
@@ -19,5 +19,5 @@ UX review V5. Hover focus puts focus on .xterm-helper-textarea, which the shell 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The keys in the terminal header tooltips fire with the mouse resting over the terminal; terminal.feature covers it
+- [x] #1 The keys in the terminal header tooltips fire with the mouse resting over the terminal; terminal.feature covers it
 <!-- AC:END -->
