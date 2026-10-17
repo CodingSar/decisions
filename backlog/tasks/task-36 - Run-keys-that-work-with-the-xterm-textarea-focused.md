@@ -1,9 +1,10 @@
 ---
 id: TASK-36
 title: Run keys that work with the xterm textarea focused
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-10-16 20:27'
+updated_date: '2026-10-17 05:58'
 labels: []
 dependencies:
   - TASK-32
