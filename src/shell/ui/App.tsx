@@ -75,7 +75,8 @@ function Workspace({
   useFocus(paths, active)
   const { layout, update } = useLayout()
 
-  // Plain letters act on the focused pane: N/S/X on Runs from the sidebar or terminal, views and sort elsewhere.
+  // Modifier combos work from anywhere, even while typing in the terminal: ⌘N/⌘S/⌘X act on Runs.
+  // Plain letters switch views and sort, and stop while typing.
   useEffect(() => {
     const unit = () =>
       document.activeElement?.closest('[data-focus-unit]')?.getAttribute('data-focus-unit')
@@ -86,32 +87,31 @@ function Workspace({
         return setView('files')
       }
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+        const { current } = runs
         if (k === 'j' || k === 'b') {
           e.preventDefault()
           update(k === 'j' ? 'terminal' : 'sidebar', (s) => ({ hidden: !s.hidden }))
         } else if (k === 'f' && unit() === 'terminal') {
           e.preventDefault()
           window.dispatchEvent(new Event('terminal:find'))
+        } else if (k === 'n') {
+          e.preventDefault()
+          // With no Run yet, ⌘N starts one, as the placeholder promises.
+          runs.runs.length === 0 ? runs.run() : runs.create()
+        } else if (k === 's' && current && current.status !== 'running') {
+          e.preventDefault()
+          window.api.invoke('runs:start', current.id).catch(console.error)
+        } else if (k === 'x' && current) {
+          e.preventDefault()
+          // ⌘X stops a running Run and closes any other.
+          window.api
+            .invoke(current.status === 'running' ? 'runs:stop' : 'runs:close', current.id)
+            .catch(console.error)
         }
         return
       }
       if (e.metaKey || e.ctrlKey || e.altKey || keysBlocked(e)) return
       if (e.key === ',') return setSettings((o) => !o)
-      const u = unit()
-      const onRuns = u === 'terminal' || u === 'sidebar'
-      if (onRuns && 'nsx'.includes(k)) {
-        const { current } = runs
-        // With no Run yet, N starts one, as the placeholder promises.
-        if (k === 'n') runs.runs.length === 0 ? runs.run() : runs.create()
-        else if (k === 's' && current && current.status !== 'running')
-          window.api.invoke('runs:start', current.id).catch(console.error)
-        // X stops a running Run and closes any other.
-        else if (k === 'x' && current)
-          window.api
-            .invoke(current.status === 'running' ? 'runs:stop' : 'runs:close', current.id)
-            .catch(console.error)
-        return
-      }
       if (k === 's') return setNewestFirst((o) => !o)
       const v = VIEWS.find((x) => x.key.toLowerCase() === k)
       if (v) setView(v.id)

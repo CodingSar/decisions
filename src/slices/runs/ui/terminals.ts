@@ -118,8 +118,8 @@ function keys(term: Xterm, id: string) {
       if (down) clipboard.readText().then((t) => t && term.paste(t))
       return false
     }
-    // Let the shell see these (focus.ts, App.tsx).
-    return !(!e.shiftKey && (k === 'f' || k === 'j' || /^[123]$/.test(k)))
+    // Let the shell see these (focus.ts, App.tsx): find, hide, pane focus, Run actions.
+    return !(!e.shiftKey && /^[fjnsx123]$/.test(k))
   })
 }
 
