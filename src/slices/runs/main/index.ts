@@ -191,7 +191,12 @@ export function registerRuns(
     stopProject: (path: string) => {
       for (const r of runs) if (r.project === path) stop(r.id)
     },
-    startRun: (prompt: string) => start(create(), prompt),
+    /** `notice` is printed in the terminal before the session starts. */
+    startRun: (prompt: string, notice?: string) => {
+      const id = create()
+      if (notice) emit(id, `${notice}\r\n`)
+      start(id, prompt)
+    },
     /** Project folder the Run was started in. */
     projectOf: (id: string) => cwds.get(id),
     /** A Decision was raised at the Run's cursor: the terminal marks the line. */

@@ -7,6 +7,9 @@ Backlog MVP slices, UI polish, files, components, Decision map, terminal moderni
 Docs: `GLOSSARY.md`, ADRs 0001-0007, `docs/use-cases.md` (UC1-UC10 approved; UC9 removed).
 UI mock: `docs/mock/*.dc.html` (boards: Main, Collapsed, Review, NewProject, Settings, Files, Architecture); private artifact https://claude.ai/artifact/KRcQmrkSKrhHbJXr7efMdP.
 
+## Also done 2026-10-17
+Terminal sessions + Project setup (`2026-10-17-terminal-decisions-and-project-setup.md`, ADR 0010, UC11); covers TASK-43.
+
 ## To Do
 - TASK-32 UX review (`2026-10-16-ux-review.md`): walk the use cases as a first-time user, fix friction.
 - TASK-16 Settings section nav.

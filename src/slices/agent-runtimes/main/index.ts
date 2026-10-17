@@ -1,8 +1,8 @@
-import { claudeCodeRuntime } from '../claude-code'
+import { claudeCodeRuntime, installPlugin } from '../claude-code'
 import { fakeRuntime } from '../fake'
 import type { AgentRuntime } from '../model'
 
-export { startMcpServer } from '../mcp'
+export { PREFERRED_PORT, startMcpServer } from '../mcp'
 export type {
   AgentRuntime,
   AgentSession,
@@ -24,3 +24,7 @@ export const setRuntime = (kind: RuntimeKind) => {
   current = kind
 }
 export const getRuntime = () => runtimes[current]
+
+/** Installs the plugin the setup interview needs; resolves to why it failed. The fake needs none. */
+export const ensurePlugin = (cwd: string) =>
+  current === 'fake' ? Promise.resolve(undefined) : installPlugin(cwd)

@@ -16,7 +16,7 @@ Feature: Open a Project
   Scenario: Set up a new project
     Given I pick a new empty folder "shop"
     When I choose to set up a new project
-    Then the terminal runs the grill-with-docs interview
+    Then the terminal starts the setup interview
     And a Project tab "shop" is focused
 
   Scenario: Open an already-open folder

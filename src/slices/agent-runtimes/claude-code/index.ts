@@ -1,3 +1,4 @@
+import { execFile } from 'node:child_process'
 import { accessSync, constants } from 'node:fs'
 import { delimiter, join } from 'node:path'
 import { spawn } from '@lydell/node-pty'
@@ -38,3 +39,15 @@ export const claudeCodeRuntime: AgentRuntime = {
     }
   },
 }
+
+/** Installs the interview skills for the Project; resolves to the reason when that fails. */
+export const installPlugin = (cwd: string) =>
+  new Promise<string | undefined>((done) => {
+    if (!onPath('claude')) return done('"claude" CLI not found on PATH')
+    execFile(
+      'claude',
+      ['plugin', 'install', 'mattpocock-skills@claude-plugins-official', '--scope', 'project'],
+      { cwd, timeout: 60_000 },
+      (err, _out, stderr) => done(err ? (stderr || err.message).trim().split('\n')[0] : undefined),
+    )
+  })

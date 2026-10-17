@@ -31,7 +31,13 @@ export const test = base.extend<{
         await app?.close()
         app = await electron.launch({
           args: ['.'],
-          env: { ...process.env, DECISIONS_RUNTIME: 'fake', DECISIONS_USER_DATA: userData },
+          env: {
+            ...process.env,
+            DECISIONS_RUNTIME: 'fake',
+            DECISIONS_RENDERER: 'dom', // terminal text is readable in the DOM only
+            DECISIONS_MCP_PORT: '0',
+            DECISIONS_USER_DATA: userData,
+          },
         })
         session.page = await app.firstWindow()
         session.pages.push(session.page)

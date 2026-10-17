@@ -24,11 +24,29 @@ export async function request(
   recommended = 0,
   components?: string[],
 ) {
+  await ask(page, `/${runId}`, {}, agent, scope, recommended, components)
+}
+
+// A coding agent started in `dir` outside the app: no Run, the folder travels in a header.
+export const requestFromTerminal = (page: Page, dir: string, agent: string, scope: string) =>
+  ask(page, '', { 'X-Project-Dir': dir }, agent, scope, 0)
+
+async function ask(
+  page: Page,
+  path: string,
+  headers: Record<string, string>,
+  agent: string,
+  scope: string,
+  recommended: number,
+  components?: string[],
+) {
   const base = (await page.evaluate(() => window.api.invoke('agent:mcp-url'))) as string
   const client = new Client({ name: 'fake-agent', version: '0.0.0' })
-  await client.connect(new StreamableHTTPClientTransport(new URL(`${base}/${runId}`)))
-  const ask: Ask = { settled: false, client }
-  asks.set(page, [...(asks.get(page) ?? []), ask])
+  await client.connect(
+    new StreamableHTTPClientTransport(new URL(`${base}${path}`), { requestInit: { headers } }),
+  )
+  const pending: Ask = { settled: false, client }
+  asks.set(page, [...(asks.get(page) ?? []), pending])
   client
     .callTool(
       {
@@ -46,10 +64,10 @@ export async function request(
       { timeout: 60000 },
     )
     .then((r) => {
-      ask.settled = true
-      ask.result = (r.content as { text: string }[])[0]?.text
+      pending.settled = true
+      pending.result = (r.content as { text: string }[])[0]?.text
     })
     .catch((e) => {
-      ask.error = String(e)
+      pending.error = String(e)
     })
 }
