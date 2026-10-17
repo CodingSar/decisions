@@ -67,6 +67,13 @@ Git stays in the Run terminal: the human asks the agent to commit, push or pull,
 4. No `groma/` folder: the view shows an empty state with a button that starts a Run prompted to curate the architecture. The app never edits Groma files.
 5. Parked: Flow view (stepping through Groma `flows/`), module/dependency graph, run activity heatmap.
 
+## UC11 Approve a Mock-up
+1. For an impactful UI change the agent writes `docs/mock/<name>-for-approval.html` (self-contained, 1440x900) and calls `request_decision` with `mockup` set to that path. A missing, outside or misnamed file is an error to the agent and creates no Decision.
+2. The Feed card shows the whole Mock-up as a thumbnail under the question. `M` or a click opens the Inspector: the Mock-up at fit size, tools Note (N) and Remove (X), drag an element to Move it, Undo (⌘Z), Esc closes. With a previous `<name>-approved.html`, `T` toggles Before/After.
+3. Marks are numbered on the Mock-up and listed under it. Like (L), Dislike (D), Comment (C) and option keys work in the Inspector as on the card; the marks are appended to the Verdict as one line each naming the element (`remove: button "Sort"`, `move: button "Save" -> header "api-service"`, `note on input "Search": make it wider`).
+4. An approving Verdict renames the file to `<name>-approved.html` (replacing the earlier one). Other Verdicts leave the name; the agent revises the file in place and asks again.
+5. Parked: PNG Mock-ups (marks by coordinates), pixel diff highlight, change list from the agent.
+
 ## Rules
 - UC4: a dislike without a comment means "reject the recommendation completely". If that is ambiguous for the question, the agent asks for a comment in its next Decision.
 
