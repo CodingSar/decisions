@@ -4,7 +4,7 @@ Actor: the human (single user). Terms per `GLOSSARY.md`.
 
 ## UC1 Open a Project
 1. A new tab offers: open an existing folder, or set up a new project. Any folder works; git is not required.
-2. Set up: a native folder picker (can create a folder), then the grill-with-docs interview runs in the terminal; it writes GLOSSARY.md and ADRs into the folder.
+2. Set up: a native folder picker (can create a folder). The app adds the missing `.mcp.json` (decisions, context7, tessl), `.claude/settings.json` (interview plugin) and `CLAUDE.md`, installs the plugin, then the setup interview (grilling skill) runs in the terminal; it writes GLOSSARY.md and ADRs. If the plugin cannot be installed, the terminal says so first.
 3. The folder appears as a Project tab; the app creates `.decisions/` on first use. Opening an already-open folder focuses its tab.
 4. On launch, all previously open Project tabs return, last-active focused, with Feed and past Decisions. Runs do not resume; pending Decisions from stopped Runs still show.
 5. A remembered folder that was moved or deleted shows its tab as unavailable, with a close icon.
@@ -45,7 +45,7 @@ Actor: the human (single user). Terms per `GLOSSARY.md`.
 ## UC7 Work across Projects and Runs
 1. Human switches Project tabs; each has its own Feed and Runs.
 2. Focus follows the mouse: hovering a focus unit (a Feed card, the terminal view, or the sidebar) for 150 ms focuses it, and hovering elsewhere moves focus away. The focused unit shows a soft orange border. There is no typing pin.
-3. ⌘1/2/3 focus the sidebar, Feed and terminal; ⌘⇧[ / ⌘⇧] switch Project tabs and a number key jumps to one. A keyboard focus move suspends mouse focus until the mouse moves again.
+3. ⌘1/2/3 focus the sidebar, Feed and terminal; ⌘⇧[ / ⌘⇧] switch Project tabs and ⌘⇧1..9 jumps to a Project tab. A keyboard focus move suspends mouse focus until the mouse moves again.
 4. Sidebar and terminal are resizable by dragging their edge, and hide with a minus icon. A hidden pane leaves an edge strip with an arrow that shows it again. Widths and hidden state are remembered per app (app data, not `.decisions/`).
 5. An x icon on a Project tab closes it and stops its Runs; a confirmation appears only if a Run is active. Its Decisions stay in `.decisions/` and return on reopen.
 6. Human stops a Run; its unanswered Decisions stay pending in the Feed.
@@ -66,6 +66,18 @@ Git stays in the Run terminal: the human asks the agent to commit, push or pull,
 3. Hovering a Component lists its Decisions. The expand icon (⌘⇧M), or clicking a Component, opens the Decision map as a modal over the whole window: the same map and views, larger, focused on that Component, with a side panel listing its Decisions. Esc closes it.
 4. No `groma/` folder: the view shows an empty state with a button that starts a Run prompted to curate the architecture. The app never edits Groma files.
 5. Parked: Flow view (stepping through Groma `flows/`), module/dependency graph, run activity heatmap.
+
+## UC11 Approve a Mock-up
+1. For an impactful UI change the agent writes `docs/mock/<name>-for-approval.html` (self-contained, 1440x900) and calls `request_decision` with `mockup` set to that path. A missing, outside or misnamed file is an error to the agent and creates no Decision.
+2. The Feed card shows the whole Mock-up as a thumbnail under the question. `M` or a click opens the Inspector: the Mock-up at fit size, tools Note (N) and Remove (X), drag an element to Move it, Undo (⌘Z), Esc closes. With a previous `<name>-approved.html`, `T` toggles Before/After.
+3. Marks are numbered on the Mock-up and listed under it. Like (L), Dislike (D), Comment (C) and option keys work in the Inspector as on the card; the marks are appended to the Verdict as one line each naming the element (`remove: button "Sort"`, `move: button "Save" -> header "api-service"`, `note on input "Search": make it wider`).
+4. An approving Verdict renames the file to `<name>-approved.html` (replacing the earlier one). Other Verdicts leave the name; the agent revises the file in place and asks again.
+5. Parked: PNG Mock-ups (marks by coordinates), pixel diff highlight, change list from the agent.
+
+## UC12 Decisions from your own terminal
+1. A coding agent started in a Project folder outside the app (its `.mcp.json` has `decisions`) calls `request_decision`; the Decision follows UC4/UC5 and shows in that Project's Feed.
+2. The folder (or a parent) must be an open Project and the app running; otherwise the tool errors and the agent asks in its terminal.
+3. No Run appears in the sidebar and the Run lock does not apply.
 
 ## Rules
 - UC4: a dislike without a comment means "reject the recommendation completely". If that is ambiguous for the question, the agent asks for a comment in its next Decision.

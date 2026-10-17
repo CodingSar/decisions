@@ -112,13 +112,7 @@ export function registerRuns(
           sessions.delete(id)
           // Stopped by the human: the status is already final.
           if (run.status === 'stopped') return
-          // The session ended by itself (e.g. `exit`): the Run ends with it.
-          if (code === 0 && run.status === 'running') {
-            runs.splice(runs.indexOf(run), 1)
-            forget(id)
-            pushRuns()
-            return
-          }
+          // The session ended by itself (e.g. `exit`): the Run stays, with its scrollback, until closed.
           run.status = code === 0 ? 'stopped' : 'failed'
           reset(run)
           pushRuns()
@@ -178,6 +172,14 @@ export function registerRuns(
     pushRuns()
   }
   ipcMain.handle('runs:stop', (_e, id: string) => stop(id))
+  // Closing a Run that is not running removes it and its scrollback.
+  ipcMain.handle('runs:close', (_e, id: string) => {
+    const run = runs.find((r) => r.id === id)
+    if (!run || run.status === 'running') return
+    runs.splice(runs.indexOf(run), 1)
+    forget(id)
+    pushRuns()
+  })
   ipcMain.handle('runs:input', (_e, id: string, data: string) => {
     const s = sessions.get(id)
     if (s) s.write(data)
@@ -191,7 +193,12 @@ export function registerRuns(
     stopProject: (path: string) => {
       for (const r of runs) if (r.project === path) stop(r.id)
     },
-    startRun: (prompt: string) => start(create(), prompt),
+    /** `notice` is printed in the terminal before the session starts. */
+    startRun: (prompt: string, notice?: string) => {
+      const id = create()
+      if (notice) emit(id, `${notice}\r\n`)
+      start(id, prompt)
+    },
     /** Project folder the Run was started in. */
     projectOf: (id: string) => cwds.get(id),
     /** A Decision was raised at the Run's cursor: the terminal marks the line. */

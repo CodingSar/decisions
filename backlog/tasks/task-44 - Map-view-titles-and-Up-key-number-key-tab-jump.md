@@ -1,9 +1,10 @@
 ---
 id: TASK-44
 title: Map view titles and Up key; number-key tab jump
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-16 20:27'
+updated_date: '2026-10-17 06:19'
 labels: []
 dependencies:
   - TASK-32
@@ -18,5 +19,5 @@ UX review V19, V20. Overview/Interactions/Up titles carry no explanation or shor
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Map tabs and Up have tooltips with shortcuts that work; decision-map.feature covers it
+- [x] #1 Map tabs and Up have tooltips with shortcuts that work; decision-map.feature covers it
 <!-- AC:END -->

@@ -1,9 +1,10 @@
 ---
 id: TASK-37
 title: Hover focus must not interrupt typing
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-16 20:27'
+updated_date: '2026-10-17 06:09'
 labels: []
 dependencies:
   - TASK-32
@@ -18,5 +19,5 @@ UX review V6. Hover focus moves after 150 ms dwell regardless of typing (src/she
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Typing in the terminal with the mouse resting on a card sends no Verdict; work-across-projects.feature covers it
+- [x] #1 Typing in the terminal with the mouse resting on a card sends no Verdict; work-across-projects.feature covers it
 <!-- AC:END -->

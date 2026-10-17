@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { typesText } from '../../../shared/ui/keys'
 import type { Decision } from '../../decisions'
 import { childrenOf, edges, type Heat, heat, level, type Model, type Node } from '../model'
 import './map.css'
 
-// The Model, refetched when main reports a change (agents curate groma/ while Runs go).
+// The Model, refetched when main reports a change: Decisions, or any file in the Project
+// (agents curate groma/ while Runs go; the Project watcher carries no path, reading is cheap).
 function useModel(project: string) {
   const [model, setModel] = useState<Model | null>()
   useEffect(() => {
@@ -16,15 +18,20 @@ function useModel(project: string) {
         .catch(() => live && setModel(null))
     setModel(undefined)
     load()
-    const off = window.api.on('decisions:changed', (p: string) => {
+    window.api.invoke('files:watch', project) // the file tree may be unmounted (sidebar hidden)
+    const changed = (p: string) => {
       if (p !== project) return
       clearTimeout(timer)
       timer = setTimeout(load, 200)
-    })
+    }
+    const offs = [
+      window.api.on('decisions:changed', changed),
+      window.api.on('files:changed', changed),
+    ]
     return () => {
       live = false
       clearTimeout(timer)
-      off()
+      for (const off of offs) off()
     }
   }, [project])
   return model
@@ -355,6 +362,7 @@ export function DecisionMap({
   const [modal, setModal] = useState(false)
   const [selected, setSelected] = useState<string>()
   const [hover, setHover] = useState<Node>()
+  const ref = useRef<HTMLElement>(null)
 
   // Another Project, another map.
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset on Project change only
@@ -363,17 +371,24 @@ export function DecisionMap({
     setSelected(undefined)
   }, [project])
 
+  // O / I / Backspace act in the modal, or on the mini map while the pointer or focus is on it.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setModal(false)
-      else if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'm') {
+      const k = e.key.toLowerCase()
+      if (e.key === 'Escape') return setModal(false)
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && k === 'm') {
         e.preventDefault()
-        setModal((o) => !o)
+        return setModal((o) => !o)
       }
+      if (e.metaKey || e.ctrlKey || e.altKey || typesText(e.target)) return
+      if (!modal && !ref.current?.matches(':hover, :focus-within')) return
+      if (k === 'o') setView('overview')
+      else if (k === 'i') setView('interactions')
+      else if (e.key === 'Backspace') setInto((p) => p.slice(0, -1))
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [modal])
 
   if (model === undefined) return null
   if (model === null)
@@ -422,15 +437,15 @@ export function DecisionMap({
     <>
       {(
         [
-          ['overview', 'Overview', LAYERS],
-          ['interactions', 'Interactions', LINKS],
+          ['overview', 'Overview', 'Overview: one level, all its arrows (O)', LAYERS],
+          ['interactions', 'Interactions', 'Interactions: nested, arrows on hover (I)', LINKS],
         ] as const
-      ).map(([v, name, d]) => (
+      ).map(([v, name, tip, d]) => (
         <button
           key={v}
           type="button"
           aria-label={name}
-          title={name}
+          title={tip}
           aria-pressed={view === v}
           onClick={() => setView(v)}
         >
@@ -443,7 +458,7 @@ export function DecisionMap({
     <button
       type="button"
       aria-label="Up"
-      title="Up"
+      title="Up: back to the parent level (Backspace)"
       disabled={!into.length}
       onClick={() => setInto((p) => p.slice(0, -1))}
     >
@@ -453,7 +468,13 @@ export function DecisionMap({
 
   return (
     <>
-      <section className="map" aria-label="Decision map">
+      <section
+        ref={ref}
+        className="map"
+        aria-label="Decision map"
+        data-focus-unit="map"
+        tabIndex={-1}
+      >
         <header>
           {back}
           <span>Decision map</span>
@@ -496,6 +517,7 @@ export function DecisionMap({
               <div className="graph">{graph(true)}</div>
               <aside aria-label="Decisions">
                 <b>{model.nodes.find((n) => n.id === selected)?.title ?? 'Select an element'}</b>
+                {selected && !side.length ? <p>No Decisions</p> : null}
                 <Rows
                   ids={side}
                   decisions={decisions}

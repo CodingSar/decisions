@@ -31,7 +31,7 @@ function NewProject({
   onDone: () => void
 }) {
   const start = async (setup: boolean) => {
-    const path = (await invoke('projects:pick')) as string | undefined
+    const path = (await invoke('projects:pick', setup)) as string | undefined
     if (!path) return
     await invoke('projects:open', path, setup)
     onDone()
@@ -43,6 +43,7 @@ function NewProject({
         type="button"
         aria-label="Open existing folder"
         title="Open existing folder"
+        data-primary="true"
         onClick={() => start(false)}
       >
         <Icon
@@ -61,8 +62,7 @@ function NewProject({
         <Icon d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" size={22} />
         <strong>Set up a new project</strong>
         <span>
-          An interview (grill-with-docs) resolves the design, then writes GLOSSARY.md and ADRs into
-          the new folder.
+          Interview me about the project, then write GLOSSARY.md and ADRs into the new folder.
         </span>
       </button>
       {recent.length ? (
@@ -121,13 +121,18 @@ export function Projects({
   return (
     <>
       <div role="tablist">
-        {state.tabs.map((t) => (
+        {state.tabs.map((t, i) => (
           <span key={t.path} className="tab">
             <button
               type="button"
               role="tab"
               aria-selected={!adding && t.path === state.active}
               aria-disabled={!t.available}
+              title={
+                t.available
+                  ? `${t.path}${badges[t.path] ? ` · ${badges[t.path]} pending` : ''}${i < 9 ? ` (⌘⇧${i + 1})` : ''}`
+                  : `Folder not found: ${t.path}`
+              }
               onClick={() => {
                 setAdding(false)
                 invoke('projects:focus', t.path)

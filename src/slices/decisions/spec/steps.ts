@@ -107,7 +107,7 @@ Then('the card offers no {string}', async ({ page }, name: string) => {
 })
 
 // Empty states; the Feed is the view already shown.
-Then('the {word} says {string}', async ({ page }, view: string, text: string) => {
+Then(/^the (Feed|Review|History) says "(.*)"$/, async ({ page }, view: string, text: string) => {
   if (view !== 'Feed') await page.getByRole('button', { name: view }).click()
   await expect(page.getByRole('region', { name: view })).toHaveText(text)
 })
@@ -122,6 +122,25 @@ When('I press C and then Esc', async ({ page }) => {
   await page.keyboard.press('c')
   await expect(page.getByRole('textbox', { name: 'Comment' })).toBeVisible()
   await page.keyboard.press('Escape')
+})
+
+// Cmd+1 moves focus to the sidebar, so the comment input blurs.
+When('I press C and then Cmd+1', async ({ page }) => {
+  await page.keyboard.press('c')
+  await expect(page.getByRole('textbox', { name: 'Comment' })).toBeVisible()
+  await page.keyboard.press('Meta+1')
+})
+
+When('I press C, type {string} and press Cmd+1', async ({ page }, text: string) => {
+  await page.keyboard.press('c')
+  await expect(page.getByRole('textbox', { name: 'Comment' })).toBeVisible()
+  await page.keyboard.type(text)
+  await page.keyboard.press('Meta+1')
+})
+
+Then('the comment box still holds {string}', async ({ page }, text: string) => {
+  await expect(page.getByRole('complementary', { name: 'Sidebar' })).toBeFocused()
+  await expect(page.getByRole('textbox', { name: 'Comment' })).toHaveValue(text)
 })
 
 Then('the agent receives that direction', async ({ page }) => {

@@ -1,9 +1,10 @@
 ---
 id: TASK-38
 title: Files tab in the view bar
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-16 20:27'
+updated_date: '2026-10-16 21:30'
 labels: []
 dependencies:
   - TASK-32
@@ -18,5 +19,5 @@ UX review V7. The view bar has Feed/Review/History only (src/shell/ui/App.tsx VI
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A Files tab with tooltip and shortcut switches to the last open file; browse-files.feature covers it
+- [x] #1 A Files tab with tooltip and shortcut switches to the last open file; browse-files.feature covers it
 <!-- AC:END -->

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, type Page } from '@playwright/test'
 import { Given, Then, When } from '../../../shared/testing/fixtures'
@@ -11,8 +11,9 @@ Given('a folder {string} without git', async ({ folder }, name: string) => {
   folder(name)
 })
 
-Given('I pick a new empty folder {string}', async ({ folder }, name: string) => {
-  folder(name)
+// The native folder dialog is replaced by a test hook that answers with this folder.
+Given('I pick a new empty folder {string}', async ({ page, folder }, name: string) => {
+  await page.evaluate((e) => window.api.invoke('agent:env', e), { DECISIONS_PICK: folder(name) })
 })
 
 Given('the Project {string} is open( in a tab)', async ({ page, folder }, name: string) => {
@@ -64,8 +65,12 @@ When('I open the folder {string} again', async ({ page, folder }, name: string) 
   await open(page, folder(name))
 })
 
-When('I choose to set up a new project', async ({ page, folder }) => {
-  await open(page, folder('shop'), true)
+When('I choose to set up a new project', async ({ page }) => {
+  // A finished setup closes the picker; reopen it with the New tab button for a second one.
+  const card = page.getByRole('button', { name: 'Set up a new project' })
+  if (!(await card.isVisible())) await page.getByRole('button', { name: 'New tab' }).click()
+  await card.click()
+  await expect(card).toBeHidden()
 })
 
 When('I relaunch the app', async ({ session }) => {
@@ -94,11 +99,20 @@ Then('the folder contains {string}', async ({ folder }, entry: string) => {
   expect(existsSync(join(folder('api-service'), entry))).toBe(true)
 })
 
-Then('the terminal runs the grill-with-docs interview', async ({ session }) => {
-  await expect(session.page.getByRole('log', { name: 'Terminal' })).toContainText(
-    '/grill-with-docs',
-  )
+Then('the terminal starts the setup interview', async ({ session }) => {
+  await expect(session.page.getByRole('log', { name: 'Terminal' })).toContainText('grilling')
 })
+
+Then(
+  '{string} is the highlighted card, {string} is not',
+  async ({ page }, primary: string, other: string) => {
+    const card = (name: string) => page.getByRole('button', { name })
+    const border = (name: string) => card(name).evaluate((el) => getComputedStyle(el).borderColor)
+    await expect(card(primary)).toHaveAttribute('data-primary', 'true')
+    await expect(card(other)).not.toHaveAttribute('data-primary', 'true')
+    expect(await border(primary)).not.toBe(await border(other))
+  },
+)
 
 Then('the existing tab is focused', async ({ session }) => {
   await expect(session.page.getByRole('tab', { selected: true })).toHaveText('api-service')
@@ -128,6 +142,13 @@ Then(
   },
 )
 
+Then('its tooltip says the folder was not found', async ({ session }) => {
+  await expect(session.page.getByRole('tab', { name: 'old' })).toHaveAttribute(
+    'title',
+    /^Folder not found: .*old$/,
+  )
+})
+
 When('I close the Project {string}', async ({ page }, name: string) => {
   await page.getByRole('button', { name: `Close ${name}` }).click()
 })
@@ -139,4 +160,61 @@ Then('Recent lists {string} with {int} pending', async ({ page }, name: string, 
 
 When('I click {string} under Recent', async ({ page }, name: string) => {
   await page.getByRole('list', { name: 'Recent' }).getByRole('button', { name }).click()
+})
+
+// "shop/.mcp.json" -> the file in that scenario folder
+const at = (folder: (n: string) => string, path: string) => {
+  const [name, ...rest] = path.split('/')
+  return join(folder(name), ...rest)
+}
+
+Given(
+  'I pick a folder {string} with its own CLAUDE.md and an MCP server {string}',
+  async ({ page, folder }, name: string, server: string) => {
+    const dir = folder(name)
+    writeFileSync(join(dir, 'CLAUDE.md'), '# shop rules\n')
+    writeFileSync(
+      join(dir, '.mcp.json'),
+      JSON.stringify({ mcpServers: { [server]: { command: 'x' } } }),
+    )
+    await page.evaluate((e) => window.api.invoke('agent:env', e), { DECISIONS_PICK: dir })
+  },
+)
+
+Then(
+  '{string} configures the {string}, {string} and {string} servers',
+  async ({ folder }, file: string, a: string, b: string, c: string) => {
+    const servers = JSON.parse(readFileSync(at(folder, file), 'utf8')).mcpServers
+    for (const s of [a, b, c]) expect(servers[s]).toBeDefined()
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: the literal Claude Code expands
+    expect(servers.decisions.headers['X-Project-Dir']).toBe('${PWD}')
+  },
+)
+
+Then('{string} enables the {string} plugin', async ({ folder }, file: string, plugin: string) => {
+  const enabled = JSON.parse(readFileSync(at(folder, file), 'utf8')).enabledPlugins
+  expect(Object.keys(enabled).some((k) => k.startsWith(`${plugin}@`))).toBe(true)
+})
+
+Then('{string} tells agents to ask through {string}', async ({ folder }, file: string, tool) => {
+  expect(readFileSync(at(folder, file), 'utf8')).toContain(tool)
+})
+
+Then('{string} still configures the server {string}', async ({ folder }, file, server: string) => {
+  expect(JSON.parse(readFileSync(at(folder, file), 'utf8')).mcpServers[server]).toBeDefined()
+})
+
+Then(
+  '{string} starts with the original text and has one Decisions section',
+  async ({ folder }, file: string) => {
+    const text = readFileSync(at(folder, file), 'utf8')
+    expect(text.startsWith('# shop rules\n')).toBe(true)
+    expect(text.match(/^## Decisions$/gm)).toHaveLength(1)
+  },
+)
+
+Then('the terminal explains that {string} could not be installed', async ({ page }, p: string) => {
+  await expect(page.getByRole('log', { name: 'Terminal' })).toContainText(
+    `${p} could not be installed`,
+  )
 })

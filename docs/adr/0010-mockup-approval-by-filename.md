@@ -1,0 +1,5 @@
+# Mock-ups are approved by renaming the file
+
+An agent that proposes an impactful UI change writes a self-contained HTML Mock-up as `docs/mock/<name>-for-approval.html` (optionally `<name>-<round>-for-approval.html`) and passes its path as `mockup` to `request_decision`. The Feed shows it as a thumbnail; the Inspector lets the human mark elements (remove, move, note). An approving Verdict makes the app rename the file to `docs/mock/<name>-approved.html`, replacing the previous approved one, which until then serves as the Before image. Other Verdicts leave the name; the agent revises in place. Marks travel to the agent as text lines naming elements (`remove: button "Sort"`), never pixel coordinates.
+
+Why: the state is visible in the file tree without parsing, the agent finds open proposals with one glob, approval is a promotion like visual-regression tools do it, and models act on named marks better than on coordinates. Cost: the path changes on approval, so nothing may link to a Mock-up by name; a sidecar would keep paths stable but needs parsing.

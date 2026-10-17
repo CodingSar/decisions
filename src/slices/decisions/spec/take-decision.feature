@@ -43,6 +43,19 @@ Feature: Take a Decision
     When I press C and then Esc
     Then the Decision stays pending
 
+  Scenario: Leaving an empty comment box resumes Verdict keys
+    Given a pending Decision recommending 1
+    When I press C and then Cmd+1
+    And I press L
+    Then the agent receives approval of 1
+
+  Scenario: Esc anywhere cancels a draft left behind
+    Given a pending Decision
+    When I press C, type "wip" and press Cmd+1
+    Then the comment box still holds "wip"
+    When I press Esc
+    Then the Decision stays pending
+
   Scenario: Typing in a text field sends no Verdict
     Given a pending Decision recommending 1
     When I type "l" into the Run name field

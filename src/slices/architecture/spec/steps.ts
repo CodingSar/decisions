@@ -12,15 +12,28 @@ const touch = (page: Page, dir: string) =>
 const element = (type: string, id: string, parent?: string) =>
   `---\ntype: C4 ${type}\ntitle: ${id}\ngroma:\n  id: ${id}\n${parent ? `  parent: ${parent}\n` : ''}---\n`
 
+// One Container with its Components under the Project's `dir`.
+function writeContainer(project: string, dir: string, container: string, ids: string[]) {
+  const root = join(project, dir, 'containers', container)
+  mkdirSync(join(root, 'components'), { recursive: true })
+  writeFileSync(join(root, 'container.md'), element('Container', container))
+  for (const id of ids)
+    writeFileSync(join(root, 'components', `${id}.md`), element('Component', id, container))
+}
+
 Given(
   'its {string} has the Container {string} with the Components {string} and {string}',
   async ({ page, folder }, dir: string, container: string, a: string, b: string) => {
-    const root = join(folder('api-service'), dir, 'containers', container)
-    mkdirSync(join(root, 'components'), { recursive: true })
-    writeFileSync(join(root, 'container.md'), element('Container', container))
-    for (const id of [a, b])
-      writeFileSync(join(root, 'components', `${id}.md`), element('Component', id, container))
+    writeContainer(folder('api-service'), dir, container, [a, b])
     await touch(page, folder('api-service'))
+  },
+)
+
+// Written as an agent would, with no nudge: the app has to notice on its own.
+When(
+  '{string} gets a {string} with the Container {string} and the Components {string} and {string}',
+  async ({ folder }, name: string, dir: string, container: string, a: string, b: string) => {
+    writeContainer(folder(name), dir, container, [a, b])
   },
 )
 
@@ -226,6 +239,32 @@ Then('the side panel lists {word}', async ({ page }, id: string) => {
   ).toContainText(id)
 })
 
+Then('the side panel says {string}', async ({ page }, text: string) => {
+  await expect(
+    page.getByRole('dialog', { name: 'Decision map' }).getByRole('complementary'),
+  ).toContainText(text)
+})
+
+When('I open {word} from the side panel', async ({ page }, id: string) => {
+  await page
+    .getByRole('dialog', { name: 'Decision map' })
+    .getByRole('complementary')
+    .getByRole('button')
+    .filter({ hasText: id })
+    .click()
+})
+
+Then('the modal closes', async ({ page }) => {
+  await expect(page.getByRole('dialog', { name: 'Decision map' })).toHaveCount(0)
+})
+
+// The Decision's card or row holds the focus, so it shows the ring.
+Then('the {word} view shows {word} focused', async ({ page }, view: string, id: string) => {
+  const el = page.getByRole('region', { name: view }).locator(`[aria-label="${id}"]`)
+  await expect(el).toBeVisible()
+  await expect.poll(() => el.evaluate((e) => e.contains(document.activeElement))).toBe(true)
+})
+
 Then('the map shows only {string} and {string}', async ({ page }, a: string, b: string) => {
   await expect(node(page, a)).toBeVisible()
   await expect(node(page, b)).toBeVisible()
@@ -273,4 +312,30 @@ When('I click the build button', async ({ page }) => {
 
 Then('a Run starts with a prompt to curate the architecture', async ({ page }) => {
   await expect(page.getByRole('log', { name: 'Terminal' })).toContainText('Curate the architecture')
+})
+
+Then(
+  'the mini map control {string} has the tooltip {string}',
+  async ({ page }, name: string, tip: string) => {
+    await expect(mini(page).getByRole('button', { name, exact: true })).toHaveAttribute(
+      'title',
+      tip,
+    )
+  },
+)
+
+// Hover focus: rest past the 150 ms dwell until the map holds the focus (see shell steps `rest`).
+Given('the mouse rests on the mini map', async ({ page }) => {
+  await expect(mini(page).locator('[data-kind]').first()).toBeVisible()
+  await expect
+    .poll(async () => {
+      await mini(page).hover()
+      await page.waitForTimeout(250)
+      return mini(page).evaluate((el) => el.contains(document.activeElement))
+    })
+    .toBe(true)
+})
+
+When('I press Backspace', async ({ page }) => {
+  await page.keyboard.press('Backspace')
 })

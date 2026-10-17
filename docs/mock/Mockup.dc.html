@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mock-up Inspector</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+:root{--bg:#141413;--side:#181715;--panel:#1d1c1a;--raise:#262522;--line:#3a3835;--text:#faf9f5;--muted:#a3a097;--accent:#d97757;--accent-bg:#2e1f19;--green:#3fb950;--amber:#e5b567;--red:#f85149}
+.ic{all:unset;cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--muted);border-radius:6px}
+.ic[aria-pressed="true"]{color:var(--accent);background:var(--accent-bg)}
+.act{all:unset;cursor:pointer;width:36px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:6px;color:var(--text)}
+.act.solid{background:var(--accent);border-color:var(--accent);color:#141413}
+.badge{position:absolute;width:18px;height:18px;border-radius:9px;background:var(--accent);color:#141413;font:600 11px 'IBM Plex Mono';display:flex;align-items:center;justify-content:center}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;box-sizing:border-box;background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;position:relative;overflow:hidden">
+
+  <!-- Feed behind the modal: a Mock-up card, focused, with a whole-screen thumbnail -->
+  <div style="position:absolute;left:220px;top:84px;width:640px;display:flex;flex-direction:column;gap:16px">
+    <div style="background:var(--panel);border:1px solid var(--accent);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 0 0 3px rgba(217,119,87,.25)">
+      <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)"><span>D12</span><span style="background:var(--accent-bg);color:var(--accent);border-radius:4px;padding:2px 8px;font-weight:500">Ui</span><span>orchestrator › ui-agent</span><span style="margin-left:auto;color:var(--amber)">◔ 4m</span></div>
+      <p style="margin:0;font:600 17px 'IBM Plex Sans'">Move Sort into the Feed header and drop the per-card menu?</p>
+      <div title="Inspect Mock-up (M)" style="position:relative;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#0f0f0e;aspect-ratio:16/10;cursor:zoom-in">
+        <div style="position:absolute;inset:0;background:linear-gradient(#1d1c1a,#1d1c1a) 0 0/100% 7% no-repeat,linear-gradient(#181715,#181715) 0 7%/22% 93% no-repeat,#141413"></div>
+        <span style="position:absolute;right:8px;top:8px;background:var(--accent);color:#141413;border-radius:9px;padding:1px 7px;font-size:11px;font-weight:600">mock-up</span>
+      </div>
+      <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px">
+        <li style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--accent);background:var(--accent-bg);border-radius:6px"><span style="color:var(--accent)">1</span><span style="flex:1">Header sort icon, menu removed</span><span style="color:var(--accent)">★</span></li>
+        <li style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:6px"><span style="color:var(--muted)">2</span><span style="flex:1">Keep both</span></li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="act solid" title="Like: take the recommended option (L)">👍</button><button class="act" title="Dislike (D)">👎</button><button class="act" title="Comment (C)">💬</button><button class="act" title="Inspect Mock-up (M)">⤢</button></div>
+    </div>
+  </div>
+
+  <!-- Inspector modal -->
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center">
+    <div role="dialog" aria-label="Mock-up" style="width:1240px;height:820px;background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+      <div style="height:36px;flex:none;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--line);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">
+        <b style="color:var(--text)">Mock-up</b><span style="flex:1">docs/mock/feed-sort-for-approval.html</span>
+        <button class="ic" aria-pressed="true" title="Note (N)">✎</button>
+        <button class="ic" title="Remove (X)">✕</button>
+        <span style="width:1px;height:18px;background:var(--line)"></span>
+        <button class="ic" title="Before/After (T)">◐</button>
+        <button class="ic" title="Undo (⌘Z)">↶</button>
+        <button class="ic" title="Close (Esc)">×</button>
+      </div>
+      <!-- board at fit scale with overlay marks -->
+      <div style="flex:1;min-height:0;position:relative;margin:12px;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#141413">
+        <div style="position:absolute;inset:0;background:linear-gradient(#1d1c1a,#1d1c1a) 0 0/100% 7% no-repeat,linear-gradient(#181715,#181715) 0 7%/22% 93% no-repeat,#141413"></div>
+        <div style="position:absolute;left:380px;top:120px;width:560px;height:120px;border:1px solid var(--line);border-radius:8px;background:var(--panel)"></div>
+        <!-- 1 remove: red cross over an element -->
+        <div style="position:absolute;left:880px;top:16px;width:72px;height:26px;border:2px solid var(--red);border-radius:4px"><svg width="72" height="26" viewBox="0 0 72 26" style="position:absolute;inset:0" aria-hidden="true"><path d="M2 2l68 22M70 2L2 24" stroke="#f85149" stroke-width="2"/></svg><span class="badge" style="left:-9px;top:-9px;background:var(--red)">1</span></div>
+        <!-- 2 move: arrow from element to drop target -->
+        <div style="position:absolute;left:400px;top:200px;width:60px;height:24px;border:2px dashed var(--accent);border-radius:4px"><span class="badge" style="left:-9px;top:-9px">2</span></div>
+        <svg style="position:absolute;inset:0;pointer-events:none" width="1214" height="710" aria-hidden="true"><defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4 0 8z" fill="#d97757"/></marker></defs><path d="M460 212 C 700 212, 900 80, 1000 70" stroke="#d97757" stroke-width="2" fill="none" marker-end="url(#a)"/></svg>
+        <div style="position:absolute;left:1000px;top:58px;width:120px;height:26px;border:2px solid var(--accent);border-radius:4px"></div>
+        <!-- 3 note pin -->
+        <div style="position:absolute;left:600px;top:160px"><span class="badge" style="position:static">3</span></div>
+      </div>
+      <!-- footer: marks list + verdict -->
+      <div style="flex:none;display:flex;align-items:center;gap:16px;padding:0 16px 14px">
+        <ol style="flex:1;margin:0;padding:0 0 0 18px;color:var(--muted);line-height:1.6">
+          <li>remove: button <span style="color:var(--text)">"Sort"</span></li>
+          <li>move: button <span style="color:var(--text)">"Save"</span> → header <span style="color:var(--text)">"api-service"</span></li>
+          <li>note on input <span style="color:var(--text)">"Search"</span>: make it wider</li>
+        </ol>
+        <div style="display:flex;gap:10px"><button class="act solid" title="Like: take the recommended option (L)">👍</button><button class="act" title="Dislike (D)">👎</button><button class="act" title="Comment (C)">💬</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

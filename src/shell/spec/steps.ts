@@ -52,10 +52,14 @@ Then('the {string} tab badge increases', async ({ page }, name: string) => {
   await expect(page.getByRole('tab', { name }).getByRole('status')).toHaveText('1')
 })
 
-// Focus: a unit shows the ring when it holds the DOM focus.
+// Focus: a unit shows the ring (an inset shadow) when it holds the DOM focus.
 const hasFocus = (unit: Locator) => unit.evaluate((el) => el.contains(document.activeElement))
-const expectFocus = (unit: Locator, focused = true) =>
-  expect.poll(() => hasFocus(unit)).toBe(focused)
+const ringed = (unit: Locator) =>
+  unit.evaluate((el) => el.matches(':focus-within') && getComputedStyle(el).boxShadow !== 'none')
+const expectFocus = async (unit: Locator, focused = true) => {
+  await expect.poll(() => hasFocus(unit)).toBe(focused)
+  if (focused) await expect.poll(() => ringed(unit)).toBe(true)
+}
 
 const card = (page: Page) => page.getByRole('article').first()
 const terminal = (page: Page) => page.getByRole('region', { name: 'Terminal pane' })
@@ -96,13 +100,74 @@ Then('the terminal has the focus ring and the card does not', async ({ page }) =
   await expectFocus(card(page), false)
 })
 
+// Typing: each keystroke pauses hover focus (focus.ts TYPING_MS); keys land ~200 ms apart, past
+// the 150 ms dwell, with the mouse moved onto the card before each one.
+Given('a pending Decision shows a card and the terminal has focus', async ({ page }) => {
+  const id = (await invoke(page, 'runs:create')) as string
+  await invoke(page, 'runs:start', id)
+  await request(page, id, 'orchestrator > api-agent', 'Architecture')
+  await expect(card(page)).toBeVisible()
+  await expect(page.getByRole('button', { name: /^(Hide|Show) sidebar/ })).toBeVisible()
+  await page.keyboard.press('Meta+3')
+  await expectFocus(terminal(page))
+})
+
+When(
+  'I type {string} in the terminal while the mouse rests on the card',
+  async ({ page }, text: string) => {
+    for (const ch of text) {
+      await card(page).hover()
+      await page.keyboard.press(ch)
+      await page.waitForTimeout(200)
+    }
+  },
+)
+
+When('I stop typing for 1 s and the mouse rests on the card', async ({ page }) => {
+  await page.waitForTimeout(1100)
+  await rest(page, card(page))
+})
+
 When('I press Cmd+Shift+]', async ({ page }) => {
   await expect(sidebar(page)).toBeVisible()
   await page.keyboard.press('Meta+Shift+BracketRight')
 })
 
+// The Workspace listens only once its layout has loaded: wait for the sidebar toggle.
+When('I press Cmd+B', async ({ page }) => {
+  await expect(page.getByRole('button', { name: /^(Hide|Show) sidebar/ })).toBeVisible()
+  await page.keyboard.press('ControlOrMeta+b')
+})
+
+When('I press Cmd+2', async ({ page }) => {
+  await expect(page.getByRole('button', { name: /^(Hide|Show) sidebar/ })).toBeVisible()
+  await page.keyboard.press('Meta+2')
+})
+
+When('I show the History view', async ({ page }) => {
+  await page.getByRole('button', { name: 'History' }).click()
+})
+
+Then('the {word} view has the focus ring', async ({ page }, name: string) => {
+  await expectFocus(page.getByRole('region', { name }))
+})
+
+When('I press Cmd+Shift+E', async ({ page }) => {
+  await expect(page.getByRole('button', { name: /^(Hide|Show) sidebar/ })).toBeVisible()
+  await page.keyboard.press('ControlOrMeta+Shift+e')
+})
+
 Then('the next Project tab is focused', async ({ page }) => {
   await expect(page.getByRole('tab', { selected: true })).toHaveText('api-service') // wraps from "shop"
+})
+
+When('I press Cmd+Shift+{int}', async ({ page }, n: number) => {
+  await expect(sidebar(page)).toBeVisible()
+  await page.keyboard.press(`Meta+Shift+Digit${n}`)
+})
+
+Then('the {string} tab is selected', async ({ page }, name: string) => {
+  await expect(page.getByRole('tab', { name, selected: true })).toBeVisible()
 })
 
 const width = async (el: Locator) => (await el.boundingBox())?.width as number

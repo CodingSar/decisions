@@ -92,6 +92,22 @@ _Avoid_: Generate, scan
 The override that unlocks the read-only editor while a Run is active.
 _Avoid_: Force edit
 
+**Terminal session**:
+A coding agent started in a Project folder outside the app. Its Decisions reach the Feed like a Run's, but it has no Run, no lock and no pane (ADR 0011).
+_Avoid_: External run
+
 **Terminal**:
 The pane that shows the selected Run's session (xterm). The only place git is used (ADR 0009); it also marks where Decisions were raised and reports the agent's activity.
 _Avoid_: Console, shell
+
+**Mock-up**:
+A self-contained HTML board an agent proposes for an impactful UI change, attached to a Decision; `-for-approval` in its name until the app renames it `-approved` on an approving Verdict.
+_Avoid_: Screenshot, design, preview
+
+**Mark**:
+One instruction the human puts on a Mock-up in the Inspector: remove an element, move it onto another, or a one-line note on it; sent to the agent as a text line in the Verdict.
+_Avoid_: Annotation, comment pin, drawing
+
+**Inspector**:
+The modal that shows a Mock-up at full size with its Marks and the Before/After toggle against the last approved Mock-up.
+_Avoid_: Lightbox, viewer

@@ -1,9 +1,10 @@
 ---
 id: TASK-40
 title: Decision map refreshes when groma/ changes
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-16 20:27'
+updated_date: '2026-10-16 21:32'
 labels: []
 dependencies:
   - TASK-32
@@ -18,5 +19,5 @@ UX review V10. useModel refetches only on decisions:changed (src/slices/architec
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The map appears once the curate Run writes groma/ without a restart; decision-map.feature covers it
+- [x] #1 The map appears once the curate Run writes groma/ without a restart; decision-map.feature covers it
 <!-- AC:END -->

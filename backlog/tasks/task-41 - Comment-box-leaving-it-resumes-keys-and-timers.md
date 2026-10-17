@@ -1,9 +1,10 @@
 ---
 id: TASK-41
 title: 'Comment box: leaving it resumes keys and timers'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-16 20:27'
+updated_date: '2026-10-16 21:32'
 labels: []
 dependencies:
   - TASK-32
@@ -18,5 +19,5 @@ UX review U7. While commenting the Feed key handler is off and decisions:working
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Leaving an empty comment box resumes Verdict keys and timers; auto-resolve.feature covers it
+- [x] #1 Leaving an empty comment box resumes Verdict keys and timers; auto-resolve.feature covers it
 <!-- AC:END -->

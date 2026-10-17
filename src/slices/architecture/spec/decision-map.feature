@@ -89,3 +89,52 @@ Feature: Decision map
     Then the map says "No Decision map yet" with a build button
     When I click the build button
     Then a Run starts with a prompt to curate the architecture
+
+  Scenario: The map appears once groma/ is written
+    Given the Project "bare" has no "groma/" folder
+    Then the map says "No Decision map yet" with a build button
+    When "bare" gets a "groma/" with the Container "main-process" and the Components "decision-store" and "decision-ipc"
+    Then the mini map shows "main-process" without its Components
+
+  Scenario: An element without Decisions says so
+    When I click "decision-ipc" in the mini map
+    Then the modal opens with "decision-ipc" selected
+    And the side panel says "No Decisions"
+
+  Scenario: Open a pending Decision from the map
+    Given a pending Decision D1 touches "decision-ipc"
+    And a pending Decision D7 touches "decision-store"
+    When I click "decision-store" in the mini map
+    And I open D7 from the side panel
+    Then the modal closes
+    And the Feed view shows D7 focused
+
+  Scenario: Open an answered Decision from the map
+    Given an answered Decision from yesterday touches "decision-ipc"
+    When I click "decision-ipc" in the mini map
+    And I open D1 from the side panel
+    Then the modal closes
+    And the History view shows D1 focused
+
+  Scenario: Map tabs show their shortcuts
+    Then the mini map control "Overview" has the tooltip "Overview: one level, all its arrows (O)"
+    And the mini map control "Interactions" has the tooltip "Interactions: nested, arrows on hover (I)"
+    And the mini map control "Up" has the tooltip "Up: back to the parent level (Backspace)"
+
+  Scenario: Keys switch the map view
+    Given the mouse rests on the mini map
+    When I press I
+    Then the mini map shows "main-process" containing "decision-store" and "decision-ipc"
+    When I press O
+    Then the mini map shows "main-process" without its Components
+
+  Scenario: Backspace goes up a level
+    When I click "main-process" in the mini map
+    Then the map shows only "decision-store" and "decision-ipc"
+    When I press Backspace
+    Then the mini map shows "main-process" without its Components
+
+  Scenario: Keys act in the modal
+    When I click the expand icon
+    And I press I
+    Then the mini map shows "main-process" containing "decision-store" and "decision-ipc"

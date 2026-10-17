@@ -12,7 +12,8 @@ Run typecheck + only the tests for what you changed after every series of change
 - Non-trivial change (multi-file, unfamiliar code, unclear approach): research -> plan -> implement. If the diff fits in one sentence, skip the plan.
 - Research documents the code as it is. No proposed changes. Cite `file:line`.
 - Plans name files to change, phases, and a concrete verification step per phase. No open questions left in a final plan.
-- Before building a feature, interview me about unclear points (use AskUserQuestion) until the design is resolved. Don't guess requirements.
+- Before building a feature, interview me about unclear points until the design is resolved. Don't guess requirements.
+- Ask me through the `request_decision` MCP tool (the Decisions app), not AskUserQuestion. If it is missing or errors (app not running), ask in the terminal.
 - Implement one phase at a time. Stop and flag if reality differs from the plan.
 - Bugs: reproduce with a failing test first, fix root cause, keep the regression test. Don't suppress errors.
 - Tests: E2E and BDD only. No unit tests (deliberate experiment). Bugs and features start from a failing BDD scenario. Small vertical slices: one failing scenario, make it pass, refactor.
@@ -49,7 +50,7 @@ Run typecheck + only the tests for what you changed after every series of change
 - Tessl: MCP configured in `.mcp.json`; use it to find/install public plugins and docs.
 - Specs: the `.feature` Gherkin files in each slice's `spec/` (ADR 0002; shell ones in `src/shell/spec/`) are the spec of record; `docs/use-cases.md` is the narrative.
 - Tasks: Backlog.md (`backlog` CLI, tasks in `backlog/`). One task per vertical slice or scenario group. Check `backlog task list` before starting work. "Next task" = lowest-ordinal unblocked To Do/In Progress task (order and why in `docs/plans/2026-10-16-mvp-status.md`). When planning tasks, order them by dependency (set `--ordinal` and `--dep`), never arbitrarily.
-- Feature design: run `/grill-with-docs` (mattpocock-skills plugin) before building. It updates `GLOSSARY.md` and ADRs inline.
+- Feature design: use the `grilling` skill, then `domain-modeling` for `GLOSSARY.md` and ADRs (mattpocock-skills plugin) before building.
 
 ## Gotchas
 - E2E tests launch the built app from `out/`; `npm test` rebuilds first. Running `bddgen`/`playwright` alone uses a stale build.

@@ -1,9 +1,10 @@
 ---
 id: TASK-34
 title: Resolve the login-shell PATH before looking up claude
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-16 20:27'
+updated_date: '2026-10-16 21:20'
 labels: []
 dependencies:
   - TASK-32
@@ -18,5 +19,5 @@ UX review U1 (docs/plans/2026-10-16-ux-review.md). A Dock-launched macOS app lac
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A Run starts with claude installed via nvm or Homebrew when the app is launched from the Dock; claude-code.feature covers the PATH lookup
+- [x] #1 A Run starts with claude installed via nvm or Homebrew when the app is launched from the Dock; claude-code.feature covers the PATH lookup
 <!-- AC:END -->

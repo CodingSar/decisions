@@ -89,9 +89,10 @@ Given('Run {string} is stopped', async ({ page }, id: string) => {
   await expect(runButton(page, id, 'stopped')).toBeVisible()
 })
 
+// Neither the app's PATH nor the login shell knows `claude`.
 Given('the {string} CLI is not found', async ({ page }, _cli: string) => {
   await page.evaluate(() => window.api.invoke('agent:use-runtime', 'claude-code'))
-  await page.evaluate(() => window.api.invoke('agent:hide-claude'))
+  await page.evaluate(() => window.api.invoke('agent:env', { PATH: '', SHELL: '/bin/false' }))
 })
 
 When('I select {string} in the sidebar', async ({ page }, id: string) => {
@@ -110,6 +111,10 @@ When('I rename it to {string}', async ({ page }, name: string) => {
 
 When('I press stop', async ({ page }) => {
   await page.getByRole('button', { name: 'Stop' }).click()
+})
+
+When('I press Close', async ({ page }) => {
+  await page.getByRole('button', { name: 'Close', exact: true }).click()
 })
 
 Then('the start icon is disabled', async ({ page }) => {
@@ -154,6 +159,23 @@ Then('the terminal shows its scrollback read-only', async ({ page }) => {
 Then('the terminal shows the error', async ({ page }) => {
   await expect(page.getByRole('log', { name: 'Terminal' })).toContainText('not found')
 })
+
+Then('the error says {string}', async ({ page }, text: string) => {
+  await expect(page.getByRole('log', { name: 'Terminal' })).toContainText(text)
+})
+
+Then('no terminal is shown', async ({ page }) => {
+  await expect(page.getByRole('log', { name: 'Terminal' })).toHaveCount(0)
+})
+
+Then(
+  'its row reads {string} with the tooltip {string}',
+  async ({ page }, text: string, tip: string) => {
+    const row = page.getByRole('button', { name: tip })
+    await expect(row).toHaveText(text)
+    await expect(row).toHaveAttribute('title', tip)
+  },
+)
 
 Then('the Run is marked failed', async ({ page }) => {
   await expect(runButton(page, 'R1', 'failed')).toBeVisible()

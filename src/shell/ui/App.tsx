@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { keysBlocked } from '../../shared/ui/keys'
 import { DecisionMap } from '../../slices/architecture'
 import { Feed, History, Review, ReviewBadge, useAll, usePending } from '../../slices/decisions'
 import { FilesView, FileTree } from '../../slices/files'
@@ -6,13 +7,20 @@ import { Projects } from '../../slices/projects'
 import { RunList, RunTerminal, showDecision, useBusy, useRuns } from '../../slices/runs'
 import { Settings } from '../../slices/scopes'
 import { useFocus } from './focus'
-import { columns, Pane, useLayout } from './Panes'
+import { columns, MOD, Pane, useLayout } from './Panes'
 import './shell.css'
 
+// `key`: the shortcut shown in the tooltip; a single letter also switches the view on its own.
 const VIEWS = [
-  { id: 'feed', name: 'Feed', key: 'f', d: 'M4 6h16M4 12h16M4 18h16' },
-  { id: 'review', name: 'Review', key: 'r', d: 'M5 13l4 4L19 7' },
-  { id: 'history', name: 'History', key: 'h', d: 'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2' },
+  { id: 'feed', name: 'Feed', key: 'F', d: 'M4 6h16M4 12h16M4 18h16' },
+  { id: 'review', name: 'Review', key: 'R', d: 'M5 13l4 4L19 7' },
+  { id: 'history', name: 'History', key: 'H', d: 'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2' },
+  {
+    id: 'files',
+    name: 'Files',
+    key: `${MOD}⇧E`,
+    d: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  },
 ] as const
 
 const GEAR =
@@ -54,55 +62,58 @@ function Workspace({
   }
   const [settings, setSettings] = useState(false)
   const [newestFirst, setNewestFirst] = useState(false)
-  // An overturn opens the Feed on its new copy.
-  const [focus, setFocus] = useState<number>()
-  const overturned = (id: number) => {
-    setFocus(id)
-    setView('feed')
+  // The Decision to land on: an overturn's new copy in the Feed, or one opened from the map.
+  // A fresh object each time, so opening the same one again focuses it again.
+  const [focus, setFocus] = useState<{ id: number }>()
+  const open = (id: number, v: 'feed' | 'history') => {
+    setFocus({ id })
+    setView(v)
   }
+  const overturned = (id: number) => open(id, 'feed')
   const runs = useRuns(active)
   const all = useAll(active)
   useFocus(paths, active)
   const { layout, update } = useLayout()
 
-  // Plain letters act on the focused pane: N/S/X on Runs from the sidebar or terminal, views and sort elsewhere.
+  // Modifier combos work from anywhere, even while typing in the terminal: ⌘N/⌘S/⌘X act on Runs.
+  // Plain letters switch views and sort, and stop while typing.
   useEffect(() => {
     const unit = () =>
       document.activeElement?.closest('[data-focus-unit]')?.getAttribute('data-focus-unit')
     const onKey = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase()
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && !e.altKey && k === 'e') {
+        e.preventDefault()
+        return setView('files')
+      }
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
-        if (k === 'j') {
+        const { current } = runs
+        if (k === 'j' || k === 'b') {
           e.preventDefault()
-          update('terminal', (s) => ({ hidden: !s.hidden }))
+          update(k === 'j' ? 'terminal' : 'sidebar', (s) => ({ hidden: !s.hidden }))
         } else if (k === 'f' && unit() === 'terminal') {
           e.preventDefault()
           window.dispatchEvent(new Event('terminal:find'))
+        } else if (k === 'n') {
+          e.preventDefault()
+          // With no Run yet, ⌘N starts one, as the placeholder promises.
+          runs.runs.length === 0 ? runs.run() : runs.create()
+        } else if (k === 's' && current && current.status !== 'running') {
+          e.preventDefault()
+          window.api.invoke('runs:start', current.id).catch(console.error)
+        } else if (k === 'x' && current) {
+          e.preventDefault()
+          // ⌘X stops a running Run and closes any other.
+          window.api
+            .invoke(current.status === 'running' ? 'runs:stop' : 'runs:close', current.id)
+            .catch(console.error)
         }
         return
       }
-      if (
-        e.metaKey ||
-        e.ctrlKey ||
-        e.altKey ||
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      )
-        return
+      if (e.metaKey || e.ctrlKey || e.altKey || keysBlocked(e)) return
       if (e.key === ',') return setSettings((o) => !o)
-      const u = unit()
-      const onRuns = u === 'terminal' || u === 'sidebar'
-      if (onRuns && 'nsx'.includes(k)) {
-        const { current } = runs
-        if (k === 'n') runs.create()
-        else if (k === 's' && current && current.status !== 'running')
-          window.api.invoke('runs:start', current.id).catch(console.error)
-        else if (k === 'x' && current?.status === 'running')
-          window.api.invoke('runs:stop', current.id).catch(console.error)
-        return
-      }
       if (k === 's') return setNewestFirst((o) => !o)
-      const v = VIEWS.find((x) => x.key === k)
+      const v = VIEWS.find((x) => x.key.toLowerCase() === k)
       if (v) setView(v.id)
     }
     window.addEventListener('keydown', onKey)
@@ -160,10 +171,10 @@ function Workspace({
               type="button"
               aria-label={v.name}
               aria-pressed={view === v.id}
-              title={`${v.name} (${v.key.toUpperCase()})`}
+              title={`${v.name} (${v.key})`}
               onClick={() => setView(v.id)}
             >
-              {v.id === 'history' ? (
+              {v.id === 'history' || v.id === 'files' ? (
                 <Icon d={v.d} />
               ) : (
                 <>
@@ -209,7 +220,7 @@ function Workspace({
         ) : view === 'review' ? (
           <Review project={active} onOverturn={overturned} />
         ) : (
-          <History project={active} onOverturn={overturned} />
+          <History project={active} focus={focus} onOverturn={overturned} />
         )}
       </main>
       <Pane side="terminal" state={layout.terminal} onChange={(p) => update('terminal', p)}>
@@ -218,7 +229,7 @@ function Workspace({
           <DecisionMap
             project={active}
             decisions={all}
-            onOpen={(d) => setView(d.status === 'pending' ? 'feed' : 'history')}
+            onOpen={(d) => open(d.id, d.status === 'pending' ? 'feed' : 'history')}
           />
         </section>
       </Pane>
