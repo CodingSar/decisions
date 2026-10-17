@@ -1,6 +1,11 @@
 import { join } from 'node:path'
 import { app, BrowserWindow, clipboard, ipcMain, Menu, shell } from 'electron'
-import { type RuntimeKind, setRuntime, startMcpServer } from '../slices/agent-runtimes/main'
+import {
+  hasSkill,
+  type RuntimeKind,
+  setRuntime,
+  startMcpServer,
+} from '../slices/agent-runtimes/main'
 import { componentIds, registerArchitecture } from '../slices/architecture/main'
 import { registerDecisions } from '../slices/decisions/main'
 import { registerFiles } from '../slices/files/main'
@@ -29,6 +34,7 @@ async function startMcp() {
     },
   )
   ipcMain.handle('agent:mcp-url', () => mcp.url)
+  ipcMain.handle('agent:has-skill', (_e, name: string, cwd: string) => hasSkill(name, cwd))
   // Test hook: only exists when the harness picked a runtime by env.
   if (process.env.DECISIONS_RUNTIME) {
     ipcMain.handle('agent:use-runtime', (_e, kind: RuntimeKind) => setRuntime(kind))

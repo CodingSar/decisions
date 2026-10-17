@@ -24,3 +24,4 @@ export const setRuntime = (kind: RuntimeKind) => {
   current = kind
 }
 export const getRuntime = () => runtimes[current]
+export const hasSkill = (name: string, cwd: string) => getRuntime().hasSkill(name, cwd)

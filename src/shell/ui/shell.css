@@ -473,20 +473,25 @@ main {
 .new-project button strong {
   color: var(--text);
 }
-.new-project button:nth-of-type(2) {
+.new-project button[data-primary] {
   border-color: var(--accent-solid);
   background: var(--accent-bg);
   color: var(--accent-solid);
 }
-.new-project button:nth-of-type(2) strong {
+.new-project button[data-primary] strong {
   color: var(--accent-solid);
+}
+.new-project [role="alert"] {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted);
 }
 .files li > span {
   display: block;
   padding: 1px 8px;
   white-space: nowrap;
 }
-.new-project button:nth-of-type(2) span {
+.new-project button[data-primary] span {
   color: var(--muted);
 }
 .new-project ul {
