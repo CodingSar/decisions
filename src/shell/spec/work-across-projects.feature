@@ -23,6 +23,12 @@ Feature: Work across Projects and Runs
     When I press Cmd+Shift+]
     Then the next Project tab is focused
 
+  Scenario: Jump to a Project tab by number
+    When I press Cmd+Shift+1
+    Then the "api-service" tab is selected
+    When I press Cmd+Shift+2
+    Then the "shop" tab is selected
+
   Scenario: Resize persists
     When I drag the terminal edge 100px wider
     And I relaunch the app
