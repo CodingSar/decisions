@@ -23,6 +23,7 @@ export async function request(
   scope: string,
   recommended = 0,
   components?: string[],
+  mockup?: string,
 ) {
   const base = (await page.evaluate(() => window.api.invoke('agent:mcp-url'))) as string
   const client = new Client({ name: 'fake-agent', version: '0.0.0' })
@@ -40,6 +41,7 @@ export async function request(
           options: OPTIONS,
           recommended,
           ...(components && { components }),
+          ...(mockup && { mockup }),
         },
       },
       undefined,
@@ -47,7 +49,10 @@ export async function request(
     )
     .then((r) => {
       ask.settled = true
-      ask.result = (r.content as { text: string }[])[0]?.text
+      const text = (r.content as { text: string }[])[0]?.text
+      // A refused request (e.g. a Mock-up outside the convention) comes back as a tool error.
+      if (r.isError) ask.error = text
+      else ask.result = text
     })
     .catch((e) => {
       ask.error = String(e)

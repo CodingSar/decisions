@@ -170,6 +170,7 @@ article input {
 }
 .rows .verdict {
   color: var(--muted);
+  white-space: pre-line;
 }
 .rows .verdict:empty {
   display: none;

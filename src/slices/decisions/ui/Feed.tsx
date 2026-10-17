@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { keysBlocked } from '../../../shared/ui/keys'
+import { Inspector, Thumb } from '../../mockups'
 import type { Decision, Verdict } from '../model'
 import './feed.css'
 
@@ -138,6 +139,7 @@ function Card({
   onBlur,
   onComment,
   onShowRun,
+  onInspect,
 }: {
   d: Decision
   project: string
@@ -147,6 +149,8 @@ function Card({
   onBlur: () => void
   onComment: () => void
   onShowRun?: () => void
+  /** Opens the Mock-up in the Inspector. */
+  onInspect: () => void
 }) {
   return (
     <article
@@ -164,6 +168,7 @@ function Card({
         {d.asked && <Waited since={d.asked} />}
       </div>
       <p className="question">{d.question}</p>
+      {d.mockup && <Thumb project={project} rel={d.mockup} onOpen={onInspect} />}
       <ul className="options">
         {d.options.map((o, i) => (
           <li key={o} className={i === d.recommended ? 'rec' : undefined}>
@@ -240,6 +245,7 @@ export function Feed({
 }) {
   const [focusId, setFocusId] = useState(focus?.id)
   const [commenting, setCommenting] = useState(false)
+  const [inspecting, setInspecting] = useState(false)
   const ref = useRef<HTMLElement>(null)
   const first = pending.find((d) => d.id === focusId) ?? pending[0]
   const hasRun = (d: Decision) => d.run !== undefined && runIds.includes(d.run)
@@ -253,7 +259,10 @@ export function Feed({
   // Layout effects: the box state and the key listener settle before the card is painted, so a
   // key pressed as soon as it shows acts on it instead of being lost or undone by the reset.
   // biome-ignore lint/correctness/useExhaustiveDependencies: only a change of card resets it
-  useLayoutEffect(() => setCommenting(first?.supersedes !== undefined), [first?.id])
+  useLayoutEffect(() => {
+    setCommenting(first?.supersedes !== undefined)
+    setInspecting(false)
+  }, [first?.id])
   // With nothing (or only the view) focused, focus lands on the first card, so the ring always
   // shows where keys act.
   useEffect(() => {
@@ -277,6 +286,7 @@ export function Feed({
         return
       }
       if (k === 'j') return first.run && runIds.includes(first.run) && onShowRun?.(first)
+      if (k === 'm') return first.mockup && setInspecting(true)
       const option = Number(k) - 1
       const verdict: Verdict | undefined =
         k === 'l'
@@ -312,6 +322,10 @@ export function Feed({
             setCommenting(true)
           }}
           onShowRun={hasRun(d) ? () => onShowRun?.(d) : undefined}
+          onInspect={() => {
+            setFocusId(d.id)
+            setInspecting(true)
+          }}
           box={
             commenting && d === first ? (
               <CommentBox
@@ -332,6 +346,15 @@ export function Feed({
           }
         />
       ))}
+      {inspecting && first?.mockup && (
+        <Inspector
+          project={project}
+          rel={first.mockup}
+          options={first.options.length}
+          onReply={(r) => send(project, first.id, r)}
+          onClose={() => setInspecting(false)}
+        />
+      )}
     </section>
   )
 }

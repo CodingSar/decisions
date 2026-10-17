@@ -20,6 +20,7 @@ const testDir = defineBddConfig({
     'src/slices/files/spec/browse-files.feature',
     'src/slices/files/spec/edit-files.feature',
     'src/slices/architecture/spec/decision-map.feature',
+    'src/slices/mockups/spec/approve-mockup.feature',
   ],
   missingSteps: 'skip-scenario', // slices land one scenario at a time
   steps: ['src/**/spec/steps.ts', 'src/**/spec/steps-*.ts', 'src/shared/testing/fixtures.ts'],
