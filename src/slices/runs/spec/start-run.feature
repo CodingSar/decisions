@@ -11,8 +11,8 @@ Feature: Start a Run
     Then the terminal shows an orchestrator session
     And the sidebar lists Run "R1" as running
 
-  Scenario: N on an empty terminal starts a Run
-    When I focus the terminal pane and press "n"
+  Scenario: ⌘N on an empty terminal starts a Run
+    When I focus the terminal pane and press "ControlOrMeta+n"
     Then the terminal shows an orchestrator session
     And the sidebar lists Run "R1" as running
 

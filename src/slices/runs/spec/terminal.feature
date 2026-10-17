@@ -69,14 +69,33 @@ Feature: Terminal
 
   Scenario: Run shortcuts work from the terminal pane
     Given Run "R1" exists
-    When I focus the terminal pane and press "n"
+    When I focus the terminal pane and press "ControlOrMeta+n"
     Then the sidebar lists Run "R2" as idle
-    When I focus the terminal pane and press "s"
+    When I focus the terminal pane and press "ControlOrMeta+s"
     Then the sidebar lists Run "R2" as running
-    When I focus the terminal pane and press "x"
+    When I focus the terminal pane and press "ControlOrMeta+x"
     Then "R2" is marked stopped
-    When I focus the terminal pane and press "x"
+    When I focus the terminal pane and press "ControlOrMeta+x"
     Then the sidebar does not list "R2"
+
+  Scenario: Run shortcuts work while typing in the terminal
+    Given Run "R1" is running
+    When the mouse moves onto the terminal for 150 ms
+    And I press "ControlOrMeta+n"
+    Then the sidebar lists Run "R2" as idle
+    When I press "ControlOrMeta+s"
+    Then the sidebar lists Run "R2" as running
+    When I press "ControlOrMeta+x" in the terminal
+    Then "R2" is marked stopped
+    When I press "ControlOrMeta+x" in the terminal
+    Then the sidebar does not list "R2"
+
+  Scenario: Plain letters typed in the terminal reach the Run
+    Given Run "R1" is running
+    When I type "nsx" in the terminal
+    Then the terminal shows "R1" with "nsx"
+    And the sidebar lists Run "R1" as running
+    And the sidebar does not list "R2"
 
   Scenario: Hide and show the terminal with the keyboard
     Given Run "R1" is running

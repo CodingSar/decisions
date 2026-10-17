@@ -109,7 +109,7 @@ export function RunList({ runs, current, select, create }: Runs) {
     <>
       <div className="side-head">
         <span>Runs</span>
-        <button type="button" aria-label="New Run" title="New Run (N)" onClick={create}>
+        <button type="button" aria-label="New Run" title="New Run (⌘N)" onClick={create}>
           <svg
             width={15}
             height={15}
@@ -181,7 +181,7 @@ export function RunTerminal({ current, run }: Pick<Runs, 'current' | 'run'>) {
           <span className="dot" />
           <span className="muted">Terminal</span>
         </div>
-        <Placeholder text="No Run yet" title="Start a Run (N)" onRun={run} />
+        <Placeholder text="No Run yet" title="Start a Run (⌘N)" onRun={run} />
       </>
     )
   const idle = current.status === 'idle'
@@ -223,7 +223,7 @@ export function RunTerminal({ current, run }: Pick<Runs, 'current' | 'run'>) {
           type="button"
           className="start"
           aria-label="Start"
-          title="Start (S)"
+          title="Start (⌘S)"
           disabled={running}
           onClick={start}
         >
@@ -236,7 +236,7 @@ export function RunTerminal({ current, run }: Pick<Runs, 'current' | 'run'>) {
             type="button"
             className="stop"
             aria-label="Stop"
-            title="Stop (X)"
+            title="Stop (⌘X)"
             onClick={() => window.api.invoke('runs:stop', current.id).catch(console.error)}
           >
             <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -248,7 +248,7 @@ export function RunTerminal({ current, run }: Pick<Runs, 'current' | 'run'>) {
             type="button"
             className="stop"
             aria-label="Close"
-            title="Close (X)"
+            title="Close (⌘X)"
             onClick={() => window.api.invoke('runs:close', current.id).catch(console.error)}
           >
             <svg
@@ -276,7 +276,7 @@ export function RunTerminal({ current, run }: Pick<Runs, 'current' | 'run'>) {
         />
       )}
       {idle ? (
-        <Placeholder text={`${current.name} not started`} title="Start (S)" onRun={start} />
+        <Placeholder text={`${current.name} not started`} title="Start (⌘S)" onRun={start} />
       ) : (
         <Terminal key={current.id} runId={current.id} live={running} />
       )}
