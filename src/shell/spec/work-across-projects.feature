@@ -60,3 +60,15 @@ Feature: Work across Projects and Runs
   Scenario: Cmd+2 rings an empty Feed
     When I press Cmd+2
     Then the Feed view has the focus ring
+
+  Scenario: Typing in the terminal ignores the mouse resting on a card
+    Given a pending Decision shows a card and the terminal has focus
+    When I type "hello" in the terminal while the mouse rests on the card
+    Then the Decision stays pending
+    And the terminal has the focus ring and the card does not
+
+  Scenario: Hover focus resumes once typing stops
+    Given a pending Decision shows a card and the terminal has focus
+    When I type "hello" in the terminal while the mouse rests on the card
+    And I stop typing for 1 s and the mouse rests on the card
+    Then the card shows the focus ring

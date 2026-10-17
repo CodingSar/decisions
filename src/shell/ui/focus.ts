@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 
 const DWELL_MS = 150
+const TYPING_MS = 1000
 const UNIT = '[data-focus-unit]'
 const PANES = { '1': 'sidebar', '2': 'feed', '3': 'terminal' } as const
 
@@ -14,16 +15,19 @@ function focusEl(el: Element | null | undefined) {
 
 // Hover focus: resting on a focus unit for 150 ms focuses it. A focus move by other means (keys,
 // a click, the app itself) suspends hover focus until the mouse moves again, so a pending dwell
-// cannot undo it. `paths`/`active` are the Project tabs for tab shortcuts.
+// cannot undo it. Any keystroke pauses hover focus for a second, so typing with the mouse resting
+// on a card keeps going to the terminal; the next mouse move after the pause rests as usual.
+// `paths`/`active` are the Project tabs for tab shortcuts.
 export function useFocus(paths: string[], active: string) {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined
     let candidate: Element | null | undefined
     let suspended = false
+    let typingUntil = 0
     let own = false
 
     const hover = (t: EventTarget | null) => {
-      if (suspended) return
+      if (suspended || Date.now() < typingUntil) return
       const unit = unitOf(t)
       if (unit === candidate) return
       candidate = unit
@@ -52,6 +56,11 @@ export function useFocus(paths: string[], active: string) {
     const onFocusIn = () => {
       if (!own) suspend()
     }
+    const onType = () => {
+      typingUntil = Date.now() + TYPING_MS
+      candidate = undefined
+      clearTimeout(timer)
+    }
 
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || e.altKey) return
@@ -75,12 +84,14 @@ export function useFocus(paths: string[], active: string) {
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseover', onOver)
     window.addEventListener('focusin', onFocusIn)
+    window.addEventListener('keydown', onType, true)
     window.addEventListener('keydown', onKey)
     return () => {
       clearTimeout(timer)
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseover', onOver)
       window.removeEventListener('focusin', onFocusIn)
+      window.removeEventListener('keydown', onType, true)
       window.removeEventListener('keydown', onKey)
     }
   }, [paths, active])

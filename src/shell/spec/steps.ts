@@ -100,6 +100,34 @@ Then('the terminal has the focus ring and the card does not', async ({ page }) =
   await expectFocus(card(page), false)
 })
 
+// Typing: each keystroke pauses hover focus (focus.ts TYPING_MS); keys land ~200 ms apart, past
+// the 150 ms dwell, with the mouse moved onto the card before each one.
+Given('a pending Decision shows a card and the terminal has focus', async ({ page }) => {
+  const id = (await invoke(page, 'runs:create')) as string
+  await invoke(page, 'runs:start', id)
+  await request(page, id, 'orchestrator > api-agent', 'Architecture')
+  await expect(card(page)).toBeVisible()
+  await expect(page.getByRole('button', { name: /^(Hide|Show) sidebar/ })).toBeVisible()
+  await page.keyboard.press('Meta+3')
+  await expectFocus(terminal(page))
+})
+
+When(
+  'I type {string} in the terminal while the mouse rests on the card',
+  async ({ page }, text: string) => {
+    for (const ch of text) {
+      await card(page).hover()
+      await page.keyboard.press(ch)
+      await page.waitForTimeout(200)
+    }
+  },
+)
+
+When('I stop typing for 1 s and the mouse rests on the card', async ({ page }) => {
+  await page.waitForTimeout(1100)
+  await rest(page, card(page))
+})
+
 When('I press Cmd+Shift+]', async ({ page }) => {
   await expect(sidebar(page)).toBeVisible()
   await page.keyboard.press('Meta+Shift+BracketRight')
