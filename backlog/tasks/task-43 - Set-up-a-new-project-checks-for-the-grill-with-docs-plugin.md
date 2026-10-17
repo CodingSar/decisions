@@ -1,10 +1,10 @@
 ---
 id: TASK-43
 title: Set up a new project checks for the grill-with-docs plugin
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-10-16 20:27'
-updated_date: '2026-10-17 05:58'
+updated_date: '2026-10-17 06:10'
 labels: []
 dependencies:
   - TASK-32
@@ -19,5 +19,5 @@ UX review U3. 'Set up a new project' only starts a Run with /grill-with-docs; a 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A missing plugin is explained before the Run starts; open-project.feature covers it
+- [x] #1 A missing plugin is explained before the Run starts; open-project.feature covers it
 <!-- AC:END -->
