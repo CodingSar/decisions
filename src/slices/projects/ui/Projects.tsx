@@ -135,7 +135,7 @@ export function Projects({
   return (
     <>
       <div role="tablist">
-        {state.tabs.map((t) => (
+        {state.tabs.map((t, i) => (
           <span key={t.path} className="tab">
             <button
               type="button"
@@ -144,7 +144,7 @@ export function Projects({
               aria-disabled={!t.available}
               title={
                 t.available
-                  ? `${t.path}${badges[t.path] ? ` · ${badges[t.path]} pending` : ''}`
+                  ? `${t.path}${badges[t.path] ? ` · ${badges[t.path]} pending` : ''}${i < 9 ? ` (⌘⇧${i + 1})` : ''}`
                   : `Folder not found: ${t.path}`
               }
               onClick={() => {

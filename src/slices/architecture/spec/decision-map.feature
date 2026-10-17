@@ -115,3 +115,26 @@ Feature: Decision map
     And I open D1 from the side panel
     Then the modal closes
     And the History view shows D1 focused
+
+  Scenario: Map tabs show their shortcuts
+    Then the mini map control "Overview" has the tooltip "Overview: one level, all its arrows (O)"
+    And the mini map control "Interactions" has the tooltip "Interactions: nested, arrows on hover (I)"
+    And the mini map control "Up" has the tooltip "Up: back to the parent level (Backspace)"
+
+  Scenario: Keys switch the map view
+    Given the mouse rests on the mini map
+    When I press I
+    Then the mini map shows "main-process" containing "decision-store" and "decision-ipc"
+    When I press O
+    Then the mini map shows "main-process" without its Components
+
+  Scenario: Backspace goes up a level
+    When I click "main-process" in the mini map
+    Then the map shows only "decision-store" and "decision-ipc"
+    When I press Backspace
+    Then the mini map shows "main-process" without its Components
+
+  Scenario: Keys act in the modal
+    When I click the expand icon
+    And I press I
+    Then the mini map shows "main-process" containing "decision-store" and "decision-ipc"

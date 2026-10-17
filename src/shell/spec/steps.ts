@@ -161,6 +161,15 @@ Then('the next Project tab is focused', async ({ page }) => {
   await expect(page.getByRole('tab', { selected: true })).toHaveText('api-service') // wraps from "shop"
 })
 
+When('I press Cmd+Shift+{int}', async ({ page }, n: number) => {
+  await expect(sidebar(page)).toBeVisible()
+  await page.keyboard.press(`Meta+Shift+Digit${n}`)
+})
+
+Then('the {string} tab is selected', async ({ page }, name: string) => {
+  await expect(page.getByRole('tab', { name, selected: true })).toBeVisible()
+})
+
 const width = async (el: Locator) => (await el.boundingBox())?.width as number
 let before = 0
 

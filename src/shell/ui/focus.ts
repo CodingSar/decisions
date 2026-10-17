@@ -73,11 +73,18 @@ export function useFocus(paths: string[], active: string) {
         focusEl(units.find((u) => !u.querySelector(UNIT)) ?? units[0])
         return
       }
-      const step = e.shiftKey ? { BracketRight: 1, BracketLeft: -1 }[e.code] : undefined
-      if (!step || paths.length < 2) return
+      if (!e.shiftKey) return
+      // ⌘⇧[ ] step through the Project tabs; ⌘⇧1..9 jump to one.
+      const step = { BracketRight: 1, BracketLeft: -1 }[e.code]
+      const digit = /^Digit([1-9])$/.exec(e.code)?.[1]
+      const next = step
+        ? paths[(paths.indexOf(active) + step + paths.length) % paths.length]
+        : digit
+          ? paths[Number(digit) - 1]
+          : undefined
+      if (!next) return
       e.preventDefault()
       suspend()
-      const next = paths[(paths.indexOf(active) + step + paths.length) % paths.length]
       window.api.invoke('projects:focus', next)
     }
 

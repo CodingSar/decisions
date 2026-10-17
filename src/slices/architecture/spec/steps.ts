@@ -313,3 +313,29 @@ When('I click the build button', async ({ page }) => {
 Then('a Run starts with a prompt to curate the architecture', async ({ page }) => {
   await expect(page.getByRole('log', { name: 'Terminal' })).toContainText('Curate the architecture')
 })
+
+Then(
+  'the mini map control {string} has the tooltip {string}',
+  async ({ page }, name: string, tip: string) => {
+    await expect(mini(page).getByRole('button', { name, exact: true })).toHaveAttribute(
+      'title',
+      tip,
+    )
+  },
+)
+
+// Hover focus: rest past the 150 ms dwell until the map holds the focus (see shell steps `rest`).
+Given('the mouse rests on the mini map', async ({ page }) => {
+  await expect(mini(page).locator('[data-kind]').first()).toBeVisible()
+  await expect
+    .poll(async () => {
+      await mini(page).hover()
+      await page.waitForTimeout(250)
+      return mini(page).evaluate((el) => el.contains(document.activeElement))
+    })
+    .toBe(true)
+})
+
+When('I press Backspace', async ({ page }) => {
+  await page.keyboard.press('Backspace')
+})

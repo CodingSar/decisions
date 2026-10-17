@@ -45,7 +45,7 @@ Actor: the human (single user). Terms per `GLOSSARY.md`.
 ## UC7 Work across Projects and Runs
 1. Human switches Project tabs; each has its own Feed and Runs.
 2. Focus follows the mouse: hovering a focus unit (a Feed card, the terminal view, or the sidebar) for 150 ms focuses it, and hovering elsewhere moves focus away. The focused unit shows a soft orange border. There is no typing pin.
-3. ⌘1/2/3 focus the sidebar, Feed and terminal; ⌘⇧[ / ⌘⇧] switch Project tabs and a number key jumps to one. A keyboard focus move suspends mouse focus until the mouse moves again.
+3. ⌘1/2/3 focus the sidebar, Feed and terminal; ⌘⇧[ / ⌘⇧] switch Project tabs and ⌘⇧1..9 jumps to a Project tab. A keyboard focus move suspends mouse focus until the mouse moves again.
 4. Sidebar and terminal are resizable by dragging their edge, and hide with a minus icon. A hidden pane leaves an edge strip with an arrow that shows it again. Widths and hidden state are remembered per app (app data, not `.decisions/`).
 5. An x icon on a Project tab closes it and stops its Runs; a confirmation appears only if a Run is active. Its Decisions stay in `.decisions/` and return on reopen.
 6. Human stops a Run; its unanswered Decisions stay pending in the Feed.
