@@ -2,8 +2,6 @@ import type { AgentRuntime } from '../model'
 
 // A tiny line-oriented shell: echoes input and knows a few commands the specs drive.
 export const fakeRuntime: AgentRuntime = {
-  // Specs make a skill missing with DECISIONS_FAKE_PLUGINS=none (through the agent:env hook).
-  hasSkill: () => process.env.DECISIONS_FAKE_PLUGINS !== 'none',
   start({ onOutput, onExit, prompt, mcpUrl }) {
     // The endpoint ends in the Run ID, which makes sessions tell apart.
     const id = mcpUrl.split('/').pop()

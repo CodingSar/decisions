@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { basename, join, resolve } from 'node:path'
+import { basename, join, resolve, sep } from 'node:path'
 import { app, type BrowserWindow, dialog, ipcMain } from 'electron'
 import type { ProjectsState } from '../model'
+import { scaffold } from './scaffold'
 
 // Open Projects (tab order + active) persist in userData; Runs do not resume.
 export function registerProjects(
@@ -52,7 +53,10 @@ export function registerProjects(
     recent = recent.filter((p) => p !== path)
     active = path
     changed()
-    if (setup) onSetup(path)
+    if (setup) {
+      scaffold(path)
+      onSetup(path)
+    }
   })
   const focus = (path: string) => {
     if (!paths.includes(path) || !existsSync(path)) return
@@ -68,5 +72,11 @@ export function registerProjects(
     changed()
   })
 
-  return { active: () => active, focus }
+  /** The open Project that is `dir` or holds it. */
+  const containing = (dir: string) => {
+    const d = resolve(dir)
+    return paths.find((p) => d === p || d.startsWith(p + sep))
+  }
+
+  return { active: () => active, focus, containing }
 }

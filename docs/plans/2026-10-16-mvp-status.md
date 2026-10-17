@@ -6,8 +6,11 @@ Goal: single-user Electron app where the human takes Decisions raised by agents.
 Backlog MVP slices, UI polish, files, components, Decision map, terminal modernization (TASK-26..30, `2026-10-16-terminal-modernization.md`). The git slice was built and then removed (TASK-31): git happens in the Run terminal. All features listed in `playwright.config.ts`.
 UX review (TASK-32, `2026-10-16-ux-review.md`): 40 findings, 29 quick fixes shipped with scenarios, 11 follow-up tasks (TASK-34..44). Flaky Feed key scenarios fixed (TASK-33). All follow-ups TASK-34..44 done (150 scenarios pass).
 Mock-up approval (TASK-45, `2026-10-17-mockup-approval.md`, ADR 0010): `mockup` on request_decision, thumbnail in the Feed, Inspector with Marks, rename on approval, Before/After toggle.
-Docs: `GLOSSARY.md`, ADRs 0001-0007 and 0010, `docs/use-cases.md` (UC1-UC8, UC10, UC11 approved; UC9 removed).
+Docs: `GLOSSARY.md`, ADRs 0001-0011, `docs/use-cases.md` (UC1-UC8, UC10-UC12 approved; UC9 removed).
 UI mock: `docs/mock/*.dc.html` (boards: Main, Collapsed, Review, NewProject, Settings, Files, Architecture, Mockup); private artifact https://claude.ai/artifact/KRcQmrkSKrhHbJXr7efMdP.
+
+## Also done 2026-10-17
+Terminal sessions + Project setup (`2026-10-17-terminal-decisions-and-project-setup.md`, ADR 0011, UC12); covers TASK-43 (the app installs the interview plugin; a failed install is explained in the terminal).
 
 ## To Do
 - TASK-16 Settings section nav (parked until a second Settings section exists).

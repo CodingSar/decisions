@@ -19,8 +19,6 @@ export interface StartOptions {
 export interface AgentRuntime {
   /** Throws when the runtime is unavailable (e.g. CLI missing). */
   start(opts: StartOptions): AgentSession
-  /** Whether `/name` resolves for a session in `cwd` (a user, project or plugin skill/command). */
-  hasSkill(name: string, cwd: string): boolean
 }
 
 export interface DecisionRequest {

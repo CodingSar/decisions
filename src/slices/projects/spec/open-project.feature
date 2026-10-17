@@ -19,16 +19,8 @@ Feature: Open a Project
   Scenario: Set up a new project
     Given I pick a new empty folder "shop"
     When I choose to set up a new project
-    Then the terminal runs the grill-with-docs interview
+    Then the terminal starts the setup interview
     And a Project tab "shop" is focused
-
-  Scenario: Set up a new project without the plugin
-    Given the grill-with-docs skill is not installed
-    And I pick a new empty folder "shop"
-    When I choose to set up a new project
-    Then the picker says how to install the mattpocock-skills plugin
-    And no Project tab is open
-    And no Run is running
 
   Scenario: Open an already-open folder
     Given the Project "api-service" is open in a tab

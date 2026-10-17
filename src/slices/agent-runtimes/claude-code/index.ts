@@ -1,6 +1,5 @@
-import { spawnSync } from 'node:child_process'
-import { accessSync, constants, existsSync, readdirSync, readFileSync } from 'node:fs'
-import { homedir } from 'node:os'
+import { execFile, spawnSync } from 'node:child_process'
+import { accessSync, constants } from 'node:fs'
 import { delimiter, join } from 'node:path'
 import { spawn } from '@lydell/node-pty'
 import type { AgentRuntime } from '../model'
@@ -30,47 +29,8 @@ function onPath(cmd: string) {
   return undefined
 }
 
-// `<name>/SKILL.md` or `commands/<name>.md` anywhere under `dir`, a few levels deep (plugins nest skills).
-function provides(dir: string, name: string, depth: number): boolean {
-  if (existsSync(join(dir, name, 'SKILL.md')) || existsSync(join(dir, 'commands', `${name}.md`)))
-    return true
-  if (!depth) return false
-  try {
-    return readdirSync(dir, { withFileTypes: true }).some(
-      (e) =>
-        e.isDirectory() && !e.name.startsWith('.') && provides(join(dir, e.name), name, depth - 1),
-    )
-  } catch {
-    return false
-  }
-}
-
-// Where Claude Code keeps installed plugins: every `installPath` in installed_plugins.json, plus claude.ai-synced ones.
-function pluginDirs(root: string) {
-  const dirs = [join(root, 'synced')]
-  const collect = (v: unknown) => {
-    if (Array.isArray(v)) v.forEach(collect)
-    else if (v && typeof v === 'object')
-      for (const [k, x] of Object.entries(v))
-        if (k === 'installPath' && typeof x === 'string') dirs.push(x)
-        else collect(x)
-  }
-  try {
-    collect(JSON.parse(readFileSync(join(root, 'installed_plugins.json'), 'utf8')))
-  } catch {}
-  return dirs
-}
-
-// Filesystem only, no CLI call: skills and commands of the project, the user and installed plugins.
-export function hasSkill(name: string, cwd: string) {
-  const home = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude')
-  const plugins = process.env.CLAUDE_CODE_PLUGIN_CACHE_DIR || join(home, 'plugins')
-  return [join(cwd, '.claude'), home, ...pluginDirs(plugins)].some((d) => provides(d, name, 4))
-}
-
 // Runs the interactive `claude` CLI in a pty, wired to the app's request_decision MCP server.
 export const claudeCodeRuntime: AgentRuntime = {
-  hasSkill,
   start({ cwd, mcpUrl, prompt, onOutput, onExit }) {
     const claude = onPath('claude')
     if (!claude)
@@ -98,3 +58,15 @@ export const claudeCodeRuntime: AgentRuntime = {
     }
   },
 }
+
+/** Installs the interview skills for the Project; resolves to the reason when that fails. */
+export const installPlugin = (cwd: string) =>
+  new Promise<string | undefined>((done) => {
+    if (!onPath('claude')) return done('"claude" CLI not found on PATH')
+    execFile(
+      'claude',
+      ['plugin', 'install', 'mattpocock-skills@claude-plugins-official', '--scope', 'project'],
+      { cwd, timeout: 60_000 },
+      (err, _out, stderr) => done(err ? (stderr || err.message).trim().split('\n')[0] : undefined),
+    )
+  })

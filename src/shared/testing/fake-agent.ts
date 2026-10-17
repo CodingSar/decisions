@@ -25,11 +25,30 @@ export async function request(
   components?: string[],
   mockup?: string,
 ) {
+  await ask(page, `/${runId}`, {}, agent, scope, recommended, components, mockup)
+}
+
+// A coding agent started in `dir` outside the app: no Run, the folder travels in a header.
+export const requestFromTerminal = (page: Page, dir: string, agent: string, scope: string) =>
+  ask(page, '', { 'X-Project-Dir': dir }, agent, scope, 0)
+
+async function ask(
+  page: Page,
+  path: string,
+  headers: Record<string, string>,
+  agent: string,
+  scope: string,
+  recommended: number,
+  components?: string[],
+  mockup?: string,
+) {
   const base = (await page.evaluate(() => window.api.invoke('agent:mcp-url'))) as string
   const client = new Client({ name: 'fake-agent', version: '0.0.0' })
-  await client.connect(new StreamableHTTPClientTransport(new URL(`${base}/${runId}`)))
-  const ask: Ask = { settled: false, client }
-  asks.set(page, [...(asks.get(page) ?? []), ask])
+  await client.connect(
+    new StreamableHTTPClientTransport(new URL(`${base}${path}`), { requestInit: { headers } }),
+  )
+  const pending: Ask = { settled: false, client }
+  asks.set(page, [...(asks.get(page) ?? []), pending])
   client
     .callTool(
       {
@@ -48,13 +67,13 @@ export async function request(
       { timeout: 60000 },
     )
     .then((r) => {
-      ask.settled = true
+      pending.settled = true
       const text = (r.content as { text: string }[])[0]?.text
       // A refused request (e.g. a Mock-up outside the convention) comes back as a tool error.
-      if (r.isError) ask.error = text
-      else ask.result = text
+      if (r.isError) pending.error = text
+      else pending.result = text
     })
     .catch((e) => {
-      ask.error = String(e)
+      pending.error = String(e)
     })
 }

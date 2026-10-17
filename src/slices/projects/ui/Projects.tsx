@@ -21,10 +21,6 @@ function Icon({ d, size = 18 }: { d: string; size?: number }) {
 
 const invoke = window.api.invoke
 
-// The setup interview is a Claude Code skill from this plugin; without it the Run would only print "unknown command".
-const SKILL = 'grill-with-docs'
-const INSTALL = 'claude plugin install mattpocock-skills@claude-plugins-official'
-
 function NewProject({
   recent,
   badges,
@@ -34,14 +30,9 @@ function NewProject({
   badges: Record<string, number>
   onDone: () => void
 }) {
-  const [missing, setMissing] = useState(false)
   const start = async (setup: boolean) => {
     const path = (await invoke('projects:pick', setup)) as string | undefined
     if (!path) return
-    if (setup && !(await invoke('agent:has-skill', SKILL, path))) {
-      setMissing(true)
-      return
-    }
     await invoke('projects:open', path, setup)
     onDone()
   }
@@ -74,11 +65,6 @@ function NewProject({
           Interview me about the project, then write GLOSSARY.md and ADRs into the new folder.
         </span>
       </button>
-      {missing ? (
-        <p role="alert">
-          Needs the {SKILL} skill. In a terminal: <code>{INSTALL}</code>
-        </p>
-      ) : null}
       {recent.length ? (
         <ul aria-label="Recent">
           {recent.map((r) => (
