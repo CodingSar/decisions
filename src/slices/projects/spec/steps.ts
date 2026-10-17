@@ -11,8 +11,13 @@ Given('a folder {string} without git', async ({ folder }, name: string) => {
   folder(name)
 })
 
-Given('I pick a new empty folder {string}', async ({ folder }, name: string) => {
-  folder(name)
+// The native folder dialog is replaced by a test hook that answers with this folder.
+Given('I pick a new empty folder {string}', async ({ page, folder }, name: string) => {
+  await page.evaluate((e) => window.api.invoke('agent:env', e), { DECISIONS_PICK: folder(name) })
+})
+
+Given('the grill-with-docs skill is not installed', async ({ page }) => {
+  await page.evaluate(() => window.api.invoke('agent:env', { DECISIONS_FAKE_PLUGINS: 'none' }))
 })
 
 Given('the Project {string} is open( in a tab)', async ({ page, folder }, name: string) => {
@@ -64,8 +69,8 @@ When('I open the folder {string} again', async ({ page, folder }, name: string) 
   await open(page, folder(name))
 })
 
-When('I choose to set up a new project', async ({ page, folder }) => {
-  await open(page, folder('shop'), true)
+When('I choose to set up a new project', async ({ page }) => {
+  await page.getByRole('button', { name: 'Set up a new project' }).click()
 })
 
 When('I relaunch the app', async ({ session }) => {
@@ -99,6 +104,27 @@ Then('the terminal runs the grill-with-docs interview', async ({ session }) => {
     '/grill-with-docs',
   )
 })
+
+Then('the picker says how to install the mattpocock-skills plugin', async ({ page }) => {
+  await expect(page.getByRole('alert')).toContainText(
+    'claude plugin install mattpocock-skills@claude-plugins-official',
+  )
+})
+
+Then('no Project tab is open', async ({ page }) => {
+  await expect(page.getByRole('tab')).toHaveCount(0)
+})
+
+Then(
+  '{string} is the highlighted card, {string} is not',
+  async ({ page }, primary: string, other: string) => {
+    const card = (name: string) => page.getByRole('button', { name })
+    const border = (name: string) => card(name).evaluate((el) => getComputedStyle(el).borderColor)
+    await expect(card(primary)).toHaveAttribute('data-primary', 'true')
+    await expect(card(other)).not.toHaveAttribute('data-primary', 'true')
+    expect(await border(primary)).not.toBe(await border(other))
+  },
+)
 
 Then('the existing tab is focused', async ({ session }) => {
   await expect(session.page.getByRole('tab', { selected: true })).toHaveText('api-service')

@@ -31,6 +31,9 @@ export function registerProjects(
 
   ipcMain.handle('projects:list', state)
   ipcMain.handle('projects:pick', async (_e, setup = false) => {
+    // Test hook: specs cannot drive the native dialog, so they name the folder by env.
+    if (process.env.DECISIONS_RUNTIME && process.env.DECISIONS_PICK)
+      return process.env.DECISIONS_PICK
     const r = await dialog.showOpenDialog(win, {
       title: 'Choose the project folder',
       buttonLabel: 'Open',

@@ -13,11 +13,22 @@ Feature: Open a Project
     Then the Feed shows D1
     And the Review tab shows D2
 
+  Scenario: Open existing folder is the primary card
+    Then "Open existing folder" is the highlighted card, "Set up a new project" is not
+
   Scenario: Set up a new project
     Given I pick a new empty folder "shop"
     When I choose to set up a new project
     Then the terminal runs the grill-with-docs interview
     And a Project tab "shop" is focused
+
+  Scenario: Set up a new project without the plugin
+    Given the grill-with-docs skill is not installed
+    And I pick a new empty folder "shop"
+    When I choose to set up a new project
+    Then the picker says how to install the mattpocock-skills plugin
+    And no Project tab is open
+    And no Run is running
 
   Scenario: Open an already-open folder
     Given the Project "api-service" is open in a tab
