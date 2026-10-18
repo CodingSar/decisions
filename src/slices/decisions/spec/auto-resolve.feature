@@ -47,3 +47,13 @@ Feature: Auto-resolve a Decision
     Then the Review says "Nothing to review. Auto-resolved Decisions land here."
     And the History says "No Decisions yet."
 
+
+  Scenario: An informed action lands in Review
+    When the agent informs "Pinned zod to 3.x" because "newer breaks the SDK"
+    Then the Feed has no card
+    And ".decisions/D1.md" records "by: auto" with reason "informed"
+    And Review lists D1 and its badge increases
+
+  Scenario: Informing is capped
+    When the agent informs 21 times in a row
+    Then the last inform is refused with "ask"

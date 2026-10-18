@@ -31,4 +31,17 @@ export interface DecisionRequest {
   components?: string[]
   /** Project-relative path of a Mock-up named `*-for-approval.html` (ADR 0010). */
   mockup?: string
+  /** `soft`: park the Decision and carry on with the recommendation (default `hard`: wait for the Verdict). */
+  blocking?: 'hard' | 'soft'
+}
+
+/** An action the agent took without asking; it lands in Review. */
+export interface InformRequest {
+  agent: string
+  scope: string
+  /** What was done. */
+  summary: string
+  /** Why it needed no human. */
+  reason: string
+  components?: string[]
 }

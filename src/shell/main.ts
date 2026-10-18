@@ -31,7 +31,9 @@ const TERMINAL = 'terminal:'
 
 async function startMcp() {
   const mcp = await startMcpServer(
-    (req, runId) => decisions.request(req, runId),
+    (req, runId, gone) => decisions.request(req, runId, gone),
+    (runId) => decisions.check(runId),
+    (req, runId) => decisions.inform(req, runId),
     (runId) => {
       const project = projectOf(runId)
       return project ? scopeNames(project) : []
@@ -80,7 +82,7 @@ function createWindow(mcpUrl: string) {
       files.stop(path)
     },
   )
-  runs = registerRuns(win, projects.active, mcpUrl, projects.focus)
+  runs = registerRuns(win, projects.active, mcpUrl, projects.focus, (cwd) => decisions.unseen(cwd))
   projectOf = (id) => (id.startsWith(TERMINAL) ? id.slice(TERMINAL.length) : runs.projectOf(id))
   projectAt = projects.containing
   decisions = registerDecisions(

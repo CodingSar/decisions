@@ -88,3 +88,57 @@ Feature: Take a Decision
     When I give a Verdict
     Then ".decisions/D1.md" records it
     And the next Run is pointed at ".decisions/"
+
+  Scenario: A Decision whose agent disconnected is marked
+    Given a pending Decision
+    When the agent disconnects
+    Then the card is marked "Agent gone"
+    When I press L
+    Then the card leaves the Feed
+    And ".decisions/D1.md" records the Verdict with "by: human"
+
+  Scenario: A new Run is told the Verdicts its predecessor never received
+    Given a pending Decision
+    And the agent disconnects
+    When I press L
+    And Run "R2" is started
+    Then the terminal of "R2" says "Unseen Verdicts: D1"
+    And the terminal of "R2" says "Approved: 1"
+
+  Scenario: A Verdict the agent received is not listed again
+    Given a pending Decision
+    When I press L
+    And Run "R2" is started
+    Then the terminal of "R2" says "Past Decisions are in .decisions/"
+    And the terminal of "R2" does not say "Unseen Verdicts"
+
+  Scenario: A soft ask does not block the agent
+    When agent "orchestrator > api-agent" parks an "Architecture" Decision, recommending 1
+    Then the agent immediately receives "Parked D1; proceed on option 1"
+    And a card shows the Scope, the asking agent, the question and both options
+    And the card is not marked "Agent gone"
+
+  Scenario: A parked Decision is answered later
+    When agent "orchestrator > api-agent" parks an "Architecture" Decision, recommending 1
+    Then a card shows the Scope, the asking agent, the question and both options
+    When I press 2
+    Then the card leaves the Feed
+    And ".decisions/D1.md" records the Verdict with "undelivered: true"
+    And ".decisions/D1.md" records the Verdict with "Approved: 2"
+
+  Scenario: The agent fetches a parked Decision's Verdict once
+    When agent "orchestrator > api-agent" parks an "Architecture" Decision, recommending 1
+    Then a card shows the Scope, the asking agent, the question and both options
+    When I press 2
+    Then the card leaves the Feed
+    And checking Decisions as "R1" returns "Approved: 2"
+    And checking Decisions as "R1" returns "No new Verdicts."
+
+  Scenario: Another Run does not receive the Verdict
+    When agent "orchestrator > api-agent" parks an "Architecture" Decision, recommending 1
+    Then a card shows the Scope, the asking agent, the question and both options
+    When Run "R2" is started
+    And I press 2
+    Then the card leaves the Feed
+    And checking Decisions as "R2" returns "No new Verdicts."
+    And checking Decisions as "R1" returns "Approved: 2"

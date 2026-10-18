@@ -12,6 +12,18 @@ _Avoid_: Approval, prompt, ticket, ADR
 A Decision with no Verdict yet. It stays pending when its Run stops or its agent disconnects, until the human gives a Verdict.
 _Avoid_: Open, unanswered, queued
 
+**Soft ask**:
+A Decision raised with `blocking: soft`: the app returns at once with the recommendation and the agent carries on. The card waits in the Feed like any Pending Decision; the agent fetches the Verdict later with `check_decisions`.
+_Avoid_: Async decision, deferred decision
+
+**Undelivered Verdict**:
+A Verdict that reached no agent (its Run stopped, or it answers a Soft ask). Flagged `undelivered: true` in the file until `check_decisions` or a new Run's startup line hands it over.
+_Avoid_: Unseen, queued Verdict
+
+**Informed action**:
+An action an agent reports with `inform` instead of asking. It lands in Review as an Auto-resolved Decision with reason `informed`; capped at 20 per Run per hour.
+_Avoid_: Notification, log entry
+
 **Verdict**:
 The human's response to a Decision: a like, a dislike, and/or a comment, returned to the waiting agent.
 _Avoid_: Answer, vote, reaction

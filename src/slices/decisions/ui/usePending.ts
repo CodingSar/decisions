@@ -12,9 +12,14 @@ export function usePending(projects: string[]) {
     // Closed Projects drop out.
     setByProject((s) => Object.fromEntries(Object.entries(s).filter(([p]) => open.includes(p))))
     const load = (project: string) =>
-      window.api.invoke('decisions:list', project).then((all) => {
+      Promise.all([
+        window.api.invoke('decisions:list', project),
+        window.api.invoke('decisions:orphans', project),
+      ]).then(([all, orphans]) => {
         if (stale) return
-        const pending = (all as Decision[]).filter((d) => d.status === 'pending')
+        const pending = (all as Decision[])
+          .filter((d) => d.status === 'pending')
+          .map((d) => ({ ...d, orphaned: (orphans as number[]).includes(d.id) }))
         setByProject((s) => ({ ...s, [project]: pending }))
       })
     for (const p of open) load(p)

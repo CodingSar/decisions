@@ -7,6 +7,7 @@ export type {
   AgentRuntime,
   AgentSession,
   DecisionRequest,
+  InformRequest,
   StartOptions,
 } from '../model'
 

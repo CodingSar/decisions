@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { expect, type Page } from '@playwright/test'
-import { asks, OPTIONS, QUESTION, request } from '../../../shared/testing/fake-agent'
+import { asks, check, inform, OPTIONS, QUESTION, request } from '../../../shared/testing/fake-agent'
 import { Given, Then, When } from '../../../shared/testing/fixtures'
 import { type Decision, serialize } from '../model'
 
@@ -629,4 +629,70 @@ Then('the new Decision touches {string}', async ({ folder }, id: string) => {
   expect(readFileSync(join(folder('api-service'), '.decisions', 'D2.md'), 'utf8')).toContain(
     `components: ${id}\n`,
   )
+})
+
+When('the agent disconnects', async ({ page }) => {
+  await asks.get(page)?.[0]?.client.close()
+})
+
+Then('the card is marked {string}', async ({ page }, name: string) => {
+  await expect(page.getByRole('article').getByRole('img', { name })).toBeVisible()
+})
+
+When('Run {string} is started', async ({ page }, id: string) => {
+  await page.evaluate(() => window.api.invoke('runs:create'))
+  await page.evaluate((i) => window.api.invoke('runs:start', i), id)
+})
+
+Then('the terminal of {string} says {string}', async ({ page }, _id: string, text: string) => {
+  await expect(page.getByRole('log', { name: 'Terminal' })).toContainText(text)
+})
+
+Then(
+  'the terminal of {string} does not say {string}',
+  async ({ page }, _id: string, text: string) => {
+    await expect(page.getByRole('log', { name: 'Terminal' })).toContainText('Past Decisions')
+    await expect(page.getByRole('log', { name: 'Terminal' })).not.toContainText(text)
+  },
+)
+
+When(
+  'agent {string} parks an {string} Decision, recommending 1',
+  async ({ page }, agent: string, scope: string) => {
+    await request(page, 'R1', agent, scope, 0, undefined, undefined, 'soft')
+  },
+)
+
+Then('the agent immediately receives {string}', async ({ page }, text: string) => {
+  await expect.poll(() => asks.get(page)?.[0]?.result).toContain(text)
+})
+
+Then('the card is not marked {string}', async ({ page }, name: string) => {
+  await expect(page.getByRole('article')).toHaveCount(1)
+  await expect(page.getByRole('article').getByRole('img', { name })).toHaveCount(0)
+})
+
+Then(
+  'checking Decisions as {string} returns {string}',
+  async ({ page }, run: string, text: string) => {
+    expect(await check(page, run)).toContain(text)
+  },
+)
+
+When(
+  'the agent informs {string} because {string}',
+  async ({ page }, summary: string, reason: string) => {
+    await inform(page, 'R1', summary, reason)
+  },
+)
+
+const refused = new WeakMap<Page, { isError: boolean; text: string }>()
+
+When('the agent informs {int} times in a row', async ({ page }, n: number) => {
+  refused.set(page, await inform(page, 'R1', 'Did a thing', 'It was obvious', n))
+})
+
+Then('the last inform is refused with {string}', async ({ page }, text: string) => {
+  expect(refused.get(page)?.isError).toBe(true)
+  expect(refused.get(page)?.text).toContain(text)
 })

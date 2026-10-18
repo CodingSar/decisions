@@ -12,6 +12,9 @@ UI mock: `docs/mock/*.dc.html` (boards: Main, Collapsed, Review, NewProject, Set
 ## Also done 2026-10-17
 Terminal sessions + Project setup (`2026-10-17-terminal-decisions-and-project-setup.md`, ADR 0011, UC12); covers TASK-43 (the app installs the interview plugin; a failed install is explained in the terminal).
 
+## Also done 2026-10-18
+Non-blocking asks (`2026-10-18-implementation-plan.md`, ADR 0012, UC13 draft): orphan marker, `undelivered` Verdicts + startup line, `blocking: soft`, `check_decisions`, `inform`. Ideas and ruled-out items: `2026-10-18-ideas.md`. Not built: Feed ordering, snooze, bulk Accept, efficiency quick wins.
+
 ## To Do
 - TASK-16 Settings section nav (parked until a second Settings section exists).
 - TASK-15 Agent Runtime picker (parked until a second Agent Runtime exists).

@@ -24,8 +24,9 @@ export async function request(
   recommended = 0,
   components?: string[],
   mockup?: string,
+  blocking?: 'hard' | 'soft',
 ) {
-  await ask(page, `/${runId}`, {}, agent, scope, recommended, components, mockup)
+  await ask(page, `/${runId}`, {}, agent, scope, recommended, components, mockup, blocking)
 }
 
 // A coding agent started in `dir` outside the app: no Run, the folder travels in a header.
@@ -41,6 +42,7 @@ async function ask(
   recommended: number,
   components?: string[],
   mockup?: string,
+  blocking?: 'hard' | 'soft',
 ) {
   const base = (await page.evaluate(() => window.api.invoke('agent:mcp-url'))) as string
   const client = new Client({ name: 'fake-agent', version: '0.0.0' })
@@ -61,6 +63,7 @@ async function ask(
           recommended,
           ...(components && { components }),
           ...(mockup && { mockup }),
+          ...(blocking && { blocking }),
         },
       },
       undefined,
@@ -76,4 +79,38 @@ async function ask(
     .catch((e) => {
       pending.error = String(e)
     })
+}
+
+// The agent fetches the Verdicts of its parked Decisions.
+export async function check(page: Page, runId: string) {
+  const base = (await page.evaluate(() => window.api.invoke('agent:mcp-url'))) as string
+  const client = new Client({ name: 'fake-agent', version: '0.0.0' })
+  await client.connect(new StreamableHTTPClientTransport(new URL(`${base}/${runId}`)))
+  const r = await client.callTool({ name: 'check_decisions', arguments: {} })
+  await client.close()
+  return (r.content as { text: string }[])[0]?.text
+}
+
+// The agent reports what it did without asking; `times` calls on one connection, the last result is returned.
+export async function inform(
+  page: Page,
+  runId: string,
+  summary: string,
+  reason: string,
+  times = 1,
+) {
+  const base = (await page.evaluate(() => window.api.invoke('agent:mcp-url'))) as string
+  const client = new Client({ name: 'fake-agent', version: '0.0.0' })
+  await client.connect(new StreamableHTTPClientTransport(new URL(`${base}/${runId}`)))
+  let r: Awaited<ReturnType<Client['callTool']>> | undefined
+  for (let i = 0; i < times; i++)
+    r = await client.callTool({
+      name: 'inform',
+      arguments: { agent: 'orchestrator > api-agent', scope: 'architecture', summary, reason },
+    })
+  await client.close()
+  return {
+    isError: Boolean(r?.isError),
+    text: ((r?.content ?? []) as { text: string }[])[0]?.text ?? '',
+  }
 }

@@ -3,7 +3,7 @@ import type { AddressInfo } from 'node:net'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import * as z from 'zod'
-import type { DecisionRequest } from './model'
+import type { DecisionRequest, InformRequest } from './model'
 
 // Capped on purpose: one-line question, 2-4 one-line options.
 const input = (scopes: string[], components: string[]) => ({
@@ -22,6 +22,12 @@ const input = (scopes: string[], components: string[]) => ({
     .describe(
       `Optional Components of the architecture this touches${components.length ? `, from: ${components.join(', ')}` : ''}`,
     ),
+  blocking: z
+    .enum(['hard', 'soft'])
+    .optional()
+    .describe(
+      'soft: park the question and carry on with your recommendation; fetch the Verdict later with check_decisions. Default hard: wait for the human.',
+    ),
   mockup: z
     .string()
     .max(200)
@@ -31,8 +37,14 @@ const input = (scopes: string[], components: string[]) => ({
     ),
 })
 
-/** Resolves to the reply text the agent receives. `runId` is the last path segment of the MCP URL the agent was started with. */
-export type OnDecision = (req: DecisionRequest, runId: string) => Promise<string>
+/** Resolves to the reply text the agent receives. `runId` is the last path segment of the MCP URL the agent was started with. `gone` aborts when the agent hangs up before the reply. */
+export type OnDecision = (req: DecisionRequest, runId: string, gone: AbortSignal) => Promise<string>
+
+/** The Verdicts of the Run's parked Decisions that its agent has not seen. */
+export type OnCheck = (runId: string) => string
+
+/** Records an action the agent took without asking; throws when the Run informs too often. */
+export type OnInform = (req: InformRequest, runId: string) => void
 
 /** Maps the folder of a coding agent started outside the app to a pseudo Run id, or nothing when it is no open Project. */
 export type TerminalRun = (dir: string) => string | undefined
@@ -42,10 +54,13 @@ export const PREFERRED_PORT = 47821
 
 function createMcp(
   onDecision: OnDecision,
+  onCheck: OnCheck,
+  onInform: OnInform,
   runId: string | undefined,
   dir: string,
   scopes: string[],
   components: string[],
+  gone: AbortSignal,
 ) {
   const mcp = new McpServer({ name: 'decisions', version: '0.0.0' })
   mcp.registerTool(
@@ -62,7 +77,46 @@ function createMcp(
       if (req.recommended >= req.options.length) {
         return { isError: true, content: [{ type: 'text', text: 'recommended is out of range' }] }
       }
-      return { content: [{ type: 'text', text: await onDecision(req, runId) }] }
+      return { content: [{ type: 'text', text: await onDecision(req, runId, gone) }] }
+    },
+  )
+  mcp.registerTool(
+    'check_decisions',
+    {
+      description:
+        'Fetch Verdicts of your parked (blocking: soft) Decisions answered since your last check. Call it at natural checkpoints.',
+    },
+    async () => ({
+      content: [
+        {
+          type: 'text',
+          text: runId === undefined ? 'No new Verdicts.' : onCheck(runId),
+        },
+      ],
+    }),
+  )
+  mcp.registerTool(
+    'inform',
+    {
+      description:
+        'Report an action you took without asking, because it needed no human. It lands in Review and does not wait. Ask with request_decision when unsure.',
+      inputSchema: {
+        agent: input(scopes, components).agent,
+        scope: input(scopes, components).scope,
+        summary: z.string().max(200).describe('One line: what you did'),
+        reason: z.string().max(200).describe('One line: why it needed no human'),
+        components: input(scopes, components).components,
+      },
+    },
+    async (req) => {
+      if (runId === undefined)
+        return { isError: true, content: [{ type: 'text', text: 'No Project' }] }
+      try {
+        onInform(req, runId)
+        return { content: [{ type: 'text', text: 'Noted in Review.' }] }
+      } catch (e) {
+        return { isError: true, content: [{ type: 'text', text: (e as Error).message }] }
+      }
     },
   )
   return mcp
@@ -73,6 +127,8 @@ function createMcp(
 // `scopesOf` names the valid Scopes of the Project a Run works in; the tool schema lists them; `componentsOf` likewise for the Groma Components.
 export async function startMcpServer(
   onDecision: OnDecision,
+  onCheck: OnCheck,
+  onInform: OnInform,
   scopesOf: (runId: string) => string[],
   componentsOf: (runId: string) => string[],
   terminalRun: TerminalRun,
@@ -82,15 +138,20 @@ export async function startMcpServer(
     const dir = String(req.headers['x-project-dir'] ?? '')
     const named = (req.url ?? '').split('/').filter(Boolean).at(1)
     const runId = named ?? (dir ? terminalRun(dir) : undefined)
+    const gone = new AbortController()
     const mcp = createMcp(
       onDecision,
+      onCheck,
+      onInform,
       runId,
       dir,
       runId ? scopesOf(runId) : [],
       runId ? componentsOf(runId) : [],
+      gone.signal,
     )
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined })
     res.on('close', () => {
+      if (!res.writableFinished) gone.abort()
       transport.close()
       mcp.close()
     })

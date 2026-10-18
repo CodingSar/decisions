@@ -10,7 +10,7 @@ export interface Decision {
   asked?: number
   by?: 'human' | 'auto'
   /** Why it was Auto-resolved. */
-  reason?: 'out-of-scope' | 'timeout'
+  reason?: 'out-of-scope' | 'timeout' | 'informed'
   /** Auto-resolved and accepted in Review: no longer unseen. */
   accepted?: boolean
   verdict?: string
@@ -24,6 +24,12 @@ export interface Decision {
   run?: string
   /** Project-relative path of the Mock-up under approval (ADR 0010). */
   mockup?: string
+  /** Parked: the agent carried on with the recommendation instead of waiting. */
+  soft?: boolean
+  /** Answered, but no agent was there to receive the Verdict (Run stopped, agent gone). */
+  undelivered?: boolean
+  /** Derived, never stored: pending and no agent waits for the Verdict. */
+  orphaned?: boolean
 }
 
 /** The human's response; `option` is an index, `like` approves the recommendation. */
@@ -53,6 +59,17 @@ export function verdictText(d: Decision, v: Verdict): string {
   return `Direction: ${v.comment ?? ''}${marks}`
 }
 
+const oneLine = (d: Decision) =>
+  `D${d.id} "${d.question}": ${(d.verdict ?? '').replace(/\s+/g, ' ').trim()}`
+
+/** The startup line for a Run: Verdicts that never reached an agent, else a pointer to the folder. */
+export const unseenLine = (unseen: Decision[]) =>
+  `Unseen Verdicts: ${unseen.map(oneLine).join('; ')}. Past Decisions are in .decisions/`
+
+/** What `check_decisions` returns. */
+export const checkText = (unseen: Decision[]) =>
+  unseen.length ? unseen.map(oneLine).join('\n') : 'No new Verdicts.'
+
 /** Whether the Verdict text takes the recommendation or an option. */
 export const approves = (verdict: string) => verdict.startsWith('Approved:')
 
@@ -67,8 +84,10 @@ export function serialize(d: Decision): string {
   const components = d.components?.length ? `components: ${d.components.join(', ')}\n` : ''
   const run = d.run ? `run: ${d.run}\n` : ''
   const mockup = d.mockup ? `mockup: ${d.mockup}\n` : ''
+  const soft = d.soft ? 'soft: true\n' : ''
+  const undelivered = d.undelivered ? 'undelivered: true\n' : ''
   const verdict = d.verdict ? `\n## Verdict\n\n${d.verdict}\n` : ''
-  return `---\nscope: ${d.scope}\nstatus: ${d.status}\n${asked}${by}${accepted}${supersedes}${components}${run}${mockup}---\n# ${d.question}\n\nAsked by: ${d.agent}\n\n${options.join('\n')}\n${verdict}`
+  return `---\nscope: ${d.scope}\nstatus: ${d.status}\n${asked}${by}${accepted}${supersedes}${components}${run}${mockup}${soft}${undelivered}---\n# ${d.question}\n\nAsked by: ${d.agent}\n\n${options.join('\n')}\n${verdict}`
 }
 
 export function parse(id: number, text: string): Decision {
@@ -88,8 +107,8 @@ export function parse(id: number, text: string): Decision {
     by: ['human', 'auto'].includes(field(/^by: (.*)$/m))
       ? (field(/^by: (.*)$/m) as 'human' | 'auto')
       : undefined,
-    reason: ['out-of-scope', 'timeout'].includes(field(/^reason: (.*)$/m))
-      ? (field(/^reason: (.*)$/m) as 'out-of-scope' | 'timeout')
+    reason: ['out-of-scope', 'timeout', 'informed'].includes(field(/^reason: (.*)$/m))
+      ? (field(/^reason: (.*)$/m) as 'out-of-scope' | 'timeout' | 'informed')
       : undefined,
     asked: Number(field(/^asked: (.*)$/m)) || undefined,
     answered: Number(field(/^answered: (.*)$/m)) || undefined,
@@ -100,6 +119,8 @@ export function parse(id: number, text: string): Decision {
       .filter(Boolean),
     run: field(/^run: (.*)$/m) || undefined,
     mockup: field(/^mockup: (.*)$/m) || undefined,
+    soft: field(/^soft: (.*)$/m) === 'true' || undefined,
+    undelivered: field(/^undelivered: (.*)$/m) === 'true' || undefined,
     // Marks follow the first line, one per line.
     verdict: /^## Verdict\n\n([\s\S]*)$/m.exec(text)?.[1]?.trimEnd(),
   }

@@ -166,6 +166,23 @@ function Card({
         <span className="chip">{cap(d.scope)}</span>
         <span>{d.agent.replaceAll(' > ', ' › ')}</span>
         {d.asked && <Waited since={d.asked} />}
+        {d.orphaned && (
+          <svg
+            role="img"
+            aria-label="Agent gone"
+            width={16}
+            height={16}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <title>Agent gone: the Verdict goes to the next Run</title>
+            <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM5.6 5.6l12.8 12.8" />
+          </svg>
+        )}
       </div>
       <p className="question">{d.question}</p>
       {d.mockup && <Thumb project={project} rel={d.mockup} onOpen={onInspect} />}

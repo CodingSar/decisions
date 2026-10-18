@@ -79,6 +79,13 @@ Git stays in the Run terminal: the human asks the agent to commit, push or pull,
 2. The folder (or a parent) must be an open Project and the app running; otherwise the tool errors and the agent asks in its terminal.
 3. No Run appears in the sidebar and the Run lock does not apply.
 
+## UC13 Agent keeps working while a Decision waits (draft, not yet walked through)
+1. An agent raises a Decision with `blocking: soft`; it gets the recommendation at once and carries on.
+2. The card shows in the Feed like any other; the human takes it when ready (UC4).
+3. The agent calls `check_decisions` at checkpoints and receives the Verdicts answered since its last call, each once.
+4. If the agent's Run stopped, the card shows "Agent gone"; the Verdict is written and the next Run's startup line lists it.
+5. An agent that only wants to report an action calls `inform`; it lands in Review (UC5), no wait. More than 20 per hour is refused: ask instead.
+
 ## Rules
 - UC4: a dislike without a comment means "reject the recommendation completely". If that is ambiguous for the question, the agent asks for a comment in its next Decision.
 

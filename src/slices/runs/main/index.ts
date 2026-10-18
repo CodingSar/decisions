@@ -23,6 +23,7 @@ export function registerRuns(
   getCwd: () => string | undefined,
   mcpUrl: string,
   focusProject: (path: string) => void,
+  unseen: (cwd: string) => string | undefined = () => undefined,
 ) {
   const runs: Run[] = []
   let seq = 0
@@ -104,7 +105,7 @@ export function registerRuns(
       session = getRuntime().start({
         cwd,
         mcpUrl: `${mcpUrl}/${id}`,
-        prompt: prompt ?? (hasDecisions(cwd) ? POINTER : undefined),
+        prompt: prompt ?? unseen(cwd) ?? (hasDecisions(cwd) ? POINTER : undefined),
         onOutput: (data) => emit(id, data),
         onExit: (code) => {
           // A late exit of a previous session must not touch its successor.
